@@ -1,0 +1,5 @@
+yolov8
+opencv-python
+numpy
+pydantic
+numpy
