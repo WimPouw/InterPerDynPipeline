@@ -6,6 +6,8 @@ import numpy as np
 import glob
 import os
 import torch # for gpu support
+from itertools import combinations
+import sys
 
 torch.cuda.set_device(0)
 # Load the model
@@ -14,8 +16,68 @@ model = YOLO('yolov8x-pose-p6.pt') # heaviest model
 video_folder = "../data_sampledata_raw/"
 # avi mp4 or other video formats
 video_files = glob.glob(video_folder + "*.mp4") + glob.glob(video_folder + "*.avi")
-step1resultfolder = "../step1result/" # we can replace with full data
+step1resultfolder = "../data_sampledatatracked_afterSTEP1/" # we can replace with full data
 print(video_files)
+
+def tensor_to_matrix(results_tensor):
+    # this just takes the results output of YOLO and coverts it to a matrix,
+    # making it easier to do quick calculations on the coordinates
+    results_list = results_tensor.tolist()
+    results_matrix = np.matrix(results_list)
+    
+    results_matrix[results_matrix==0] = np.nan
+    
+    return results_matrix
+
+
+def check_for_duplication(results):
+    
+    # this threshold determines how close two skeletons must be in order to be
+    # considered the same person. Arbitrarily chosen for now.
+    close_threshold = 350
+    
+    # missing data tolerance
+    miss_tolerance = 0.75 # this means we can miss up to 75% of the keypoints
+    
+    drop_indices = []
+    
+    if len(results[0].keypoints.xy) > 1:
+        
+        
+        
+        conf_scores = []
+        # get detection confidence for each skeleton
+        for person in tensor_to_matrix(results[0].keypoints.conf):
+            conf_scores.append(np.mean(person))
+                
+        # this list will stores which comparisons need to be made
+        combos = list(combinations(range(len(results[0].keypoints.xy)), 2))
+        
+        
+        # now loop through these comparisons
+        for combo in combos:
+            closeness = abs(np.nanmean(tensor_to_matrix(results[0].keypoints.xy[combo[0]]) - 
+                        tensor_to_matrix(results[0].keypoints.xy[combo[1]])))
+            # if any of them indicate that two skeletons are very close together,
+            # we keep the one with higher tracking confidence, and remove the other
+            if closeness < close_threshold:
+                conf_list = [conf_scores[combo[0]], conf_scores[combo[1]]]
+                idx_min = conf_list.index(min(conf_list))
+        
+                drop_indices.append(combo[idx_min])
+                
+        # additional checks:
+        for person in range(len(results[0].keypoints.xy)):
+           keypoints_missed =  np.isnan(tensor_to_matrix(results[0].keypoints.xy[person])).sum()/2
+           perc_missed = keypoints_missed/len(tensor_to_matrix(results[0].keypoints.xy[person]))
+           
+           if perc_missed > miss_tolerance:
+               drop_indices.append(person)
+        
+        
+    return list(set(drop_indices))
+
+
 
 class GetKeypoint(BaseModel):
     NOSE:           int = 0
@@ -90,40 +152,45 @@ for video_path in video_files:
         success, frame = cap.read()
         if not success:
             break
-        
+    
         # Run YOLOv8 inference on the frame
         results = model(frame)
         
         # Visualize the results on the frame
-        annotated_frame = results[0].plot()
+        #annotated_frame = results[0].plot()
         
         # write empty rows if no person is detected
         if len(results[0].keypoints.xy) == 0:
             csv_writer.writerow([frame_count, None, None, None, None])
-            annotated_frame = frame
+        annotated_frame = frame
         
         # only do this if a person is detected
         if len(results[0].keypoints.xy) > 0:
             # Process the results
-            for person_idx, person_keypoints in enumerate(results[0].keypoints.xy):
-                for keypoint_idx, keypoint in enumerate(person_keypoints):
-                    x, y = keypoint
-                    # Write to CSV
-                    csv_writer.writerow([frame_count, person_idx, keypoint_idx, x.item(), y.item()])
-                    
-                    # Draw keypoint on the frame
-                    cv2.circle(annotated_frame, (int(x), int(y)), 5, (0, 255, 0), -1)
+            drop_indices = check_for_duplication(results)
                 
-                # Draw skeleton
-                for connection in skeleton:
-                    if connection[0] < len(person_keypoints) and connection[1] < len(person_keypoints):
-                        start_point = tuple(map(int, person_keypoints[connection[0]]))
-                        end_point = tuple(map(int, person_keypoints[connection[1]]))
-                        if all(start_point) and all(end_point):  # Check if both points are valid
-                            cv2.line(annotated_frame, start_point, end_point, (255, 0, 0), 2)
-        
-        # Write the frame to the output video
-        out.write(annotated_frame)
+            
+            for person_idx, person_keypoints in enumerate(results[0].keypoints.xy):
+                if person_idx not in drop_indices:
+                    for keypoint_idx, keypoint in enumerate(person_keypoints):
+                        x, y = keypoint
+     
+                        # Write to CSV
+                        csv_writer.writerow([frame_count, person_idx, keypoint_idx, x.item(), y.item()])
+                        
+                        # Draw keypoint on the frame
+                        cv2.circle(annotated_frame, (int(x), int(y)), 5, (0, 255, 0), -1)
+                    
+                    # Draw skeleton
+                    for connection in skeleton:
+                        if connection[0] < len(person_keypoints) and connection[1] < len(person_keypoints):
+                            start_point = tuple(map(int, person_keypoints[connection[0]]))
+                            end_point = tuple(map(int, person_keypoints[connection[1]]))
+                            if all(start_point) and all(end_point):  # Check if both points are valid
+                                cv2.line(annotated_frame, start_point, end_point, (255, 0, 0), 2)
+            
+            # Write the frame to the output video
+            out.write(annotated_frame)
         
         frame_count += 1
 
