@@ -14,7 +14,7 @@ model = YOLO('yolov8x-pose-p6.pt') # heaviest model
 video_folder = "../data_sampledata_raw/"
 # avi mp4 or other video formats
 video_files = glob.glob(video_folder + "*.mp4") + glob.glob(video_folder + "*.avi")
-step1resultfolder = "../step1result/" # we can replace with full data
+step1resultfolder = "../data_sampledatatracked_afterSTEP1/" # we can replace with full data
 print(video_files)
 
 class GetKeypoint(BaseModel):
