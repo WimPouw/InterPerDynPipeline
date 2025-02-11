@@ -9,6 +9,7 @@ import torch # for gpu support
 from itertools import combinations
 import sys
 
+
 torch.cuda.set_device(0)
 # Load the model
 model = YOLO('yolov8x-pose-p6.pt') # heaviest model
