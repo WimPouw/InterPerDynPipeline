@@ -35,10 +35,10 @@ def check_for_duplication(results):
     
     # this threshold determines how close two skeletons must be in order to be
     # considered the same person. Arbitrarily chosen for now.
-    close_threshold = 350
+    close_threshold =150
     
     # missing data tolerance
-    miss_tolerance = 0.75 # this means we can miss up to 75% of the keypoints
+    miss_tolerance = 0.95 # this means we can miss up to 75% of the keypoints
     
     drop_indices = []
     
@@ -65,6 +65,7 @@ def check_for_duplication(results):
                 conf_list = [conf_scores[combo[0]], conf_scores[combo[1]]]
                 idx_min = conf_list.index(min(conf_list))
         
+                
                 drop_indices.append(combo[idx_min])
                 
         # additional checks:
@@ -134,7 +135,7 @@ for video_path in video_files:
 
     # Define the output video writer
     corename = os.path.basename(video_path).split('.')[0]
-    output_path = step1resultfolder+ vidname+"_annotated_layer1.mp4"
+    output_path = step1resultfolder+ vidname+"_annotated_layer1_c150_miss95.mp4"
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
 
@@ -168,28 +169,34 @@ for video_path in video_files:
         # only do this if a person is detected
         if len(results[0].keypoints.xy) > 0:
             # Process the results
+            drop_indices = []
+            
             drop_indices = check_for_duplication(results)
-                
+            
             
             for person_idx, person_keypoints in enumerate(results[0].keypoints.xy):
                 if person_idx not in drop_indices:
-                    for keypoint_idx, keypoint in enumerate(person_keypoints):
-                        x, y = keypoint
-     
-                        # Write to CSV
-                        csv_writer.writerow([frame_count, person_idx, keypoint_idx, x.item(), y.item()])
-                        
-                        # Draw keypoint on the frame
-                        cv2.circle(annotated_frame, (int(x), int(y)), 5, (0, 255, 0), -1)
+                    colourcode = (0, 255, 0)
+                else:
+                    colourcode = (255, 0, 0)
+                
+                for keypoint_idx, keypoint in enumerate(person_keypoints):
+                    x, y = keypoint
+ 
+                    # Write to CSV
+                    csv_writer.writerow([frame_count, person_idx, keypoint_idx, x.item(), y.item()])
                     
-                    # Draw skeleton
-                    for connection in skeleton:
-                        if connection[0] < len(person_keypoints) and connection[1] < len(person_keypoints):
-                            start_point = tuple(map(int, person_keypoints[connection[0]]))
-                            end_point = tuple(map(int, person_keypoints[connection[1]]))
-                            if all(start_point) and all(end_point):  # Check if both points are valid
-                                cv2.line(annotated_frame, start_point, end_point, (255, 0, 0), 2)
-            
+                    # Draw keypoint on the frame
+                    cv2.circle(annotated_frame, (int(x), int(y)), 5, colourcode, -1)
+                
+                # Draw skeleton
+                for connection in skeleton:
+                    if connection[0] < len(person_keypoints) and connection[1] < len(person_keypoints):
+                        start_point = tuple(map(int, person_keypoints[connection[0]]))
+                        end_point = tuple(map(int, person_keypoints[connection[1]]))
+                        if all(start_point) and all(end_point):  # Check if both points are valid
+                            cv2.line(annotated_frame, start_point, end_point, (255, 0, 0), 2)
+        
             # Write the frame to the output video
             out.write(annotated_frame)
         
@@ -202,3 +209,4 @@ for video_path in video_files:
     csv_file.close()
     print(f"Output video saved as {output_path}")
     print(f"Keypoints data saved as {csv_path}")
+    
