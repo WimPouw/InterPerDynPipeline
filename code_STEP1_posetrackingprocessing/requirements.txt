@@ -1,3 +1,4 @@
+ultralytics
 yolov8
 opencv-python
 numpy
