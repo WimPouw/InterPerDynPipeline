@@ -35,6 +35,8 @@ data_sampledatatotimeseries_afterSTEP2/  # STEP 2 output: time series
 
 ## Time Series Data Documentation
 
+Below are some highlighted variables that the pipeline generates.
+
 ### Temporal Measurements
 | Variable | Description |
 |----------|-------------|
@@ -72,6 +74,66 @@ data_sampledatatotimeseries_afterSTEP2/  # STEP 2 output: time series
 - `wrist_left_p2_speed_smooth`: Person 2 left wrist (filtered)
 - `wrist_right_p2_speed_smooth`: Person 2 right wrist (filtered)
 
+#### Positions
+- `com_p1_x`: COM (Center of mass) of p1, on the x dimension
+- `com_p1_y`: COM (Center of mass) of p1, on the y dimension
+- `com_p2_x`: COM (Center of mass) of p2, on the y dimension
+- `com_p2_y`: COM (Center of mass) of p2, on the y dimension
+- `centroid_p1_x`: Centroid of the bounding box of p1, on the x dimension
+- `centroid_p1_y`: Centroid of the bounding box of p1, on the y dimension
+- `centroid_p2_x`: Centroid of the bounding box of p2, on the y dimension
+- `centroid_p2_y`: Centroid of the bounding box of p2, on the y dimension
+
+#### Distance
+- `distance_smooth`: COM distance between person 1 and 2
+
+#### Proximity (Key variable)
+- `p1_com_approach_pos`: Proximity position p1 projected onto the euclidean line between p1 and p2
+- `p2_com_approach_pos`: Proximity position p1 projected onto the euclidean line between p1 and p2
+
+## Smoothness flat data
+We also generate for each session smoothness measures. Thus the data is flat, for each session a feature.
+
+# Smoothness Metrics in Flat Data
+
+The smoothness analysis calculates log dimensionless squared jerk (DSJ) for various movement trajectories to quantify motion smoothness. Lower DSJ values indicate smoother. The values are log-transformed to normalize their distribution.
+
+### Distance-Based Smoothness
+| Variable | Description |
+|----------|-------------|
+| `smoothness_distancecom` | Smoothness of center-of-mass distance between people |
+| `smoothness_distancecentroid` | Smoothness of centroid distance between people |
+
+### Position-Based Smoothness
+| Variable | Description |
+|----------|-------------|
+| `smoothness_xy_average_com_p1` | Average smoothness of Person 1's COM movement (x,y axes) |
+| `smoothness_xy_average_com_p2` | Average smoothness of Person 2's COM movement (x,y axes) |
+| `smoothness_xy_average_centroid_p1` | Average smoothness of Person 1's centroid movement (x,y axes) |
+| `smoothness_xy_average_centroid_p2` | Average smoothness of Person 2's centroid movement (x,y axes) |
+
+### Approach/Avoidance Smoothness
+| Variable | Description |
+|----------|-------------|
+| `smoothness_p1_proximity` | Smoothness of Person 1's approach/avoidance behavior |
+| `smoothness_p2_proximity` | Smoothness of Person 2's approach/avoidance behavior |
+
+### Additional Metrics
+| Variable | Description |
+|----------|-------------|
+| `videoID` | Unique identifier for the session recording |
+| `samples` | Number of frames/samples in the recording |
+| `perc_twopersonsdetected` | Percentage of frames where both people were detected |
+| `average_com_movementp1` | Average movement magnitude of Person 1's center of mass |
+| `average_com_movementp2` | Average movement magnitude of Person 2's center of mass |
+
+The dimensionless squared jerk calculation involves several processing steps:
+1. Interpolation to handle missing data
+2. Velocity, acceleration and jerk calculation with Savitzky-Golay filtering
+3. Integration to determine movement amplitude and squared jerk
+4. Calculation of dimensionless metric so that it is normalized for movement duration and movement amplitude
+5. Log transformation
+
 ## Processing Pipeline
 1. **Video Tracking (STEP 1)**
    - Input: Raw video files
@@ -86,7 +148,4 @@ data_sampledatatotimeseries_afterSTEP2/  # STEP 2 output: time series
      - Signal smoothing (One Euro Filter)
    - Output: Processed time series data
 
-3. Time Series analysis (STEP 3) (TODO)
-   - Input: Processed time series data
-
-*Note: Due to size and privacy limitations, video files over 100MB are stored somewhere else.*
+*Note: Due to size limitations, video files over 100MB are stored somewhere else.*
