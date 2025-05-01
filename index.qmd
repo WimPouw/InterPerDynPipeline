@@ -21,46 +21,170 @@ author:
 contact: 
   - name: Wim Pouw
     email: w.pouw@tilburguniversity.edu
-bibliography: references/refs.bib
-theme: minty
+bibliography: quarto_dependencies/references/refs.bib
+theme: journal
+css: quarto_dependencies/styles/styles.css
 format:
   html:
     code-fold: true
     code-tools: true  # Adds a code button to toggle all code
 ---
-<style>
-.python-code {
-  font-family: 'Fira Code', 'Roboto Mono', monospace;
-  font-size: 0.9em;
-  background-color: #f5f5f5;
-  border-radius: 5px;
-}
-
-.r-code {
-  font-family: 'Consolas', 'Monaco', monospace;
-  font-size: 0.9em;
-  background-color: #f8f8f8;
-}
-</style>
-
 ![](images/ts.gif)
 
 # Overview
 
+To increase privacy we apply maskanyone [@owoyeleMaskAnyoneToolkitOffering2024].
+
+# Dataset
+
+The following data has been made available in masked form.
+
+::: {.callout-note .callout-download collapse="true"}
+## Download Guide ⬇️
+
+The masked data can be downloaded from the repository of Jagellonian University [here](). The unmasked data can be requested from the authors. The unmasked data is not available in this repository for privacy reasons.
+:::
+
+### Dataset Mother Infant
+
+### Dataset Siblings
 
 
-To increase privacy we apply maskanyone [@owoyeleMaskAnyoneToolkitOffering2024]
+```{python}
+#| warning: false
+#| error: false
+#| message: false
+#| results: false
+#| echo: false
+#| code-fold: true
+#| code-summary: "Code for generating plot"
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+
+# Load the data
+df = pd.read_csv('./meta/project_siblings_metadata_ages_gender.csv')
+
+# Data preprocessing
+df['AgeDifference'] = abs(df['P1agedays'] - df['P2agedays'])
+df['AverageAge'] = (df['P1agedays'] + df['P2agedays']) / 2
+df['GenderCombo'] = df['GenderP1'] + '-' + df['GenderP2']
+
+# Create a 2x2 subplot layout
+fig, axs = plt.subplots(2, 2, figsize=(10, 8), gridspec_kw={'width_ratios': [1.5, 1], 'height_ratios': [1.5, 1]})
+fig.suptitle('Sibling Dataset Overview', fontsize=16, fontfamily='serif')
+
+# Define colors for gender combinations
+colors = {
+    'M-M': '#4472C4',   # Blue
+    'M-F': '#7030A0',   # Purple
+    'F-M': '#548235',   # Green
+    'F-F': '#C55A11'    # Rust/Orange
+}
+
+# 1. Scatter plot - P1 age vs P2 age
+for gender_combo, group in df.groupby('GenderCombo'):
+    axs[0, 0].scatter(
+        group['P1agedays'],
+        group['P2agedays'],
+        color=colors.get(gender_combo, 'gray'),
+        alpha=0.7,
+        label=gender_combo,
+        s=50
+    )
+
+# Add reference line
+min_age = min(df['P1agedays'].min(), df['P2agedays'].min())
+max_age = max(df['P1agedays'].max(), df['P2agedays'].max())
+axs[0, 0].plot([min_age, max_age], [min_age, max_age], 'k--', alpha=0.3)
+axs[0, 0].set_xlabel('P1 Age (days)', fontfamily='serif')
+axs[0, 0].set_ylabel('P2 Age (days)', fontfamily='serif')
+axs[0, 0].set_title('Participant Ages (P1 vs P2)', fontfamily='serif')
+axs[0, 0].grid(True, alpha=0.3)
+axs[0, 0].legend()
+
+# 2. Bar chart - Age differences
+bar_positions = np.arange(len(df))
+bar_width = 0.8
+axs[0, 1].bar(
+    bar_positions,
+    df['AgeDifference'],
+    width=bar_width,
+    color=[colors.get(combo, 'gray') for combo in df['GenderCombo']]
+)
+axs[0, 1].set_xticks(bar_positions)
+axs[0, 1].set_xticklabels(df['Code'], rotation=90)
+axs[0, 1].set_xlabel('Sibling Pair', fontfamily='serif')
+axs[0, 1].set_ylabel('Age Difference (days)', fontfamily='serif')
+axs[0, 1].set_title('Age Differences by Sibling Pair', fontfamily='serif')
+axs[0, 1].grid(True, alpha=0.3, axis='y')
+
+# 3. Pie chart - Gender distribution
+gender_counts = df['GenderCombo'].value_counts()
+axs[1, 0].pie(
+    gender_counts,
+    labels=gender_counts.index,
+    autopct='%1.1f%%',
+    colors=[colors.get(combo, 'gray') for combo in gender_counts.index],
+    wedgeprops={'edgecolor': 'w', 'linewidth': 1}
+)
+axs[1, 0].set_title('Gender Distribution', fontfamily='serif')
+
+# 4. Summary table
+summary_data = [
+    ["Total Sibling Pairs", f"{len(df)}"],
+    ["Average P1 Age", f"{df['P1agedays'].mean()/30:.1f} months"],
+    ["Average P2 Age", f"{df['P2agedays'].mean()/30:.1f} months"],
+    ["Average Age Difference", f"{df['AgeDifference'].mean()/30:.1f} months"],
+    ["Number of Males", f"{(df['GenderP1'] == 'M').sum() + (df['GenderP2'] == 'M').sum()}"],
+    ["Number of Females", f"{(df['GenderP1'] == 'F').sum() + (df['GenderP2'] == 'F').sum()}"]
+]
+
+# Turn off axis for table
+axs[1, 1].axis('off')
+table = axs[1, 1].table(
+    cellText=[row for row in summary_data],
+    colLabels=["Measure", "Value"],
+    loc='center',
+    cellLoc='left'
+)
+table.auto_set_font_size(False)
+table.set_fontsize(10)
+table.scale(1, 1.5)
+axs[1, 1].set_title('Dataset Summary', fontfamily='serif')
+
+plt.tight_layout()
+plt.subplots_adjust(top=0.9)
+
+# Save the figure to a file
+output_path = "images/sibling_analysis.png"
+os.makedirs(os.path.dirname(output_path), exist_ok=True)
+plt.savefig(output_path, dpi=300, bbox_inches='tight')
+plt.close()
+```
+
+
+![](images/sibling_analysis.png){fig-align="center" width=600}
+
 
 # Motion tracking and signal processing and wrangling
-
-```{python, code_folding="hide"}
-# show some folder structure
-print("test")
-```
 
 ## Step 1: Tracking two persons in videos for top-view
 
 We have tried several pose tracking solutions. From this experience we concluded yolo worked best for top-view tracking.
+
+::: {.callout-note .callout-installation collapse="true"}
+## Installation Guide 🛠️
+
+The yolo model we used is the YOLOv8 pose model. This model is the heaviest and will run slowly on a CPU. We recommend using a GPU for this model.
+
+### Step 1: Install requirements
+```bash
+pip install requirements.txt
+```
+:::
 
 ```{python,eval=FALSE, code_folding="hide"}
 from ultralytics import YOLO
