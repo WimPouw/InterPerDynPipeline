@@ -22,17 +22,34 @@ contact:
   - name: Wim Pouw
     email: w.pouw@tilburguniversity.edu
 bibliography: references/refs.bib
+theme: minty
 format:
   html:
     code-fold: true
     code-tools: true  # Adds a code button to toggle all code
 ---
+<style>
+.python-code {
+  font-family: 'Fira Code', 'Roboto Mono', monospace;
+  font-size: 0.9em;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+}
+
+.r-code {
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.9em;
+  background-color: #f8f8f8;
+}
+</style>
 
 ![](images/ts.gif)
 
 # Overview
 
-To increase privacy [@owoyeleMaskAnyoneToolkitOffering2024]
+
+
+To increase privacy we apply maskanyone [@owoyeleMaskAnyoneToolkitOffering2024]
 
 # Motion tracking and signal processing and wrangling
 
@@ -298,3 +315,7 @@ summary(model1)
 ```
 
 # Statistical analysis on measures derived from non-linear time series analysis
+
+
+
+# References
