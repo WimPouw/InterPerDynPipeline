@@ -21,21 +21,28 @@ author:
 contact: 
   - name: Wim Pouw
     email: w.pouw@tilburguniversity.edu
+bibliography: references/refs.bib
 format:
   html:
     code-fold: true
     code-tools: true  # Adds a code button to toggle all code
 ---
 
-![gif](images/ts.gif)
+![](images/ts.gif)
+
+# Overview
+
+To increase privacy [@owoyeleMaskAnyoneToolkitOffering2024]
 
 # Motion tracking and signal processing and wrangling
+
 ```{python, code_folding="hide"}
 # show some folder structure
 print("test")
 ```
 
 ## Step 1: Tracking two persons in videos for top-view
+
 We have tried several pose tracking solutions. From this experience we concluded yolo worked best for top-view tracking.
 
 ```{python,eval=FALSE, code_folding="hide"}
@@ -258,7 +265,6 @@ for video_path in video_files:
 
 ## Step 2: Timeseries preparation and flat data for statistics
 
-
 # Statistical analysis on smoothness derived from timeseries analysis (flat data)
 
 ```{r, eval=FALSE, code_folding="hide"}
@@ -291,6 +297,4 @@ model1 <- lmer(smoothness_value ~ culture + (1 | videoID), data = data_long)
 summary(model1)
 ```
 
-
 # Statistical analysis on measures derived from non-linear time series analysis
-
