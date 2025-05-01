@@ -1,0 +1,58 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {},
+      "source": [
+        "---\n",
+        "title: \"An Open-source Standardized Pipeline for Tracing the Behavioral Dynamics in Social Interactions\"\n",
+        "subtitle: \"Theory-driven Measurements, Analyses, and Archiving\"\n",
+        "author: \n",
+        "  - name: Arkadiusz Białek\n",
+        "    affiliation: Jagiellonian University, Poland\n",
+        "  - name: Wim Pouw\n",
+        "    affiliation: Tilburg University, Netherlands\n",
+        "  - name: Travis J. Wiltshire\n",
+        "    affiliation: Tilburg University, Netherlands\n",
+        "  - name: James Trujillo\n",
+        "    affiliation: University of Amsterdam, USA\n",
+        "  - name: Fred Hasselman\n",
+        "    affiliation: Radboud University, Netherlands\n",
+        "  - name: Babajide Alamu Owoyele\n",
+        "    affiliation: Hasso Plattner Institute, University of Potsdam, Germany\n",
+        "  - name: Natalia Siekiera\n",
+        "    affiliation: Jagiellonian University, Poland\n",
+        "  - name: Joanna Rączaszek-Leonardi\n",
+        "    affiliation: University of Warsaw, Poland\n",
+        "contact: \n",
+        "  - name: Wim Pouw\n",
+        "    email: w.pouw@tilburguniversity.edu\n",
+        "---\n",
+        "\n",
+        "# Step 1: Tracking two persons in videos for top-view\n",
+        "We have tried several pose tracking solutions of which yolo worked best."
+      ],
+      "id": "f1f6b65f"
+    },
+    {
+      "cell_type": "code",
+      "metadata": {},
+      "source": [
+        "print(\"Hello world\")"
+      ],
+      "id": "17f35b9a",
+      "execution_count": null,
+      "outputs": []
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "name": "aniposedlc",
+      "language": "python",
+      "display_name": "aniposedlc",
+      "path": "C:\\Users\\Admin\\AppData\\Roaming\\jupyter\\kernels\\aniposedlc"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+}
