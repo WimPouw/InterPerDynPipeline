@@ -14,6 +14,7 @@
 <meta name="author" content="Babajide Alamu Owoyele">
 <meta name="author" content="Natalia Siekiera">
 <meta name="author" content="Joanna Rączaszek-Leonardi">
+<meta name="dcterms.date" content="2025-05-01">
 
 <title>An Open-source Standardized Pipeline for Tracing the Behavioral Dynamics in Social Interactions</title>
 <style>
@@ -188,6 +189,12 @@ div.csl-indent {
 <div class="quarto-title-meta">
 
       
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">May 1, 2025</p>
+    </div>
+  </div>
   
     
   </div>
@@ -235,8 +242,9 @@ Download Guide ⬇️
 </section>
 <section id="motion-tracking-and-signal-processing-and-wrangling" class="level1">
 <h1>Motion tracking and signal processing and wrangling</h1>
-<section id="step-1-tracking-two-persons-in-videos-for-top-view" class="level2">
-<h2 class="anchored" data-anchor-id="step-1-tracking-two-persons-in-videos-for-top-view">Step 1: Tracking two persons in videos for top-view</h2>
+<p>The motion tracking and signal processing pipeline is divided into two main steps: 1. <strong>Tracking</strong>: This step involves tracking the movements of individuals in the videos using a pose estimation model. The output is a video with annotated keypoints and a CSV file containing the coordinates of these keypoints. 2. <strong>Signal Processing</strong>: This step involves processing the keypoint data to extract relevant features for analysis. The output are processed timeseries files, and a flat dataset containing our smoothness measures that are directly ready for statistical analysis.</p>
+<section id="step-1-tracking-two-persons-in-videos-for-top-view-python" class="level2">
+<h2 class="anchored" data-anchor-id="step-1-tracking-two-persons-in-videos-for-top-view-python">Step 1: Tracking two persons in videos for top-view (Python)</h2>
 <p>We have tried several pose tracking solutions. From this experience we concluded yolo worked best for top-view tracking.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
@@ -987,448 +995,455 @@ Owoyele, Babajide Alamu, Martin Schilling, Rohan Sawahn, Niklas Kaemer, Pavel Zh
 <div class="sourceCode" id="cb4" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "An Open-source Standardized Pipeline for Tracing the Behavioral Dynamics in Social Interactions"</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="an">subtitle:</span><span class="co"> "Computationally Reproducible Extended Methods Section"</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> </span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Arkadiusz Białek</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: Jagiellonian University, Poland</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Wim Pouw</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: Tilburg University, Netherlands</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Travis J. Wiltshire</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: Tilburg University, Netherlands</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: James Trujillo</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: University of Amsterdam, USA</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Fred Hasselman</span></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: Radboud University, Netherlands</span></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Babajide Alamu Owoyele</span></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: Hasso Plattner Institute, University of Potsdam, Germany</span></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Natalia Siekiera</span></span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: Jagiellonian University, Poland</span></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Joanna Rączaszek-Leonardi</span></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: University of Warsaw, Poland</span></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="an">contact:</span><span class="co"> </span></span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Wim Pouw</span></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co">    email: w.pouw@tilburguniversity.edu</span></span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="an">bibliography:</span><span class="co"> quarto_dependencies/references/refs.bib</span></span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="an">theme:</span><span class="co"> journal</span></span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="an">css:</span><span class="co"> quarto_dependencies/styles/styles.css</span></span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="co">  html:</span></span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: true</span></span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools: true  # Adds a code button to toggle all code</span></span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="al">![](images/ts.gif)</span></span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="fu"># Overview</span></span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>To increase privacy we apply maskanyone <span class="co">[</span><span class="ot">@owoyeleMaskAnyoneToolkitOffering2024</span><span class="co">]</span>.</span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="fu"># Dataset</span></span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>The following data has been made available in masked form.</span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>::: {.callout-note .callout-download collapse="true"}</span>
-<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a><span class="fu">## Download Guide ⬇️</span></span>
-<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>The masked data can be downloaded from the repository of Jagellonian University <span class="co">[</span><span class="ot">here</span><span class="co">]()</span>. The unmasked data can be requested from the authors. The unmasked data is not available in this repository for privacy reasons.</span>
-<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a><span class="fu">### Dataset Mother Infant</span></span>
-<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a><span class="fu">### Dataset Siblings</span></span>
-<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "`r format(Sys.time(), '%B %d, %Y')`"</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> </span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Arkadiusz Białek</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: Jagiellonian University, Poland</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Wim Pouw</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: Tilburg University, Netherlands</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Travis J. Wiltshire</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: Tilburg University, Netherlands</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: James Trujillo</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: University of Amsterdam, USA</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Fred Hasselman</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: Radboud University, Netherlands</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Babajide Alamu Owoyele</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: Hasso Plattner Institute, University of Potsdam, Germany</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Natalia Siekiera</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: Jagiellonian University, Poland</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Joanna Rączaszek-Leonardi</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">    affiliation: University of Warsaw, Poland</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="an">contact:</span><span class="co"> </span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co">  - name: Wim Pouw</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="co">    email: w.pouw@tilburguniversity.edu</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="an">bibliography:</span><span class="co"> quarto_dependencies/references/refs.bib</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="an">theme:</span><span class="co"> journal</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="an">css:</span><span class="co"> quarto_dependencies/styles/styles.css</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="co">  html:</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="co">    code-fold: true</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="co">    code-tools: true  # Adds a code button to toggle all code</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="al">![](images/ts.gif)</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a><span class="fu"># Overview</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>To increase privacy we apply maskanyone <span class="co">[</span><span class="ot">@owoyeleMaskAnyoneToolkitOffering2024</span><span class="co">]</span>.</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a><span class="fu"># Dataset</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>The following data has been made available in masked form.</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>::: {.callout-note .callout-download collapse="true"}</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a><span class="fu">## Download Guide ⬇️</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>The masked data can be downloaded from the repository of Jagellonian University <span class="co">[</span><span class="ot">here</span><span class="co">]()</span>. The unmasked data can be requested from the authors. The unmasked data is not available in this repository for privacy reasons.</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a><span class="fu">### Dataset Mother Infant</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a><span class="fu">### Dataset Siblings</span></span>
 <span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a><span class="co">#| warning: false</span></span>
-<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a><span class="co">#| error: false</span></span>
-<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a><span class="co">#| message: false</span></span>
-<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a><span class="co">#| results: false</span></span>
-<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a><span class="co">#| code-fold: true</span></span>
-<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a><span class="co">#| code-summary: "Code for generating plot"</span></span>
-<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
-<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the data</span></span>
-<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">'./meta/project_siblings_metadata_ages_gender.csv'</span>)</span>
-<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a><span class="co"># Data preprocessing</span></span>
-<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'AgeDifference'</span>] <span class="op">=</span> <span class="bu">abs</span>(df[<span class="st">'P1agedays'</span>] <span class="op">-</span> df[<span class="st">'P2agedays'</span>])</span>
-<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'AverageAge'</span>] <span class="op">=</span> (df[<span class="st">'P1agedays'</span>] <span class="op">+</span> df[<span class="st">'P2agedays'</span>]) <span class="op">/</span> <span class="dv">2</span></span>
-<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'GenderCombo'</span>] <span class="op">=</span> df[<span class="st">'GenderP1'</span>] <span class="op">+</span> <span class="st">'-'</span> <span class="op">+</span> df[<span class="st">'GenderP2'</span>]</span>
-<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a 2x2 subplot layout</span></span>
-<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a>fig, axs <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">8</span>), gridspec_kw<span class="op">=</span>{<span class="st">'width_ratios'</span>: [<span class="fl">1.5</span>, <span class="dv">1</span>], <span class="st">'height_ratios'</span>: [<span class="fl">1.5</span>, <span class="dv">1</span>]})</span>
-<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>fig.suptitle(<span class="st">'Sibling Dataset Overview'</span>, fontsize<span class="op">=</span><span class="dv">16</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
-<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a><span class="co"># Define colors for gender combinations</span></span>
-<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> {</span>
-<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>    <span class="st">'M-M'</span>: <span class="st">'#4472C4'</span>,   <span class="co"># Blue</span></span>
-<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a>    <span class="st">'M-F'</span>: <span class="st">'#7030A0'</span>,   <span class="co"># Purple</span></span>
-<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a>    <span class="st">'F-M'</span>: <span class="st">'#548235'</span>,   <span class="co"># Green</span></span>
-<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a>    <span class="st">'F-F'</span>: <span class="st">'#C55A11'</span>    <span class="co"># Rust/Orange</span></span>
-<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Scatter plot - P1 age vs P2 age</span></span>
-<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> gender_combo, group <span class="kw">in</span> df.groupby(<span class="st">'GenderCombo'</span>):</span>
-<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a>    axs[<span class="dv">0</span>, <span class="dv">0</span>].scatter(</span>
-<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a>        group[<span class="st">'P1agedays'</span>],</span>
-<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a>        group[<span class="st">'P2agedays'</span>],</span>
-<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a>        color<span class="op">=</span>colors.get(gender_combo, <span class="st">'gray'</span>),</span>
-<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a>        alpha<span class="op">=</span><span class="fl">0.7</span>,</span>
-<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>gender_combo,</span>
-<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a>        s<span class="op">=</span><span class="dv">50</span></span>
-<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-100"><a href="#cb4-100" aria-hidden="true" tabindex="-1"></a><span class="co"># Add reference line</span></span>
-<span id="cb4-101"><a href="#cb4-101" aria-hidden="true" tabindex="-1"></a>min_age <span class="op">=</span> <span class="bu">min</span>(df[<span class="st">'P1agedays'</span>].<span class="bu">min</span>(), df[<span class="st">'P2agedays'</span>].<span class="bu">min</span>())</span>
-<span id="cb4-102"><a href="#cb4-102" aria-hidden="true" tabindex="-1"></a>max_age <span class="op">=</span> <span class="bu">max</span>(df[<span class="st">'P1agedays'</span>].<span class="bu">max</span>(), df[<span class="st">'P2agedays'</span>].<span class="bu">max</span>())</span>
-<span id="cb4-103"><a href="#cb4-103" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">0</span>].plot([min_age, max_age], [min_age, max_age], <span class="st">'k--'</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
-<span id="cb4-104"><a href="#cb4-104" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">0</span>].set_xlabel(<span class="st">'P1 Age (days)'</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
-<span id="cb4-105"><a href="#cb4-105" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">0</span>].set_ylabel(<span class="st">'P2 Age (days)'</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
-<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">0</span>].set_title(<span class="st">'Participant Ages (P1 vs P2)'</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
-<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">0</span>].grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
-<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">0</span>].legend()</span>
-<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Bar chart - Age differences</span></span>
-<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a>bar_positions <span class="op">=</span> np.arange(<span class="bu">len</span>(df))</span>
-<span id="cb4-112"><a href="#cb4-112" aria-hidden="true" tabindex="-1"></a>bar_width <span class="op">=</span> <span class="fl">0.8</span></span>
-<span id="cb4-113"><a href="#cb4-113" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">1</span>].bar(</span>
-<span id="cb4-114"><a href="#cb4-114" aria-hidden="true" tabindex="-1"></a>    bar_positions,</span>
-<span id="cb4-115"><a href="#cb4-115" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">'AgeDifference'</span>],</span>
-<span id="cb4-116"><a href="#cb4-116" aria-hidden="true" tabindex="-1"></a>    width<span class="op">=</span>bar_width,</span>
-<span id="cb4-117"><a href="#cb4-117" aria-hidden="true" tabindex="-1"></a>    color<span class="op">=</span>[colors.get(combo, <span class="st">'gray'</span>) <span class="cf">for</span> combo <span class="kw">in</span> df[<span class="st">'GenderCombo'</span>]]</span>
-<span id="cb4-118"><a href="#cb4-118" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-119"><a href="#cb4-119" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">1</span>].set_xticks(bar_positions)</span>
-<span id="cb4-120"><a href="#cb4-120" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">1</span>].set_xticklabels(df[<span class="st">'Code'</span>], rotation<span class="op">=</span><span class="dv">90</span>)</span>
-<span id="cb4-121"><a href="#cb4-121" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">1</span>].set_xlabel(<span class="st">'Sibling Pair'</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
-<span id="cb4-122"><a href="#cb4-122" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">1</span>].set_ylabel(<span class="st">'Age Difference (days)'</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
-<span id="cb4-123"><a href="#cb4-123" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">1</span>].set_title(<span class="st">'Age Differences by Sibling Pair'</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
-<span id="cb4-124"><a href="#cb4-124" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">1</span>].grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>, axis<span class="op">=</span><span class="st">'y'</span>)</span>
-<span id="cb4-125"><a href="#cb4-125" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-126"><a href="#cb4-126" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Pie chart - Gender distribution</span></span>
-<span id="cb4-127"><a href="#cb4-127" aria-hidden="true" tabindex="-1"></a>gender_counts <span class="op">=</span> df[<span class="st">'GenderCombo'</span>].value_counts()</span>
-<span id="cb4-128"><a href="#cb4-128" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">1</span>, <span class="dv">0</span>].pie(</span>
-<span id="cb4-129"><a href="#cb4-129" aria-hidden="true" tabindex="-1"></a>    gender_counts,</span>
-<span id="cb4-130"><a href="#cb4-130" aria-hidden="true" tabindex="-1"></a>    labels<span class="op">=</span>gender_counts.index,</span>
-<span id="cb4-131"><a href="#cb4-131" aria-hidden="true" tabindex="-1"></a>    autopct<span class="op">=</span><span class="st">'</span><span class="sc">%1.1f%%</span><span class="st">'</span>,</span>
-<span id="cb4-132"><a href="#cb4-132" aria-hidden="true" tabindex="-1"></a>    colors<span class="op">=</span>[colors.get(combo, <span class="st">'gray'</span>) <span class="cf">for</span> combo <span class="kw">in</span> gender_counts.index],</span>
-<span id="cb4-133"><a href="#cb4-133" aria-hidden="true" tabindex="-1"></a>    wedgeprops<span class="op">=</span>{<span class="st">'edgecolor'</span>: <span class="st">'w'</span>, <span class="st">'linewidth'</span>: <span class="dv">1</span>}</span>
-<span id="cb4-134"><a href="#cb4-134" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-135"><a href="#cb4-135" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">1</span>, <span class="dv">0</span>].set_title(<span class="st">'Gender Distribution'</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
-<span id="cb4-136"><a href="#cb4-136" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-137"><a href="#cb4-137" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Summary table</span></span>
-<span id="cb4-138"><a href="#cb4-138" aria-hidden="true" tabindex="-1"></a>summary_data <span class="op">=</span> [</span>
-<span id="cb4-139"><a href="#cb4-139" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"Total Sibling Pairs"</span>, <span class="ss">f"</span><span class="sc">{</span><span class="bu">len</span>(df)<span class="sc">}</span><span class="ss">"</span>],</span>
-<span id="cb4-140"><a href="#cb4-140" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"Average P1 Age"</span>, <span class="ss">f"</span><span class="sc">{</span>df[<span class="st">'P1agedays'</span>]<span class="sc">.</span>mean()<span class="op">/</span><span class="dv">30</span><span class="sc">:.1f}</span><span class="ss"> months"</span>],</span>
-<span id="cb4-141"><a href="#cb4-141" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"Average P2 Age"</span>, <span class="ss">f"</span><span class="sc">{</span>df[<span class="st">'P2agedays'</span>]<span class="sc">.</span>mean()<span class="op">/</span><span class="dv">30</span><span class="sc">:.1f}</span><span class="ss"> months"</span>],</span>
-<span id="cb4-142"><a href="#cb4-142" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"Average Age Difference"</span>, <span class="ss">f"</span><span class="sc">{</span>df[<span class="st">'AgeDifference'</span>]<span class="sc">.</span>mean()<span class="op">/</span><span class="dv">30</span><span class="sc">:.1f}</span><span class="ss"> months"</span>],</span>
-<span id="cb4-143"><a href="#cb4-143" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"Number of Males"</span>, <span class="ss">f"</span><span class="sc">{</span>(df[<span class="st">'GenderP1'</span>] <span class="op">==</span> <span class="st">'M'</span>)<span class="sc">.</span><span class="bu">sum</span>() <span class="op">+</span> (df[<span class="st">'GenderP2'</span>] <span class="op">==</span> <span class="st">'M'</span>)<span class="sc">.</span><span class="bu">sum</span>()<span class="sc">}</span><span class="ss">"</span>],</span>
-<span id="cb4-144"><a href="#cb4-144" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"Number of Females"</span>, <span class="ss">f"</span><span class="sc">{</span>(df[<span class="st">'GenderP1'</span>] <span class="op">==</span> <span class="st">'F'</span>)<span class="sc">.</span><span class="bu">sum</span>() <span class="op">+</span> (df[<span class="st">'GenderP2'</span>] <span class="op">==</span> <span class="st">'F'</span>)<span class="sc">.</span><span class="bu">sum</span>()<span class="sc">}</span><span class="ss">"</span>]</span>
-<span id="cb4-145"><a href="#cb4-145" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb4-146"><a href="#cb4-146" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-147"><a href="#cb4-147" aria-hidden="true" tabindex="-1"></a><span class="co"># Turn off axis for table</span></span>
-<span id="cb4-148"><a href="#cb4-148" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">1</span>, <span class="dv">1</span>].axis(<span class="st">'off'</span>)</span>
-<span id="cb4-149"><a href="#cb4-149" aria-hidden="true" tabindex="-1"></a>table <span class="op">=</span> axs[<span class="dv">1</span>, <span class="dv">1</span>].table(</span>
-<span id="cb4-150"><a href="#cb4-150" aria-hidden="true" tabindex="-1"></a>    cellText<span class="op">=</span>[row <span class="cf">for</span> row <span class="kw">in</span> summary_data],</span>
-<span id="cb4-151"><a href="#cb4-151" aria-hidden="true" tabindex="-1"></a>    colLabels<span class="op">=</span>[<span class="st">"Measure"</span>, <span class="st">"Value"</span>],</span>
-<span id="cb4-152"><a href="#cb4-152" aria-hidden="true" tabindex="-1"></a>    loc<span class="op">=</span><span class="st">'center'</span>,</span>
-<span id="cb4-153"><a href="#cb4-153" aria-hidden="true" tabindex="-1"></a>    cellLoc<span class="op">=</span><span class="st">'left'</span></span>
-<span id="cb4-154"><a href="#cb4-154" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-155"><a href="#cb4-155" aria-hidden="true" tabindex="-1"></a>table.auto_set_font_size(<span class="va">False</span>)</span>
-<span id="cb4-156"><a href="#cb4-156" aria-hidden="true" tabindex="-1"></a>table.set_fontsize(<span class="dv">10</span>)</span>
-<span id="cb4-157"><a href="#cb4-157" aria-hidden="true" tabindex="-1"></a>table.scale(<span class="dv">1</span>, <span class="fl">1.5</span>)</span>
-<span id="cb4-158"><a href="#cb4-158" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">1</span>, <span class="dv">1</span>].set_title(<span class="st">'Dataset Summary'</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
-<span id="cb4-159"><a href="#cb4-159" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-160"><a href="#cb4-160" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
-<span id="cb4-161"><a href="#cb4-161" aria-hidden="true" tabindex="-1"></a>plt.subplots_adjust(top<span class="op">=</span><span class="fl">0.9</span>)</span>
-<span id="cb4-162"><a href="#cb4-162" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-163"><a href="#cb4-163" aria-hidden="true" tabindex="-1"></a><span class="co"># Save the figure to a file</span></span>
-<span id="cb4-164"><a href="#cb4-164" aria-hidden="true" tabindex="-1"></a>output_path <span class="op">=</span> <span class="st">"images/sibling_analysis.png"</span></span>
-<span id="cb4-165"><a href="#cb4-165" aria-hidden="true" tabindex="-1"></a>os.makedirs(os.path.dirname(output_path), exist_ok<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb4-166"><a href="#cb4-166" aria-hidden="true" tabindex="-1"></a>plt.savefig(output_path, dpi<span class="op">=</span><span class="dv">300</span>, bbox_inches<span class="op">=</span><span class="st">'tight'</span>)</span>
-<span id="cb4-167"><a href="#cb4-167" aria-hidden="true" tabindex="-1"></a>plt.close()</span>
-<span id="cb4-168"><a href="#cb4-168" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb4-169"><a href="#cb4-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a><span class="co">#| warning: false</span></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a><span class="co">#| error: false</span></span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a><span class="co">#| message: false</span></span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a><span class="co">#| results: false</span></span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a><span class="co">#| code-fold: true</span></span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a><span class="co">#| code-summary: "Code for generating plot"</span></span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the data</span></span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">'./meta/project_siblings_metadata_ages_gender.csv'</span>)</span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a><span class="co"># Data preprocessing</span></span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'AgeDifference'</span>] <span class="op">=</span> <span class="bu">abs</span>(df[<span class="st">'P1agedays'</span>] <span class="op">-</span> df[<span class="st">'P2agedays'</span>])</span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'AverageAge'</span>] <span class="op">=</span> (df[<span class="st">'P1agedays'</span>] <span class="op">+</span> df[<span class="st">'P2agedays'</span>]) <span class="op">/</span> <span class="dv">2</span></span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'GenderCombo'</span>] <span class="op">=</span> df[<span class="st">'GenderP1'</span>] <span class="op">+</span> <span class="st">'-'</span> <span class="op">+</span> df[<span class="st">'GenderP2'</span>]</span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a 2x2 subplot layout</span></span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>fig, axs <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">8</span>), gridspec_kw<span class="op">=</span>{<span class="st">'width_ratios'</span>: [<span class="fl">1.5</span>, <span class="dv">1</span>], <span class="st">'height_ratios'</span>: [<span class="fl">1.5</span>, <span class="dv">1</span>]})</span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a>fig.suptitle(<span class="st">'Sibling Dataset Overview'</span>, fontsize<span class="op">=</span><span class="dv">16</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a><span class="co"># Define colors for gender combinations</span></span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> {</span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a>    <span class="st">'M-M'</span>: <span class="st">'#4472C4'</span>,   <span class="co"># Blue</span></span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a>    <span class="st">'M-F'</span>: <span class="st">'#7030A0'</span>,   <span class="co"># Purple</span></span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a>    <span class="st">'F-M'</span>: <span class="st">'#548235'</span>,   <span class="co"># Green</span></span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>    <span class="st">'F-F'</span>: <span class="st">'#C55A11'</span>    <span class="co"># Rust/Orange</span></span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Scatter plot - P1 age vs P2 age</span></span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> gender_combo, group <span class="kw">in</span> df.groupby(<span class="st">'GenderCombo'</span>):</span>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a>    axs[<span class="dv">0</span>, <span class="dv">0</span>].scatter(</span>
+<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a>        group[<span class="st">'P1agedays'</span>],</span>
+<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a>        group[<span class="st">'P2agedays'</span>],</span>
+<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a>        color<span class="op">=</span>colors.get(gender_combo, <span class="st">'gray'</span>),</span>
+<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a>        alpha<span class="op">=</span><span class="fl">0.7</span>,</span>
+<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>gender_combo,</span>
+<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a>        s<span class="op">=</span><span class="dv">50</span></span>
+<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-100"><a href="#cb4-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-101"><a href="#cb4-101" aria-hidden="true" tabindex="-1"></a><span class="co"># Add reference line</span></span>
+<span id="cb4-102"><a href="#cb4-102" aria-hidden="true" tabindex="-1"></a>min_age <span class="op">=</span> <span class="bu">min</span>(df[<span class="st">'P1agedays'</span>].<span class="bu">min</span>(), df[<span class="st">'P2agedays'</span>].<span class="bu">min</span>())</span>
+<span id="cb4-103"><a href="#cb4-103" aria-hidden="true" tabindex="-1"></a>max_age <span class="op">=</span> <span class="bu">max</span>(df[<span class="st">'P1agedays'</span>].<span class="bu">max</span>(), df[<span class="st">'P2agedays'</span>].<span class="bu">max</span>())</span>
+<span id="cb4-104"><a href="#cb4-104" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">0</span>].plot([min_age, max_age], [min_age, max_age], <span class="st">'k--'</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb4-105"><a href="#cb4-105" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">0</span>].set_xlabel(<span class="st">'P1 Age (days)'</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
+<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">0</span>].set_ylabel(<span class="st">'P2 Age (days)'</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
+<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">0</span>].set_title(<span class="st">'Participant Ages (P1 vs P2)'</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
+<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">0</span>].grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">0</span>].legend()</span>
+<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Bar chart - Age differences</span></span>
+<span id="cb4-112"><a href="#cb4-112" aria-hidden="true" tabindex="-1"></a>bar_positions <span class="op">=</span> np.arange(<span class="bu">len</span>(df))</span>
+<span id="cb4-113"><a href="#cb4-113" aria-hidden="true" tabindex="-1"></a>bar_width <span class="op">=</span> <span class="fl">0.8</span></span>
+<span id="cb4-114"><a href="#cb4-114" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">1</span>].bar(</span>
+<span id="cb4-115"><a href="#cb4-115" aria-hidden="true" tabindex="-1"></a>    bar_positions,</span>
+<span id="cb4-116"><a href="#cb4-116" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">'AgeDifference'</span>],</span>
+<span id="cb4-117"><a href="#cb4-117" aria-hidden="true" tabindex="-1"></a>    width<span class="op">=</span>bar_width,</span>
+<span id="cb4-118"><a href="#cb4-118" aria-hidden="true" tabindex="-1"></a>    color<span class="op">=</span>[colors.get(combo, <span class="st">'gray'</span>) <span class="cf">for</span> combo <span class="kw">in</span> df[<span class="st">'GenderCombo'</span>]]</span>
+<span id="cb4-119"><a href="#cb4-119" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-120"><a href="#cb4-120" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">1</span>].set_xticks(bar_positions)</span>
+<span id="cb4-121"><a href="#cb4-121" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">1</span>].set_xticklabels(df[<span class="st">'Code'</span>], rotation<span class="op">=</span><span class="dv">90</span>)</span>
+<span id="cb4-122"><a href="#cb4-122" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">1</span>].set_xlabel(<span class="st">'Sibling Pair'</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
+<span id="cb4-123"><a href="#cb4-123" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">1</span>].set_ylabel(<span class="st">'Age Difference (days)'</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
+<span id="cb4-124"><a href="#cb4-124" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">1</span>].set_title(<span class="st">'Age Differences by Sibling Pair'</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
+<span id="cb4-125"><a href="#cb4-125" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">0</span>, <span class="dv">1</span>].grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>, axis<span class="op">=</span><span class="st">'y'</span>)</span>
+<span id="cb4-126"><a href="#cb4-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-127"><a href="#cb4-127" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Pie chart - Gender distribution</span></span>
+<span id="cb4-128"><a href="#cb4-128" aria-hidden="true" tabindex="-1"></a>gender_counts <span class="op">=</span> df[<span class="st">'GenderCombo'</span>].value_counts()</span>
+<span id="cb4-129"><a href="#cb4-129" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">1</span>, <span class="dv">0</span>].pie(</span>
+<span id="cb4-130"><a href="#cb4-130" aria-hidden="true" tabindex="-1"></a>    gender_counts,</span>
+<span id="cb4-131"><a href="#cb4-131" aria-hidden="true" tabindex="-1"></a>    labels<span class="op">=</span>gender_counts.index,</span>
+<span id="cb4-132"><a href="#cb4-132" aria-hidden="true" tabindex="-1"></a>    autopct<span class="op">=</span><span class="st">'</span><span class="sc">%1.1f%%</span><span class="st">'</span>,</span>
+<span id="cb4-133"><a href="#cb4-133" aria-hidden="true" tabindex="-1"></a>    colors<span class="op">=</span>[colors.get(combo, <span class="st">'gray'</span>) <span class="cf">for</span> combo <span class="kw">in</span> gender_counts.index],</span>
+<span id="cb4-134"><a href="#cb4-134" aria-hidden="true" tabindex="-1"></a>    wedgeprops<span class="op">=</span>{<span class="st">'edgecolor'</span>: <span class="st">'w'</span>, <span class="st">'linewidth'</span>: <span class="dv">1</span>}</span>
+<span id="cb4-135"><a href="#cb4-135" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-136"><a href="#cb4-136" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">1</span>, <span class="dv">0</span>].set_title(<span class="st">'Gender Distribution'</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
+<span id="cb4-137"><a href="#cb4-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-138"><a href="#cb4-138" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Summary table</span></span>
+<span id="cb4-139"><a href="#cb4-139" aria-hidden="true" tabindex="-1"></a>summary_data <span class="op">=</span> [</span>
+<span id="cb4-140"><a href="#cb4-140" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"Total Sibling Pairs"</span>, <span class="ss">f"</span><span class="sc">{</span><span class="bu">len</span>(df)<span class="sc">}</span><span class="ss">"</span>],</span>
+<span id="cb4-141"><a href="#cb4-141" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"Average P1 Age"</span>, <span class="ss">f"</span><span class="sc">{</span>df[<span class="st">'P1agedays'</span>]<span class="sc">.</span>mean()<span class="op">/</span><span class="dv">30</span><span class="sc">:.1f}</span><span class="ss"> months"</span>],</span>
+<span id="cb4-142"><a href="#cb4-142" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"Average P2 Age"</span>, <span class="ss">f"</span><span class="sc">{</span>df[<span class="st">'P2agedays'</span>]<span class="sc">.</span>mean()<span class="op">/</span><span class="dv">30</span><span class="sc">:.1f}</span><span class="ss"> months"</span>],</span>
+<span id="cb4-143"><a href="#cb4-143" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"Average Age Difference"</span>, <span class="ss">f"</span><span class="sc">{</span>df[<span class="st">'AgeDifference'</span>]<span class="sc">.</span>mean()<span class="op">/</span><span class="dv">30</span><span class="sc">:.1f}</span><span class="ss"> months"</span>],</span>
+<span id="cb4-144"><a href="#cb4-144" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"Number of Males"</span>, <span class="ss">f"</span><span class="sc">{</span>(df[<span class="st">'GenderP1'</span>] <span class="op">==</span> <span class="st">'M'</span>)<span class="sc">.</span><span class="bu">sum</span>() <span class="op">+</span> (df[<span class="st">'GenderP2'</span>] <span class="op">==</span> <span class="st">'M'</span>)<span class="sc">.</span><span class="bu">sum</span>()<span class="sc">}</span><span class="ss">"</span>],</span>
+<span id="cb4-145"><a href="#cb4-145" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"Number of Females"</span>, <span class="ss">f"</span><span class="sc">{</span>(df[<span class="st">'GenderP1'</span>] <span class="op">==</span> <span class="st">'F'</span>)<span class="sc">.</span><span class="bu">sum</span>() <span class="op">+</span> (df[<span class="st">'GenderP2'</span>] <span class="op">==</span> <span class="st">'F'</span>)<span class="sc">.</span><span class="bu">sum</span>()<span class="sc">}</span><span class="ss">"</span>]</span>
+<span id="cb4-146"><a href="#cb4-146" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb4-147"><a href="#cb4-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-148"><a href="#cb4-148" aria-hidden="true" tabindex="-1"></a><span class="co"># Turn off axis for table</span></span>
+<span id="cb4-149"><a href="#cb4-149" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">1</span>, <span class="dv">1</span>].axis(<span class="st">'off'</span>)</span>
+<span id="cb4-150"><a href="#cb4-150" aria-hidden="true" tabindex="-1"></a>table <span class="op">=</span> axs[<span class="dv">1</span>, <span class="dv">1</span>].table(</span>
+<span id="cb4-151"><a href="#cb4-151" aria-hidden="true" tabindex="-1"></a>    cellText<span class="op">=</span>[row <span class="cf">for</span> row <span class="kw">in</span> summary_data],</span>
+<span id="cb4-152"><a href="#cb4-152" aria-hidden="true" tabindex="-1"></a>    colLabels<span class="op">=</span>[<span class="st">"Measure"</span>, <span class="st">"Value"</span>],</span>
+<span id="cb4-153"><a href="#cb4-153" aria-hidden="true" tabindex="-1"></a>    loc<span class="op">=</span><span class="st">'center'</span>,</span>
+<span id="cb4-154"><a href="#cb4-154" aria-hidden="true" tabindex="-1"></a>    cellLoc<span class="op">=</span><span class="st">'left'</span></span>
+<span id="cb4-155"><a href="#cb4-155" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-156"><a href="#cb4-156" aria-hidden="true" tabindex="-1"></a>table.auto_set_font_size(<span class="va">False</span>)</span>
+<span id="cb4-157"><a href="#cb4-157" aria-hidden="true" tabindex="-1"></a>table.set_fontsize(<span class="dv">10</span>)</span>
+<span id="cb4-158"><a href="#cb4-158" aria-hidden="true" tabindex="-1"></a>table.scale(<span class="dv">1</span>, <span class="fl">1.5</span>)</span>
+<span id="cb4-159"><a href="#cb4-159" aria-hidden="true" tabindex="-1"></a>axs[<span class="dv">1</span>, <span class="dv">1</span>].set_title(<span class="st">'Dataset Summary'</span>, fontfamily<span class="op">=</span><span class="st">'serif'</span>)</span>
+<span id="cb4-160"><a href="#cb4-160" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-161"><a href="#cb4-161" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb4-162"><a href="#cb4-162" aria-hidden="true" tabindex="-1"></a>plt.subplots_adjust(top<span class="op">=</span><span class="fl">0.9</span>)</span>
+<span id="cb4-163"><a href="#cb4-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-164"><a href="#cb4-164" aria-hidden="true" tabindex="-1"></a><span class="co"># Save the figure to a file</span></span>
+<span id="cb4-165"><a href="#cb4-165" aria-hidden="true" tabindex="-1"></a>output_path <span class="op">=</span> <span class="st">"images/sibling_analysis.png"</span></span>
+<span id="cb4-166"><a href="#cb4-166" aria-hidden="true" tabindex="-1"></a>os.makedirs(os.path.dirname(output_path), exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-167"><a href="#cb4-167" aria-hidden="true" tabindex="-1"></a>plt.savefig(output_path, dpi<span class="op">=</span><span class="dv">300</span>, bbox_inches<span class="op">=</span><span class="st">'tight'</span>)</span>
+<span id="cb4-168"><a href="#cb4-168" aria-hidden="true" tabindex="-1"></a>plt.close()</span>
+<span id="cb4-169"><a href="#cb4-169" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb4-170"><a href="#cb4-170" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-171"><a href="#cb4-171" aria-hidden="true" tabindex="-1"></a><span class="al">![](images/sibling_analysis.png)</span>{fig-align="center" width=600}</span>
-<span id="cb4-172"><a href="#cb4-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-171"><a href="#cb4-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-172"><a href="#cb4-172" aria-hidden="true" tabindex="-1"></a><span class="al">![](images/sibling_analysis.png)</span>{fig-align="center" width=600}</span>
 <span id="cb4-173"><a href="#cb4-173" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-174"><a href="#cb4-174" aria-hidden="true" tabindex="-1"></a><span class="fu"># Motion tracking and signal processing and wrangling</span></span>
-<span id="cb4-175"><a href="#cb4-175" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-176"><a href="#cb4-176" aria-hidden="true" tabindex="-1"></a><span class="fu">## Step 1: Tracking two persons in videos for top-view</span></span>
-<span id="cb4-177"><a href="#cb4-177" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-178"><a href="#cb4-178" aria-hidden="true" tabindex="-1"></a>We have tried several pose tracking solutions. From this experience we concluded yolo worked best for top-view tracking.</span>
-<span id="cb4-179"><a href="#cb4-179" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-180"><a href="#cb4-180" aria-hidden="true" tabindex="-1"></a>::: {.callout-note .callout-installation collapse="true"}</span>
-<span id="cb4-181"><a href="#cb4-181" aria-hidden="true" tabindex="-1"></a><span class="fu">## Installation Guide 🛠️</span></span>
-<span id="cb4-182"><a href="#cb4-182" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-183"><a href="#cb4-183" aria-hidden="true" tabindex="-1"></a>The yolo model we used is the YOLOv8 pose model. This model is the heaviest and will run slowly on a CPU. We recommend using a GPU for this model.</span>
-<span id="cb4-184"><a href="#cb4-184" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-185"><a href="#cb4-185" aria-hidden="true" tabindex="-1"></a><span class="fu">### Step 1: Install requirements</span></span>
-<span id="cb4-186"><a href="#cb4-186" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb4-187"><a href="#cb4-187" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install requirements.txt</span>
-<span id="cb4-188"><a href="#cb4-188" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb4-189"><a href="#cb4-189" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb4-174"><a href="#cb4-174" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-175"><a href="#cb4-175" aria-hidden="true" tabindex="-1"></a><span class="fu"># Motion tracking and signal processing and wrangling</span></span>
+<span id="cb4-176"><a href="#cb4-176" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-177"><a href="#cb4-177" aria-hidden="true" tabindex="-1"></a>The motion tracking and signal processing pipeline is divided into two main steps: </span>
+<span id="cb4-178"><a href="#cb4-178" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**Tracking**: This step involves tracking the movements of individuals in the videos using a pose estimation model. The output is a video with annotated keypoints and a CSV file containing the coordinates of these keypoints.</span>
+<span id="cb4-179"><a href="#cb4-179" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**Signal Processing**: This step involves processing the keypoint data to extract relevant features for analysis. The output are processed timeseries files, and a flat dataset containing our smoothness measures that are directly ready for statistical analysis.</span>
+<span id="cb4-180"><a href="#cb4-180" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-181"><a href="#cb4-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-182"><a href="#cb4-182" aria-hidden="true" tabindex="-1"></a><span class="fu">## Step 1: Tracking two persons in videos for top-view (Python)</span></span>
+<span id="cb4-183"><a href="#cb4-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-184"><a href="#cb4-184" aria-hidden="true" tabindex="-1"></a>We have tried several pose tracking solutions. From this experience we concluded yolo worked best for top-view tracking.</span>
+<span id="cb4-185"><a href="#cb4-185" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-186"><a href="#cb4-186" aria-hidden="true" tabindex="-1"></a>::: {.callout-note .callout-installation collapse="true"}</span>
+<span id="cb4-187"><a href="#cb4-187" aria-hidden="true" tabindex="-1"></a><span class="fu">## Installation Guide 🛠️</span></span>
+<span id="cb4-188"><a href="#cb4-188" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-189"><a href="#cb4-189" aria-hidden="true" tabindex="-1"></a>The yolo model we used is the YOLOv8 pose model. This model is the heaviest and will run slowly on a CPU. We recommend using a GPU for this model.</span>
 <span id="cb4-190"><a href="#cb4-190" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-191"><a href="#cb4-191" aria-hidden="true" tabindex="-1"></a><span class="in">```{python,eval=FALSE, code_folding="hide"}</span></span>
-<span id="cb4-192"><a href="#cb4-192" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> ultralytics <span class="im">import</span> YOLO</span>
-<span id="cb4-193"><a href="#cb4-193" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pydantic <span class="im">import</span> BaseModel</span>
-<span id="cb4-194"><a href="#cb4-194" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> cv2</span>
-<span id="cb4-195"><a href="#cb4-195" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> csv</span>
-<span id="cb4-196"><a href="#cb4-196" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb4-197"><a href="#cb4-197" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> glob</span>
-<span id="cb4-198"><a href="#cb4-198" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
-<span id="cb4-199"><a href="#cb4-199" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch <span class="co"># for gpu support</span></span>
-<span id="cb4-200"><a href="#cb4-200" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> combinations</span>
-<span id="cb4-201"><a href="#cb4-201" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
-<span id="cb4-202"><a href="#cb4-202" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-203"><a href="#cb4-203" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-204"><a href="#cb4-204" aria-hidden="true" tabindex="-1"></a>torch.cuda.set_device(<span class="dv">0</span>)</span>
-<span id="cb4-205"><a href="#cb4-205" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the model</span></span>
-<span id="cb4-206"><a href="#cb4-206" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> YOLO(<span class="st">'yolov8x-pose-p6.pt'</span>) <span class="co"># heaviest model</span></span>
-<span id="cb4-207"><a href="#cb4-207" aria-hidden="true" tabindex="-1"></a><span class="co"># main variables</span></span>
-<span id="cb4-208"><a href="#cb4-208" aria-hidden="true" tabindex="-1"></a>video_folder <span class="op">=</span> <span class="st">"../data_fulldata_raw/"</span></span>
-<span id="cb4-209"><a href="#cb4-209" aria-hidden="true" tabindex="-1"></a><span class="co"># avi mp4 or other video formats</span></span>
-<span id="cb4-210"><a href="#cb4-210" aria-hidden="true" tabindex="-1"></a>video_files <span class="op">=</span> glob.glob(video_folder <span class="op">+</span> <span class="st">"*.mp4"</span>) <span class="op">+</span> glob.glob(video_folder <span class="op">+</span> <span class="st">"*.avi"</span>)</span>
-<span id="cb4-211"><a href="#cb4-211" aria-hidden="true" tabindex="-1"></a>step1resultfolder <span class="op">=</span> <span class="st">"../data_fulldatatracked_afterSTEP1/"</span> <span class="co"># we can replace with full data</span></span>
-<span id="cb4-212"><a href="#cb4-212" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(video_files)</span>
-<span id="cb4-213"><a href="#cb4-213" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-214"><a href="#cb4-214" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> tensor_to_matrix(results_tensor):</span>
-<span id="cb4-215"><a href="#cb4-215" aria-hidden="true" tabindex="-1"></a>    <span class="co"># this just takes the results output of YOLO and coverts it to a matrix,</span></span>
-<span id="cb4-216"><a href="#cb4-216" aria-hidden="true" tabindex="-1"></a>    <span class="co"># making it easier to do quick calculations on the coordinates</span></span>
-<span id="cb4-217"><a href="#cb4-217" aria-hidden="true" tabindex="-1"></a>    results_list <span class="op">=</span> results_tensor.tolist()</span>
-<span id="cb4-218"><a href="#cb4-218" aria-hidden="true" tabindex="-1"></a>    results_matrix <span class="op">=</span> np.matrix(results_list)</span>
-<span id="cb4-219"><a href="#cb4-219" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb4-220"><a href="#cb4-220" aria-hidden="true" tabindex="-1"></a>    results_matrix[results_matrix<span class="op">==</span><span class="dv">0</span>] <span class="op">=</span> np.nan</span>
-<span id="cb4-221"><a href="#cb4-221" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb4-222"><a href="#cb4-222" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> results_matrix</span>
-<span id="cb4-223"><a href="#cb4-223" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-224"><a href="#cb4-224" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-225"><a href="#cb4-225" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> check_for_duplication(results):</span>
+<span id="cb4-191"><a href="#cb4-191" aria-hidden="true" tabindex="-1"></a><span class="fu">### Step 1: Install requirements</span></span>
+<span id="cb4-192"><a href="#cb4-192" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb4-193"><a href="#cb4-193" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install requirements.txt</span>
+<span id="cb4-194"><a href="#cb4-194" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb4-195"><a href="#cb4-195" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb4-196"><a href="#cb4-196" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-197"><a href="#cb4-197" aria-hidden="true" tabindex="-1"></a><span class="in">```{python, eval=FALSE, code_folding="hide"}</span></span>
+<span id="cb4-198"><a href="#cb4-198" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-199"><a href="#cb4-199" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> ultralytics <span class="im">import</span> YOLO</span>
+<span id="cb4-200"><a href="#cb4-200" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pydantic <span class="im">import</span> BaseModel</span>
+<span id="cb4-201"><a href="#cb4-201" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> cv2</span>
+<span id="cb4-202"><a href="#cb4-202" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> csv</span>
+<span id="cb4-203"><a href="#cb4-203" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb4-204"><a href="#cb4-204" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> glob</span>
+<span id="cb4-205"><a href="#cb4-205" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb4-206"><a href="#cb4-206" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch <span class="co"># for gpu support</span></span>
+<span id="cb4-207"><a href="#cb4-207" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> combinations</span>
+<span id="cb4-208"><a href="#cb4-208" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
+<span id="cb4-209"><a href="#cb4-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-210"><a href="#cb4-210" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-211"><a href="#cb4-211" aria-hidden="true" tabindex="-1"></a>torch.cuda.set_device(<span class="dv">0</span>)</span>
+<span id="cb4-212"><a href="#cb4-212" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the model</span></span>
+<span id="cb4-213"><a href="#cb4-213" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> YOLO(<span class="st">'yolov8x-pose-p6.pt'</span>) <span class="co"># heaviest model</span></span>
+<span id="cb4-214"><a href="#cb4-214" aria-hidden="true" tabindex="-1"></a><span class="co"># main variables</span></span>
+<span id="cb4-215"><a href="#cb4-215" aria-hidden="true" tabindex="-1"></a>video_folder <span class="op">=</span> <span class="st">"../data_fulldata_raw/"</span></span>
+<span id="cb4-216"><a href="#cb4-216" aria-hidden="true" tabindex="-1"></a><span class="co"># avi mp4 or other video formats</span></span>
+<span id="cb4-217"><a href="#cb4-217" aria-hidden="true" tabindex="-1"></a>video_files <span class="op">=</span> glob.glob(video_folder <span class="op">+</span> <span class="st">"*.mp4"</span>) <span class="op">+</span> glob.glob(video_folder <span class="op">+</span> <span class="st">"*.avi"</span>)</span>
+<span id="cb4-218"><a href="#cb4-218" aria-hidden="true" tabindex="-1"></a>step1resultfolder <span class="op">=</span> <span class="st">"../data_fulldatatracked_afterSTEP1/"</span> <span class="co"># we can replace with full data</span></span>
+<span id="cb4-219"><a href="#cb4-219" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(video_files)</span>
+<span id="cb4-220"><a href="#cb4-220" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-221"><a href="#cb4-221" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> tensor_to_matrix(results_tensor):</span>
+<span id="cb4-222"><a href="#cb4-222" aria-hidden="true" tabindex="-1"></a>    <span class="co"># this just takes the results output of YOLO and coverts it to a matrix,</span></span>
+<span id="cb4-223"><a href="#cb4-223" aria-hidden="true" tabindex="-1"></a>    <span class="co"># making it easier to do quick calculations on the coordinates</span></span>
+<span id="cb4-224"><a href="#cb4-224" aria-hidden="true" tabindex="-1"></a>    results_list <span class="op">=</span> results_tensor.tolist()</span>
+<span id="cb4-225"><a href="#cb4-225" aria-hidden="true" tabindex="-1"></a>    results_matrix <span class="op">=</span> np.matrix(results_list)</span>
 <span id="cb4-226"><a href="#cb4-226" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb4-227"><a href="#cb4-227" aria-hidden="true" tabindex="-1"></a>    <span class="co"># this threshold determines how close two skeletons must be in order to be</span></span>
-<span id="cb4-228"><a href="#cb4-228" aria-hidden="true" tabindex="-1"></a>    <span class="co"># considered the same person. Arbitrarily chosen for now.</span></span>
-<span id="cb4-229"><a href="#cb4-229" aria-hidden="true" tabindex="-1"></a>    close_threshold <span class="op">=</span><span class="dv">150</span></span>
-<span id="cb4-230"><a href="#cb4-230" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb4-231"><a href="#cb4-231" aria-hidden="true" tabindex="-1"></a>    <span class="co"># missing data tolerance</span></span>
-<span id="cb4-232"><a href="#cb4-232" aria-hidden="true" tabindex="-1"></a>    miss_tolerance <span class="op">=</span> <span class="fl">0.95</span> <span class="co"># this means we can miss up to 75% of the keypoints</span></span>
+<span id="cb4-227"><a href="#cb4-227" aria-hidden="true" tabindex="-1"></a>    results_matrix[results_matrix<span class="op">==</span><span class="dv">0</span>] <span class="op">=</span> np.nan</span>
+<span id="cb4-228"><a href="#cb4-228" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-229"><a href="#cb4-229" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> results_matrix</span>
+<span id="cb4-230"><a href="#cb4-230" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-231"><a href="#cb4-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-232"><a href="#cb4-232" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> check_for_duplication(results):</span>
 <span id="cb4-233"><a href="#cb4-233" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb4-234"><a href="#cb4-234" aria-hidden="true" tabindex="-1"></a>    drop_indices <span class="op">=</span> []</span>
-<span id="cb4-235"><a href="#cb4-235" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb4-236"><a href="#cb4-236" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span>(results[<span class="dv">0</span>].keypoints.xy) <span class="op">&gt;</span> <span class="dv">1</span>:</span>
-<span id="cb4-237"><a href="#cb4-237" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-238"><a href="#cb4-238" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-239"><a href="#cb4-239" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-240"><a href="#cb4-240" aria-hidden="true" tabindex="-1"></a>        conf_scores <span class="op">=</span> []</span>
-<span id="cb4-241"><a href="#cb4-241" aria-hidden="true" tabindex="-1"></a>        <span class="co"># get detection confidence for each skeleton</span></span>
-<span id="cb4-242"><a href="#cb4-242" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> person <span class="kw">in</span> tensor_to_matrix(results[<span class="dv">0</span>].keypoints.conf):</span>
-<span id="cb4-243"><a href="#cb4-243" aria-hidden="true" tabindex="-1"></a>            conf_scores.append(np.mean(person))</span>
-<span id="cb4-244"><a href="#cb4-244" aria-hidden="true" tabindex="-1"></a>                </span>
-<span id="cb4-245"><a href="#cb4-245" aria-hidden="true" tabindex="-1"></a>        <span class="co"># this list will stores which comparisons need to be made</span></span>
-<span id="cb4-246"><a href="#cb4-246" aria-hidden="true" tabindex="-1"></a>        combos <span class="op">=</span> <span class="bu">list</span>(combinations(<span class="bu">range</span>(<span class="bu">len</span>(results[<span class="dv">0</span>].keypoints.xy)), <span class="dv">2</span>))</span>
-<span id="cb4-247"><a href="#cb4-247" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-248"><a href="#cb4-248" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-249"><a href="#cb4-249" aria-hidden="true" tabindex="-1"></a>        <span class="co"># now loop through these comparisons</span></span>
-<span id="cb4-250"><a href="#cb4-250" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> combo <span class="kw">in</span> combos:</span>
-<span id="cb4-251"><a href="#cb4-251" aria-hidden="true" tabindex="-1"></a>            closeness <span class="op">=</span> <span class="bu">abs</span>(np.nanmean(tensor_to_matrix(results[<span class="dv">0</span>].keypoints.xy[combo[<span class="dv">0</span>]]) <span class="op">-</span> </span>
-<span id="cb4-252"><a href="#cb4-252" aria-hidden="true" tabindex="-1"></a>                        tensor_to_matrix(results[<span class="dv">0</span>].keypoints.xy[combo[<span class="dv">1</span>]])))</span>
-<span id="cb4-253"><a href="#cb4-253" aria-hidden="true" tabindex="-1"></a>            <span class="co"># if any of them indicate that two skeletons are very close together,</span></span>
-<span id="cb4-254"><a href="#cb4-254" aria-hidden="true" tabindex="-1"></a>            <span class="co"># we keep the one with higher tracking confidence, and remove the other</span></span>
-<span id="cb4-255"><a href="#cb4-255" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> closeness <span class="op">&lt;</span> close_threshold:</span>
-<span id="cb4-256"><a href="#cb4-256" aria-hidden="true" tabindex="-1"></a>                conf_list <span class="op">=</span> [conf_scores[combo[<span class="dv">0</span>]], conf_scores[combo[<span class="dv">1</span>]]]</span>
-<span id="cb4-257"><a href="#cb4-257" aria-hidden="true" tabindex="-1"></a>                idx_min <span class="op">=</span> conf_list.index(<span class="bu">min</span>(conf_list))</span>
-<span id="cb4-258"><a href="#cb4-258" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-259"><a href="#cb4-259" aria-hidden="true" tabindex="-1"></a>                </span>
-<span id="cb4-260"><a href="#cb4-260" aria-hidden="true" tabindex="-1"></a>                drop_indices.append(combo[idx_min])</span>
-<span id="cb4-261"><a href="#cb4-261" aria-hidden="true" tabindex="-1"></a>                </span>
-<span id="cb4-262"><a href="#cb4-262" aria-hidden="true" tabindex="-1"></a>        <span class="co"># additional checks:</span></span>
-<span id="cb4-263"><a href="#cb4-263" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> person <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(results[<span class="dv">0</span>].keypoints.xy)):</span>
-<span id="cb4-264"><a href="#cb4-264" aria-hidden="true" tabindex="-1"></a>           keypoints_missed <span class="op">=</span>  np.isnan(tensor_to_matrix(results[<span class="dv">0</span>].keypoints.xy[person])).<span class="bu">sum</span>()<span class="op">/</span><span class="dv">2</span></span>
-<span id="cb4-265"><a href="#cb4-265" aria-hidden="true" tabindex="-1"></a>           perc_missed <span class="op">=</span> keypoints_missed<span class="op">/</span><span class="bu">len</span>(tensor_to_matrix(results[<span class="dv">0</span>].keypoints.xy[person]))</span>
-<span id="cb4-266"><a href="#cb4-266" aria-hidden="true" tabindex="-1"></a>           </span>
-<span id="cb4-267"><a href="#cb4-267" aria-hidden="true" tabindex="-1"></a>           <span class="cf">if</span> perc_missed <span class="op">&gt;</span> miss_tolerance:</span>
-<span id="cb4-268"><a href="#cb4-268" aria-hidden="true" tabindex="-1"></a>               drop_indices.append(person)</span>
-<span id="cb4-269"><a href="#cb4-269" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-270"><a href="#cb4-270" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-271"><a href="#cb4-271" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">list</span>(<span class="bu">set</span>(drop_indices))</span>
-<span id="cb4-272"><a href="#cb4-272" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-273"><a href="#cb4-273" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-274"><a href="#cb4-274" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-275"><a href="#cb4-275" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> GetKeypoint(BaseModel):</span>
-<span id="cb4-276"><a href="#cb4-276" aria-hidden="true" tabindex="-1"></a>    NOSE:           <span class="bu">int</span> <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb4-277"><a href="#cb4-277" aria-hidden="true" tabindex="-1"></a>    LEFT_EYE:       <span class="bu">int</span> <span class="op">=</span> <span class="dv">1</span></span>
-<span id="cb4-278"><a href="#cb4-278" aria-hidden="true" tabindex="-1"></a>    RIGHT_EYE:      <span class="bu">int</span> <span class="op">=</span> <span class="dv">2</span></span>
-<span id="cb4-279"><a href="#cb4-279" aria-hidden="true" tabindex="-1"></a>    LEFT_EAR:       <span class="bu">int</span> <span class="op">=</span> <span class="dv">3</span></span>
-<span id="cb4-280"><a href="#cb4-280" aria-hidden="true" tabindex="-1"></a>    RIGHT_EAR:      <span class="bu">int</span> <span class="op">=</span> <span class="dv">4</span></span>
-<span id="cb4-281"><a href="#cb4-281" aria-hidden="true" tabindex="-1"></a>    LEFT_SHOULDER:  <span class="bu">int</span> <span class="op">=</span> <span class="dv">5</span></span>
-<span id="cb4-282"><a href="#cb4-282" aria-hidden="true" tabindex="-1"></a>    RIGHT_SHOULDER: <span class="bu">int</span> <span class="op">=</span> <span class="dv">6</span></span>
-<span id="cb4-283"><a href="#cb4-283" aria-hidden="true" tabindex="-1"></a>    LEFT_ELBOW:     <span class="bu">int</span> <span class="op">=</span> <span class="dv">7</span></span>
-<span id="cb4-284"><a href="#cb4-284" aria-hidden="true" tabindex="-1"></a>    RIGHT_ELBOW:    <span class="bu">int</span> <span class="op">=</span> <span class="dv">8</span></span>
-<span id="cb4-285"><a href="#cb4-285" aria-hidden="true" tabindex="-1"></a>    LEFT_WRIST:     <span class="bu">int</span> <span class="op">=</span> <span class="dv">9</span></span>
-<span id="cb4-286"><a href="#cb4-286" aria-hidden="true" tabindex="-1"></a>    RIGHT_WRIST:    <span class="bu">int</span> <span class="op">=</span> <span class="dv">10</span></span>
-<span id="cb4-287"><a href="#cb4-287" aria-hidden="true" tabindex="-1"></a>    LEFT_HIP:       <span class="bu">int</span> <span class="op">=</span> <span class="dv">11</span></span>
-<span id="cb4-288"><a href="#cb4-288" aria-hidden="true" tabindex="-1"></a>    RIGHT_HIP:      <span class="bu">int</span> <span class="op">=</span> <span class="dv">12</span></span>
-<span id="cb4-289"><a href="#cb4-289" aria-hidden="true" tabindex="-1"></a>    LEFT_KNEE:      <span class="bu">int</span> <span class="op">=</span> <span class="dv">13</span></span>
-<span id="cb4-290"><a href="#cb4-290" aria-hidden="true" tabindex="-1"></a>    RIGHT_KNEE:     <span class="bu">int</span> <span class="op">=</span> <span class="dv">14</span></span>
-<span id="cb4-291"><a href="#cb4-291" aria-hidden="true" tabindex="-1"></a>    LEFT_ANKLE:     <span class="bu">int</span> <span class="op">=</span> <span class="dv">15</span></span>
-<span id="cb4-292"><a href="#cb4-292" aria-hidden="true" tabindex="-1"></a>    RIGHT_ANKLE:    <span class="bu">int</span> <span class="op">=</span> <span class="dv">16</span></span>
-<span id="cb4-293"><a href="#cb4-293" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-294"><a href="#cb4-294" aria-hidden="true" tabindex="-1"></a>get_keypoint <span class="op">=</span> GetKeypoint()</span>
-<span id="cb4-295"><a href="#cb4-295" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-296"><a href="#cb4-296" aria-hidden="true" tabindex="-1"></a><span class="co"># Define skeleton connections</span></span>
-<span id="cb4-297"><a href="#cb4-297" aria-hidden="true" tabindex="-1"></a>skeleton <span class="op">=</span> [</span>
-<span id="cb4-298"><a href="#cb4-298" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.LEFT_SHOULDER, get_keypoint.RIGHT_SHOULDER),</span>
-<span id="cb4-299"><a href="#cb4-299" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.LEFT_SHOULDER, get_keypoint.LEFT_ELBOW),</span>
-<span id="cb4-300"><a href="#cb4-300" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.RIGHT_SHOULDER, get_keypoint.RIGHT_ELBOW),</span>
-<span id="cb4-301"><a href="#cb4-301" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.LEFT_ELBOW, get_keypoint.LEFT_WRIST),</span>
-<span id="cb4-302"><a href="#cb4-302" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.RIGHT_ELBOW, get_keypoint.RIGHT_WRIST),</span>
-<span id="cb4-303"><a href="#cb4-303" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.LEFT_SHOULDER, get_keypoint.LEFT_HIP),</span>
-<span id="cb4-304"><a href="#cb4-304" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.RIGHT_SHOULDER, get_keypoint.RIGHT_HIP),</span>
-<span id="cb4-305"><a href="#cb4-305" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.LEFT_HIP, get_keypoint.RIGHT_HIP),</span>
-<span id="cb4-306"><a href="#cb4-306" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.LEFT_HIP, get_keypoint.LEFT_KNEE),</span>
-<span id="cb4-307"><a href="#cb4-307" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.RIGHT_HIP, get_keypoint.RIGHT_KNEE),</span>
-<span id="cb4-308"><a href="#cb4-308" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.LEFT_KNEE, get_keypoint.LEFT_ANKLE),</span>
-<span id="cb4-309"><a href="#cb4-309" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.RIGHT_KNEE, get_keypoint.RIGHT_ANKLE),</span>
-<span id="cb4-310"><a href="#cb4-310" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb4-311"><a href="#cb4-311" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-312"><a href="#cb4-312" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> video_path <span class="kw">in</span> video_files:</span>
-<span id="cb4-313"><a href="#cb4-313" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Video path</span></span>
-<span id="cb4-314"><a href="#cb4-314" aria-hidden="true" tabindex="-1"></a>    video_path <span class="op">=</span> video_path</span>
-<span id="cb4-315"><a href="#cb4-315" aria-hidden="true" tabindex="-1"></a>    <span class="co"># only if the output is not there yet</span></span>
-<span id="cb4-316"><a href="#cb4-316" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> os.path.exists(step1resultfolder<span class="op">+</span> os.path.basename(video_path).split(<span class="st">'.'</span>)[<span class="dv">0</span>]<span class="op">+</span><span class="st">"_annotated_layer1_c150_miss95.mp4"</span>):</span>
-<span id="cb4-317"><a href="#cb4-317" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"Output video already exists for </span><span class="sc">{</span>video_path<span class="sc">}</span><span class="ss">. Skipping..."</span>)</span>
-<span id="cb4-318"><a href="#cb4-318" aria-hidden="true" tabindex="-1"></a>        <span class="cf">continue</span></span>
-<span id="cb4-319"><a href="#cb4-319" aria-hidden="true" tabindex="-1"></a>    <span class="co"># vidname without extension</span></span>
-<span id="cb4-320"><a href="#cb4-320" aria-hidden="true" tabindex="-1"></a>    vidname <span class="op">=</span> os.path.basename(video_path)</span>
-<span id="cb4-321"><a href="#cb4-321" aria-hidden="true" tabindex="-1"></a>    vidname <span class="op">=</span> vidname.split(<span class="st">'.'</span>)[<span class="dv">0</span>]</span>
-<span id="cb4-322"><a href="#cb4-322" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-323"><a href="#cb4-323" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Open the video</span></span>
-<span id="cb4-324"><a href="#cb4-324" aria-hidden="true" tabindex="-1"></a>    cap <span class="op">=</span> cv2.VideoCapture(video_path)</span>
-<span id="cb4-325"><a href="#cb4-325" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-326"><a href="#cb4-326" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Get video properties</span></span>
-<span id="cb4-327"><a href="#cb4-327" aria-hidden="true" tabindex="-1"></a>    fps <span class="op">=</span> <span class="bu">int</span>(cap.get(cv2.CAP_PROP_FPS))</span>
-<span id="cb4-328"><a href="#cb4-328" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> <span class="bu">int</span>(cap.get(cv2.CAP_PROP_FRAME_WIDTH))</span>
-<span id="cb4-329"><a href="#cb4-329" aria-hidden="true" tabindex="-1"></a>    height <span class="op">=</span> <span class="bu">int</span>(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))</span>
-<span id="cb4-330"><a href="#cb4-330" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-331"><a href="#cb4-331" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Define the output video writer</span></span>
-<span id="cb4-332"><a href="#cb4-332" aria-hidden="true" tabindex="-1"></a>    corename <span class="op">=</span> os.path.basename(video_path).split(<span class="st">'.'</span>)[<span class="dv">0</span>]</span>
-<span id="cb4-333"><a href="#cb4-333" aria-hidden="true" tabindex="-1"></a>    output_path <span class="op">=</span> step1resultfolder<span class="op">+</span> vidname<span class="op">+</span><span class="st">"_annotated_layer1_c150_miss95.mp4"</span></span>
-<span id="cb4-334"><a href="#cb4-334" aria-hidden="true" tabindex="-1"></a>    fourcc <span class="op">=</span> cv2.VideoWriter_fourcc(<span class="op">*</span><span class="st">'mp4v'</span>)</span>
-<span id="cb4-335"><a href="#cb4-335" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> cv2.VideoWriter(output_path, fourcc, fps, (width, height))</span>
-<span id="cb4-336"><a href="#cb4-336" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-337"><a href="#cb4-337" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Prepare CSV file</span></span>
-<span id="cb4-338"><a href="#cb4-338" aria-hidden="true" tabindex="-1"></a>    csv_path <span class="op">=</span> step1resultfolder<span class="op">+</span> vidname<span class="op">+</span><span class="st">'_keypoints_data_layer1.csv'</span></span>
-<span id="cb4-339"><a href="#cb4-339" aria-hidden="true" tabindex="-1"></a>    csv_file <span class="op">=</span> <span class="bu">open</span>(csv_path, <span class="st">'w'</span>, newline<span class="op">=</span><span class="st">''</span>)</span>
-<span id="cb4-340"><a href="#cb4-340" aria-hidden="true" tabindex="-1"></a>    csv_writer <span class="op">=</span> csv.writer(csv_file)</span>
-<span id="cb4-341"><a href="#cb4-341" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-342"><a href="#cb4-342" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Write header</span></span>
-<span id="cb4-343"><a href="#cb4-343" aria-hidden="true" tabindex="-1"></a>    header <span class="op">=</span> [<span class="st">'frame'</span>, <span class="st">'person'</span>, <span class="st">'keypoint'</span>, <span class="st">'x'</span>, <span class="st">'y'</span>]</span>
-<span id="cb4-344"><a href="#cb4-344" aria-hidden="true" tabindex="-1"></a>    csv_writer.writerow(header)</span>
-<span id="cb4-345"><a href="#cb4-345" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-346"><a href="#cb4-346" aria-hidden="true" tabindex="-1"></a>    frame_count <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb4-347"><a href="#cb4-347" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-348"><a href="#cb4-348" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> cap.isOpened():</span>
-<span id="cb4-349"><a href="#cb4-349" aria-hidden="true" tabindex="-1"></a>        success, frame <span class="op">=</span> cap.read()</span>
-<span id="cb4-350"><a href="#cb4-350" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">not</span> success:</span>
-<span id="cb4-351"><a href="#cb4-351" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
-<span id="cb4-352"><a href="#cb4-352" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb4-353"><a href="#cb4-353" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Run YOLOv8 inference on the frame</span></span>
-<span id="cb4-354"><a href="#cb4-354" aria-hidden="true" tabindex="-1"></a>        results <span class="op">=</span> model(frame)</span>
-<span id="cb4-355"><a href="#cb4-355" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-356"><a href="#cb4-356" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Visualize the results on the frame</span></span>
-<span id="cb4-357"><a href="#cb4-357" aria-hidden="true" tabindex="-1"></a>        <span class="co">#annotated_frame = results[0].plot()</span></span>
-<span id="cb4-358"><a href="#cb4-358" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-359"><a href="#cb4-359" aria-hidden="true" tabindex="-1"></a>        <span class="co"># write empty rows if no person is detected</span></span>
-<span id="cb4-360"><a href="#cb4-360" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">len</span>(results[<span class="dv">0</span>].keypoints.xy) <span class="op">==</span> <span class="dv">0</span>:</span>
-<span id="cb4-361"><a href="#cb4-361" aria-hidden="true" tabindex="-1"></a>            csv_writer.writerow([frame_count, <span class="va">None</span>, <span class="va">None</span>, <span class="va">None</span>, <span class="va">None</span>])</span>
-<span id="cb4-362"><a href="#cb4-362" aria-hidden="true" tabindex="-1"></a>        annotated_frame <span class="op">=</span> frame</span>
-<span id="cb4-363"><a href="#cb4-363" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-364"><a href="#cb4-364" aria-hidden="true" tabindex="-1"></a>        <span class="co"># only do this if a person is detected</span></span>
-<span id="cb4-365"><a href="#cb4-365" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">len</span>(results[<span class="dv">0</span>].keypoints.xy) <span class="op">&gt;</span> <span class="dv">0</span>:</span>
-<span id="cb4-366"><a href="#cb4-366" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Process the results</span></span>
-<span id="cb4-367"><a href="#cb4-367" aria-hidden="true" tabindex="-1"></a>            drop_indices <span class="op">=</span> []</span>
-<span id="cb4-368"><a href="#cb4-368" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb4-369"><a href="#cb4-369" aria-hidden="true" tabindex="-1"></a>            drop_indices <span class="op">=</span> check_for_duplication(results)</span>
-<span id="cb4-370"><a href="#cb4-370" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb4-371"><a href="#cb4-371" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb4-372"><a href="#cb4-372" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> person_idx, person_keypoints <span class="kw">in</span> <span class="bu">enumerate</span>(results[<span class="dv">0</span>].keypoints.xy):</span>
-<span id="cb4-373"><a href="#cb4-373" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> person_idx <span class="kw">not</span> <span class="kw">in</span> drop_indices:</span>
-<span id="cb4-374"><a href="#cb4-374" aria-hidden="true" tabindex="-1"></a>                    colourcode <span class="op">=</span> (<span class="dv">0</span>, <span class="dv">255</span>, <span class="dv">0</span>)</span>
-<span id="cb4-375"><a href="#cb4-375" aria-hidden="true" tabindex="-1"></a>                <span class="cf">else</span>:</span>
-<span id="cb4-376"><a href="#cb4-376" aria-hidden="true" tabindex="-1"></a>                    colourcode <span class="op">=</span> (<span class="dv">255</span>, <span class="dv">0</span>, <span class="dv">0</span>)</span>
-<span id="cb4-377"><a href="#cb4-377" aria-hidden="true" tabindex="-1"></a>                </span>
-<span id="cb4-378"><a href="#cb4-378" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> keypoint_idx, keypoint <span class="kw">in</span> <span class="bu">enumerate</span>(person_keypoints):</span>
-<span id="cb4-379"><a href="#cb4-379" aria-hidden="true" tabindex="-1"></a>                    x, y <span class="op">=</span> keypoint</span>
-<span id="cb4-380"><a href="#cb4-380" aria-hidden="true" tabindex="-1"></a> </span>
-<span id="cb4-381"><a href="#cb4-381" aria-hidden="true" tabindex="-1"></a>                    <span class="co"># Write to CSV</span></span>
-<span id="cb4-382"><a href="#cb4-382" aria-hidden="true" tabindex="-1"></a>                    csv_writer.writerow([frame_count, person_idx, keypoint_idx, x.item(), y.item()])</span>
-<span id="cb4-383"><a href="#cb4-383" aria-hidden="true" tabindex="-1"></a>                    </span>
-<span id="cb4-384"><a href="#cb4-384" aria-hidden="true" tabindex="-1"></a>                    <span class="co"># Draw keypoint on the frame</span></span>
-<span id="cb4-385"><a href="#cb4-385" aria-hidden="true" tabindex="-1"></a>                    cv2.circle(annotated_frame, (<span class="bu">int</span>(x), <span class="bu">int</span>(y)), <span class="dv">5</span>, colourcode, <span class="op">-</span><span class="dv">1</span>)</span>
-<span id="cb4-386"><a href="#cb4-386" aria-hidden="true" tabindex="-1"></a>                </span>
-<span id="cb4-387"><a href="#cb4-387" aria-hidden="true" tabindex="-1"></a>                <span class="co"># Draw skeleton</span></span>
-<span id="cb4-388"><a href="#cb4-388" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> connection <span class="kw">in</span> skeleton:</span>
-<span id="cb4-389"><a href="#cb4-389" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> connection[<span class="dv">0</span>] <span class="op">&lt;</span> <span class="bu">len</span>(person_keypoints) <span class="kw">and</span> connection[<span class="dv">1</span>] <span class="op">&lt;</span> <span class="bu">len</span>(person_keypoints):</span>
-<span id="cb4-390"><a href="#cb4-390" aria-hidden="true" tabindex="-1"></a>                        start_point <span class="op">=</span> <span class="bu">tuple</span>(<span class="bu">map</span>(<span class="bu">int</span>, person_keypoints[connection[<span class="dv">0</span>]]))</span>
-<span id="cb4-391"><a href="#cb4-391" aria-hidden="true" tabindex="-1"></a>                        end_point <span class="op">=</span> <span class="bu">tuple</span>(<span class="bu">map</span>(<span class="bu">int</span>, person_keypoints[connection[<span class="dv">1</span>]]))</span>
-<span id="cb4-392"><a href="#cb4-392" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">if</span> <span class="bu">all</span>(start_point) <span class="kw">and</span> <span class="bu">all</span>(end_point):  <span class="co"># Check if both points are valid</span></span>
-<span id="cb4-393"><a href="#cb4-393" aria-hidden="true" tabindex="-1"></a>                            cv2.line(annotated_frame, start_point, end_point, (<span class="dv">255</span>, <span class="dv">0</span>, <span class="dv">0</span>), <span class="dv">2</span>)</span>
-<span id="cb4-394"><a href="#cb4-394" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-395"><a href="#cb4-395" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Write the frame to the output video</span></span>
-<span id="cb4-396"><a href="#cb4-396" aria-hidden="true" tabindex="-1"></a>            out.write(annotated_frame)</span>
-<span id="cb4-397"><a href="#cb4-397" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-398"><a href="#cb4-398" aria-hidden="true" tabindex="-1"></a>        frame_count <span class="op">+=</span> <span class="dv">1</span></span>
-<span id="cb4-399"><a href="#cb4-399" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-400"><a href="#cb4-400" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Release everything</span></span>
-<span id="cb4-401"><a href="#cb4-401" aria-hidden="true" tabindex="-1"></a>    cap.release()</span>
-<span id="cb4-402"><a href="#cb4-402" aria-hidden="true" tabindex="-1"></a>    out.release()</span>
-<span id="cb4-403"><a href="#cb4-403" aria-hidden="true" tabindex="-1"></a>    cv2.destroyAllWindows()</span>
-<span id="cb4-404"><a href="#cb4-404" aria-hidden="true" tabindex="-1"></a>    csv_file.close()</span>
-<span id="cb4-405"><a href="#cb4-405" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Output video saved as </span><span class="sc">{</span>output_path<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb4-406"><a href="#cb4-406" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Keypoints data saved as </span><span class="sc">{</span>csv_path<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb4-407"><a href="#cb4-407" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb4-408"><a href="#cb4-408" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-409"><a href="#cb4-409" aria-hidden="true" tabindex="-1"></a><span class="fu">## Step 2: Timeseries preparation and flat data for statistics</span></span>
-<span id="cb4-410"><a href="#cb4-410" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-411"><a href="#cb4-411" aria-hidden="true" tabindex="-1"></a><span class="fu"># Statistical analysis on smoothness derived from timeseries analysis (flat data)</span></span>
-<span id="cb4-412"><a href="#cb4-412" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-413"><a href="#cb4-413" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, eval=FALSE, code_folding="hide"}</span></span>
-<span id="cb4-414"><a href="#cb4-414" aria-hidden="true" tabindex="-1"></a><span class="co"># manually edited this CSV</span></span>
-<span id="cb4-415"><a href="#cb4-415" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"C:/Users/wiltshir/GitHub/InterPerDynPipelineAnalysis/Re_ Behavioral Dynamics in Social Interactions AP_SI/smoothness_data_top_view_clean.csv"</span>) </span>
-<span id="cb4-416"><a href="#cb4-416" aria-hidden="true" tabindex="-1"></a><span class="co">#data_cross_cultur&lt;-data[1:18,]</span></span>
+<span id="cb4-234"><a href="#cb4-234" aria-hidden="true" tabindex="-1"></a>    <span class="co"># this threshold determines how close two skeletons must be in order to be</span></span>
+<span id="cb4-235"><a href="#cb4-235" aria-hidden="true" tabindex="-1"></a>    <span class="co"># considered the same person. Arbitrarily chosen for now.</span></span>
+<span id="cb4-236"><a href="#cb4-236" aria-hidden="true" tabindex="-1"></a>    close_threshold <span class="op">=</span><span class="dv">150</span></span>
+<span id="cb4-237"><a href="#cb4-237" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-238"><a href="#cb4-238" aria-hidden="true" tabindex="-1"></a>    <span class="co"># missing data tolerance</span></span>
+<span id="cb4-239"><a href="#cb4-239" aria-hidden="true" tabindex="-1"></a>    miss_tolerance <span class="op">=</span> <span class="fl">0.95</span> <span class="co"># this means we can miss up to 75% of the keypoints</span></span>
+<span id="cb4-240"><a href="#cb4-240" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-241"><a href="#cb4-241" aria-hidden="true" tabindex="-1"></a>    drop_indices <span class="op">=</span> []</span>
+<span id="cb4-242"><a href="#cb4-242" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-243"><a href="#cb4-243" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span>(results[<span class="dv">0</span>].keypoints.xy) <span class="op">&gt;</span> <span class="dv">1</span>:</span>
+<span id="cb4-244"><a href="#cb4-244" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-245"><a href="#cb4-245" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-246"><a href="#cb4-246" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-247"><a href="#cb4-247" aria-hidden="true" tabindex="-1"></a>        conf_scores <span class="op">=</span> []</span>
+<span id="cb4-248"><a href="#cb4-248" aria-hidden="true" tabindex="-1"></a>        <span class="co"># get detection confidence for each skeleton</span></span>
+<span id="cb4-249"><a href="#cb4-249" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> person <span class="kw">in</span> tensor_to_matrix(results[<span class="dv">0</span>].keypoints.conf):</span>
+<span id="cb4-250"><a href="#cb4-250" aria-hidden="true" tabindex="-1"></a>            conf_scores.append(np.mean(person))</span>
+<span id="cb4-251"><a href="#cb4-251" aria-hidden="true" tabindex="-1"></a>                </span>
+<span id="cb4-252"><a href="#cb4-252" aria-hidden="true" tabindex="-1"></a>        <span class="co"># this list will stores which comparisons need to be made</span></span>
+<span id="cb4-253"><a href="#cb4-253" aria-hidden="true" tabindex="-1"></a>        combos <span class="op">=</span> <span class="bu">list</span>(combinations(<span class="bu">range</span>(<span class="bu">len</span>(results[<span class="dv">0</span>].keypoints.xy)), <span class="dv">2</span>))</span>
+<span id="cb4-254"><a href="#cb4-254" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-255"><a href="#cb4-255" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-256"><a href="#cb4-256" aria-hidden="true" tabindex="-1"></a>        <span class="co"># now loop through these comparisons</span></span>
+<span id="cb4-257"><a href="#cb4-257" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> combo <span class="kw">in</span> combos:</span>
+<span id="cb4-258"><a href="#cb4-258" aria-hidden="true" tabindex="-1"></a>            closeness <span class="op">=</span> <span class="bu">abs</span>(np.nanmean(tensor_to_matrix(results[<span class="dv">0</span>].keypoints.xy[combo[<span class="dv">0</span>]]) <span class="op">-</span> </span>
+<span id="cb4-259"><a href="#cb4-259" aria-hidden="true" tabindex="-1"></a>                        tensor_to_matrix(results[<span class="dv">0</span>].keypoints.xy[combo[<span class="dv">1</span>]])))</span>
+<span id="cb4-260"><a href="#cb4-260" aria-hidden="true" tabindex="-1"></a>            <span class="co"># if any of them indicate that two skeletons are very close together,</span></span>
+<span id="cb4-261"><a href="#cb4-261" aria-hidden="true" tabindex="-1"></a>            <span class="co"># we keep the one with higher tracking confidence, and remove the other</span></span>
+<span id="cb4-262"><a href="#cb4-262" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> closeness <span class="op">&lt;</span> close_threshold:</span>
+<span id="cb4-263"><a href="#cb4-263" aria-hidden="true" tabindex="-1"></a>                conf_list <span class="op">=</span> [conf_scores[combo[<span class="dv">0</span>]], conf_scores[combo[<span class="dv">1</span>]]]</span>
+<span id="cb4-264"><a href="#cb4-264" aria-hidden="true" tabindex="-1"></a>                idx_min <span class="op">=</span> conf_list.index(<span class="bu">min</span>(conf_list))</span>
+<span id="cb4-265"><a href="#cb4-265" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-266"><a href="#cb4-266" aria-hidden="true" tabindex="-1"></a>                </span>
+<span id="cb4-267"><a href="#cb4-267" aria-hidden="true" tabindex="-1"></a>                drop_indices.append(combo[idx_min])</span>
+<span id="cb4-268"><a href="#cb4-268" aria-hidden="true" tabindex="-1"></a>                </span>
+<span id="cb4-269"><a href="#cb4-269" aria-hidden="true" tabindex="-1"></a>        <span class="co"># additional checks:</span></span>
+<span id="cb4-270"><a href="#cb4-270" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> person <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(results[<span class="dv">0</span>].keypoints.xy)):</span>
+<span id="cb4-271"><a href="#cb4-271" aria-hidden="true" tabindex="-1"></a>           keypoints_missed <span class="op">=</span>  np.isnan(tensor_to_matrix(results[<span class="dv">0</span>].keypoints.xy[person])).<span class="bu">sum</span>()<span class="op">/</span><span class="dv">2</span></span>
+<span id="cb4-272"><a href="#cb4-272" aria-hidden="true" tabindex="-1"></a>           perc_missed <span class="op">=</span> keypoints_missed<span class="op">/</span><span class="bu">len</span>(tensor_to_matrix(results[<span class="dv">0</span>].keypoints.xy[person]))</span>
+<span id="cb4-273"><a href="#cb4-273" aria-hidden="true" tabindex="-1"></a>           </span>
+<span id="cb4-274"><a href="#cb4-274" aria-hidden="true" tabindex="-1"></a>           <span class="cf">if</span> perc_missed <span class="op">&gt;</span> miss_tolerance:</span>
+<span id="cb4-275"><a href="#cb4-275" aria-hidden="true" tabindex="-1"></a>               drop_indices.append(person)</span>
+<span id="cb4-276"><a href="#cb4-276" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-277"><a href="#cb4-277" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-278"><a href="#cb4-278" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">list</span>(<span class="bu">set</span>(drop_indices))</span>
+<span id="cb4-279"><a href="#cb4-279" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-280"><a href="#cb4-280" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-281"><a href="#cb4-281" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-282"><a href="#cb4-282" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> GetKeypoint(BaseModel):</span>
+<span id="cb4-283"><a href="#cb4-283" aria-hidden="true" tabindex="-1"></a>    NOSE:           <span class="bu">int</span> <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb4-284"><a href="#cb4-284" aria-hidden="true" tabindex="-1"></a>    LEFT_EYE:       <span class="bu">int</span> <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb4-285"><a href="#cb4-285" aria-hidden="true" tabindex="-1"></a>    RIGHT_EYE:      <span class="bu">int</span> <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb4-286"><a href="#cb4-286" aria-hidden="true" tabindex="-1"></a>    LEFT_EAR:       <span class="bu">int</span> <span class="op">=</span> <span class="dv">3</span></span>
+<span id="cb4-287"><a href="#cb4-287" aria-hidden="true" tabindex="-1"></a>    RIGHT_EAR:      <span class="bu">int</span> <span class="op">=</span> <span class="dv">4</span></span>
+<span id="cb4-288"><a href="#cb4-288" aria-hidden="true" tabindex="-1"></a>    LEFT_SHOULDER:  <span class="bu">int</span> <span class="op">=</span> <span class="dv">5</span></span>
+<span id="cb4-289"><a href="#cb4-289" aria-hidden="true" tabindex="-1"></a>    RIGHT_SHOULDER: <span class="bu">int</span> <span class="op">=</span> <span class="dv">6</span></span>
+<span id="cb4-290"><a href="#cb4-290" aria-hidden="true" tabindex="-1"></a>    LEFT_ELBOW:     <span class="bu">int</span> <span class="op">=</span> <span class="dv">7</span></span>
+<span id="cb4-291"><a href="#cb4-291" aria-hidden="true" tabindex="-1"></a>    RIGHT_ELBOW:    <span class="bu">int</span> <span class="op">=</span> <span class="dv">8</span></span>
+<span id="cb4-292"><a href="#cb4-292" aria-hidden="true" tabindex="-1"></a>    LEFT_WRIST:     <span class="bu">int</span> <span class="op">=</span> <span class="dv">9</span></span>
+<span id="cb4-293"><a href="#cb4-293" aria-hidden="true" tabindex="-1"></a>    RIGHT_WRIST:    <span class="bu">int</span> <span class="op">=</span> <span class="dv">10</span></span>
+<span id="cb4-294"><a href="#cb4-294" aria-hidden="true" tabindex="-1"></a>    LEFT_HIP:       <span class="bu">int</span> <span class="op">=</span> <span class="dv">11</span></span>
+<span id="cb4-295"><a href="#cb4-295" aria-hidden="true" tabindex="-1"></a>    RIGHT_HIP:      <span class="bu">int</span> <span class="op">=</span> <span class="dv">12</span></span>
+<span id="cb4-296"><a href="#cb4-296" aria-hidden="true" tabindex="-1"></a>    LEFT_KNEE:      <span class="bu">int</span> <span class="op">=</span> <span class="dv">13</span></span>
+<span id="cb4-297"><a href="#cb4-297" aria-hidden="true" tabindex="-1"></a>    RIGHT_KNEE:     <span class="bu">int</span> <span class="op">=</span> <span class="dv">14</span></span>
+<span id="cb4-298"><a href="#cb4-298" aria-hidden="true" tabindex="-1"></a>    LEFT_ANKLE:     <span class="bu">int</span> <span class="op">=</span> <span class="dv">15</span></span>
+<span id="cb4-299"><a href="#cb4-299" aria-hidden="true" tabindex="-1"></a>    RIGHT_ANKLE:    <span class="bu">int</span> <span class="op">=</span> <span class="dv">16</span></span>
+<span id="cb4-300"><a href="#cb4-300" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-301"><a href="#cb4-301" aria-hidden="true" tabindex="-1"></a>get_keypoint <span class="op">=</span> GetKeypoint()</span>
+<span id="cb4-302"><a href="#cb4-302" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-303"><a href="#cb4-303" aria-hidden="true" tabindex="-1"></a><span class="co"># Define skeleton connections</span></span>
+<span id="cb4-304"><a href="#cb4-304" aria-hidden="true" tabindex="-1"></a>skeleton <span class="op">=</span> [</span>
+<span id="cb4-305"><a href="#cb4-305" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.LEFT_SHOULDER, get_keypoint.RIGHT_SHOULDER),</span>
+<span id="cb4-306"><a href="#cb4-306" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.LEFT_SHOULDER, get_keypoint.LEFT_ELBOW),</span>
+<span id="cb4-307"><a href="#cb4-307" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.RIGHT_SHOULDER, get_keypoint.RIGHT_ELBOW),</span>
+<span id="cb4-308"><a href="#cb4-308" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.LEFT_ELBOW, get_keypoint.LEFT_WRIST),</span>
+<span id="cb4-309"><a href="#cb4-309" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.RIGHT_ELBOW, get_keypoint.RIGHT_WRIST),</span>
+<span id="cb4-310"><a href="#cb4-310" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.LEFT_SHOULDER, get_keypoint.LEFT_HIP),</span>
+<span id="cb4-311"><a href="#cb4-311" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.RIGHT_SHOULDER, get_keypoint.RIGHT_HIP),</span>
+<span id="cb4-312"><a href="#cb4-312" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.LEFT_HIP, get_keypoint.RIGHT_HIP),</span>
+<span id="cb4-313"><a href="#cb4-313" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.LEFT_HIP, get_keypoint.LEFT_KNEE),</span>
+<span id="cb4-314"><a href="#cb4-314" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.RIGHT_HIP, get_keypoint.RIGHT_KNEE),</span>
+<span id="cb4-315"><a href="#cb4-315" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.LEFT_KNEE, get_keypoint.LEFT_ANKLE),</span>
+<span id="cb4-316"><a href="#cb4-316" aria-hidden="true" tabindex="-1"></a>    (get_keypoint.RIGHT_KNEE, get_keypoint.RIGHT_ANKLE),</span>
+<span id="cb4-317"><a href="#cb4-317" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb4-318"><a href="#cb4-318" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-319"><a href="#cb4-319" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> video_path <span class="kw">in</span> video_files:</span>
+<span id="cb4-320"><a href="#cb4-320" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Video path</span></span>
+<span id="cb4-321"><a href="#cb4-321" aria-hidden="true" tabindex="-1"></a>    video_path <span class="op">=</span> video_path</span>
+<span id="cb4-322"><a href="#cb4-322" aria-hidden="true" tabindex="-1"></a>    <span class="co"># only if the output is not there yet</span></span>
+<span id="cb4-323"><a href="#cb4-323" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> os.path.exists(step1resultfolder<span class="op">+</span> os.path.basename(video_path).split(<span class="st">'.'</span>)[<span class="dv">0</span>]<span class="op">+</span><span class="st">"_annotated_layer1_c150_miss95.mp4"</span>):</span>
+<span id="cb4-324"><a href="#cb4-324" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"Output video already exists for </span><span class="sc">{</span>video_path<span class="sc">}</span><span class="ss">. Skipping..."</span>)</span>
+<span id="cb4-325"><a href="#cb4-325" aria-hidden="true" tabindex="-1"></a>        <span class="cf">continue</span></span>
+<span id="cb4-326"><a href="#cb4-326" aria-hidden="true" tabindex="-1"></a>    <span class="co"># vidname without extension</span></span>
+<span id="cb4-327"><a href="#cb4-327" aria-hidden="true" tabindex="-1"></a>    vidname <span class="op">=</span> os.path.basename(video_path)</span>
+<span id="cb4-328"><a href="#cb4-328" aria-hidden="true" tabindex="-1"></a>    vidname <span class="op">=</span> vidname.split(<span class="st">'.'</span>)[<span class="dv">0</span>]</span>
+<span id="cb4-329"><a href="#cb4-329" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-330"><a href="#cb4-330" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Open the video</span></span>
+<span id="cb4-331"><a href="#cb4-331" aria-hidden="true" tabindex="-1"></a>    cap <span class="op">=</span> cv2.VideoCapture(video_path)</span>
+<span id="cb4-332"><a href="#cb4-332" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-333"><a href="#cb4-333" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Get video properties</span></span>
+<span id="cb4-334"><a href="#cb4-334" aria-hidden="true" tabindex="-1"></a>    fps <span class="op">=</span> <span class="bu">int</span>(cap.get(cv2.CAP_PROP_FPS))</span>
+<span id="cb4-335"><a href="#cb4-335" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> <span class="bu">int</span>(cap.get(cv2.CAP_PROP_FRAME_WIDTH))</span>
+<span id="cb4-336"><a href="#cb4-336" aria-hidden="true" tabindex="-1"></a>    height <span class="op">=</span> <span class="bu">int</span>(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))</span>
+<span id="cb4-337"><a href="#cb4-337" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-338"><a href="#cb4-338" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Define the output video writer</span></span>
+<span id="cb4-339"><a href="#cb4-339" aria-hidden="true" tabindex="-1"></a>    corename <span class="op">=</span> os.path.basename(video_path).split(<span class="st">'.'</span>)[<span class="dv">0</span>]</span>
+<span id="cb4-340"><a href="#cb4-340" aria-hidden="true" tabindex="-1"></a>    output_path <span class="op">=</span> step1resultfolder<span class="op">+</span> vidname<span class="op">+</span><span class="st">"_annotated_layer1_c150_miss95.mp4"</span></span>
+<span id="cb4-341"><a href="#cb4-341" aria-hidden="true" tabindex="-1"></a>    fourcc <span class="op">=</span> cv2.VideoWriter_fourcc(<span class="op">*</span><span class="st">'mp4v'</span>)</span>
+<span id="cb4-342"><a href="#cb4-342" aria-hidden="true" tabindex="-1"></a>    out <span class="op">=</span> cv2.VideoWriter(output_path, fourcc, fps, (width, height))</span>
+<span id="cb4-343"><a href="#cb4-343" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-344"><a href="#cb4-344" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Prepare CSV file</span></span>
+<span id="cb4-345"><a href="#cb4-345" aria-hidden="true" tabindex="-1"></a>    csv_path <span class="op">=</span> step1resultfolder<span class="op">+</span> vidname<span class="op">+</span><span class="st">'_keypoints_data_layer1.csv'</span></span>
+<span id="cb4-346"><a href="#cb4-346" aria-hidden="true" tabindex="-1"></a>    csv_file <span class="op">=</span> <span class="bu">open</span>(csv_path, <span class="st">'w'</span>, newline<span class="op">=</span><span class="st">''</span>)</span>
+<span id="cb4-347"><a href="#cb4-347" aria-hidden="true" tabindex="-1"></a>    csv_writer <span class="op">=</span> csv.writer(csv_file)</span>
+<span id="cb4-348"><a href="#cb4-348" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-349"><a href="#cb4-349" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Write header</span></span>
+<span id="cb4-350"><a href="#cb4-350" aria-hidden="true" tabindex="-1"></a>    header <span class="op">=</span> [<span class="st">'frame'</span>, <span class="st">'person'</span>, <span class="st">'keypoint'</span>, <span class="st">'x'</span>, <span class="st">'y'</span>]</span>
+<span id="cb4-351"><a href="#cb4-351" aria-hidden="true" tabindex="-1"></a>    csv_writer.writerow(header)</span>
+<span id="cb4-352"><a href="#cb4-352" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-353"><a href="#cb4-353" aria-hidden="true" tabindex="-1"></a>    frame_count <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb4-354"><a href="#cb4-354" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-355"><a href="#cb4-355" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> cap.isOpened():</span>
+<span id="cb4-356"><a href="#cb4-356" aria-hidden="true" tabindex="-1"></a>        success, frame <span class="op">=</span> cap.read()</span>
+<span id="cb4-357"><a href="#cb4-357" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">not</span> success:</span>
+<span id="cb4-358"><a href="#cb4-358" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
+<span id="cb4-359"><a href="#cb4-359" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-360"><a href="#cb4-360" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Run YOLOv8 inference on the frame</span></span>
+<span id="cb4-361"><a href="#cb4-361" aria-hidden="true" tabindex="-1"></a>        results <span class="op">=</span> model(frame)</span>
+<span id="cb4-362"><a href="#cb4-362" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-363"><a href="#cb4-363" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Visualize the results on the frame</span></span>
+<span id="cb4-364"><a href="#cb4-364" aria-hidden="true" tabindex="-1"></a>        <span class="co">#annotated_frame = results[0].plot()</span></span>
+<span id="cb4-365"><a href="#cb4-365" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-366"><a href="#cb4-366" aria-hidden="true" tabindex="-1"></a>        <span class="co"># write empty rows if no person is detected</span></span>
+<span id="cb4-367"><a href="#cb4-367" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">len</span>(results[<span class="dv">0</span>].keypoints.xy) <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb4-368"><a href="#cb4-368" aria-hidden="true" tabindex="-1"></a>            csv_writer.writerow([frame_count, <span class="va">None</span>, <span class="va">None</span>, <span class="va">None</span>, <span class="va">None</span>])</span>
+<span id="cb4-369"><a href="#cb4-369" aria-hidden="true" tabindex="-1"></a>        annotated_frame <span class="op">=</span> frame</span>
+<span id="cb4-370"><a href="#cb4-370" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-371"><a href="#cb4-371" aria-hidden="true" tabindex="-1"></a>        <span class="co"># only do this if a person is detected</span></span>
+<span id="cb4-372"><a href="#cb4-372" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">len</span>(results[<span class="dv">0</span>].keypoints.xy) <span class="op">&gt;</span> <span class="dv">0</span>:</span>
+<span id="cb4-373"><a href="#cb4-373" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Process the results</span></span>
+<span id="cb4-374"><a href="#cb4-374" aria-hidden="true" tabindex="-1"></a>            drop_indices <span class="op">=</span> []</span>
+<span id="cb4-375"><a href="#cb4-375" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb4-376"><a href="#cb4-376" aria-hidden="true" tabindex="-1"></a>            drop_indices <span class="op">=</span> check_for_duplication(results)</span>
+<span id="cb4-377"><a href="#cb4-377" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb4-378"><a href="#cb4-378" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb4-379"><a href="#cb4-379" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> person_idx, person_keypoints <span class="kw">in</span> <span class="bu">enumerate</span>(results[<span class="dv">0</span>].keypoints.xy):</span>
+<span id="cb4-380"><a href="#cb4-380" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> person_idx <span class="kw">not</span> <span class="kw">in</span> drop_indices:</span>
+<span id="cb4-381"><a href="#cb4-381" aria-hidden="true" tabindex="-1"></a>                    colourcode <span class="op">=</span> (<span class="dv">0</span>, <span class="dv">255</span>, <span class="dv">0</span>)</span>
+<span id="cb4-382"><a href="#cb4-382" aria-hidden="true" tabindex="-1"></a>                <span class="cf">else</span>:</span>
+<span id="cb4-383"><a href="#cb4-383" aria-hidden="true" tabindex="-1"></a>                    colourcode <span class="op">=</span> (<span class="dv">255</span>, <span class="dv">0</span>, <span class="dv">0</span>)</span>
+<span id="cb4-384"><a href="#cb4-384" aria-hidden="true" tabindex="-1"></a>                </span>
+<span id="cb4-385"><a href="#cb4-385" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> keypoint_idx, keypoint <span class="kw">in</span> <span class="bu">enumerate</span>(person_keypoints):</span>
+<span id="cb4-386"><a href="#cb4-386" aria-hidden="true" tabindex="-1"></a>                    x, y <span class="op">=</span> keypoint</span>
+<span id="cb4-387"><a href="#cb4-387" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb4-388"><a href="#cb4-388" aria-hidden="true" tabindex="-1"></a>                    <span class="co"># Write to CSV</span></span>
+<span id="cb4-389"><a href="#cb4-389" aria-hidden="true" tabindex="-1"></a>                    csv_writer.writerow([frame_count, person_idx, keypoint_idx, x.item(), y.item()])</span>
+<span id="cb4-390"><a href="#cb4-390" aria-hidden="true" tabindex="-1"></a>                    </span>
+<span id="cb4-391"><a href="#cb4-391" aria-hidden="true" tabindex="-1"></a>                    <span class="co"># Draw keypoint on the frame</span></span>
+<span id="cb4-392"><a href="#cb4-392" aria-hidden="true" tabindex="-1"></a>                    cv2.circle(annotated_frame, (<span class="bu">int</span>(x), <span class="bu">int</span>(y)), <span class="dv">5</span>, colourcode, <span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb4-393"><a href="#cb4-393" aria-hidden="true" tabindex="-1"></a>                </span>
+<span id="cb4-394"><a href="#cb4-394" aria-hidden="true" tabindex="-1"></a>                <span class="co"># Draw skeleton</span></span>
+<span id="cb4-395"><a href="#cb4-395" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> connection <span class="kw">in</span> skeleton:</span>
+<span id="cb4-396"><a href="#cb4-396" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> connection[<span class="dv">0</span>] <span class="op">&lt;</span> <span class="bu">len</span>(person_keypoints) <span class="kw">and</span> connection[<span class="dv">1</span>] <span class="op">&lt;</span> <span class="bu">len</span>(person_keypoints):</span>
+<span id="cb4-397"><a href="#cb4-397" aria-hidden="true" tabindex="-1"></a>                        start_point <span class="op">=</span> <span class="bu">tuple</span>(<span class="bu">map</span>(<span class="bu">int</span>, person_keypoints[connection[<span class="dv">0</span>]]))</span>
+<span id="cb4-398"><a href="#cb4-398" aria-hidden="true" tabindex="-1"></a>                        end_point <span class="op">=</span> <span class="bu">tuple</span>(<span class="bu">map</span>(<span class="bu">int</span>, person_keypoints[connection[<span class="dv">1</span>]]))</span>
+<span id="cb4-399"><a href="#cb4-399" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">if</span> <span class="bu">all</span>(start_point) <span class="kw">and</span> <span class="bu">all</span>(end_point):  <span class="co"># Check if both points are valid</span></span>
+<span id="cb4-400"><a href="#cb4-400" aria-hidden="true" tabindex="-1"></a>                            cv2.line(annotated_frame, start_point, end_point, (<span class="dv">255</span>, <span class="dv">0</span>, <span class="dv">0</span>), <span class="dv">2</span>)</span>
+<span id="cb4-401"><a href="#cb4-401" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-402"><a href="#cb4-402" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Write the frame to the output video</span></span>
+<span id="cb4-403"><a href="#cb4-403" aria-hidden="true" tabindex="-1"></a>            out.write(annotated_frame)</span>
+<span id="cb4-404"><a href="#cb4-404" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-405"><a href="#cb4-405" aria-hidden="true" tabindex="-1"></a>        frame_count <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb4-406"><a href="#cb4-406" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-407"><a href="#cb4-407" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Release everything</span></span>
+<span id="cb4-408"><a href="#cb4-408" aria-hidden="true" tabindex="-1"></a>    cap.release()</span>
+<span id="cb4-409"><a href="#cb4-409" aria-hidden="true" tabindex="-1"></a>    out.release()</span>
+<span id="cb4-410"><a href="#cb4-410" aria-hidden="true" tabindex="-1"></a>    cv2.destroyAllWindows()</span>
+<span id="cb4-411"><a href="#cb4-411" aria-hidden="true" tabindex="-1"></a>    csv_file.close()</span>
+<span id="cb4-412"><a href="#cb4-412" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Output video saved as </span><span class="sc">{</span>output_path<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb4-413"><a href="#cb4-413" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Keypoints data saved as </span><span class="sc">{</span>csv_path<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb4-414"><a href="#cb4-414" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb4-415"><a href="#cb4-415" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-416"><a href="#cb4-416" aria-hidden="true" tabindex="-1"></a><span class="fu">## Step 2: Timeseries preparation and flat data for statistics</span></span>
 <span id="cb4-417"><a href="#cb4-417" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-418"><a href="#cb4-418" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove a row</span></span>
-<span id="cb4-419"><a href="#cb4-419" aria-hidden="true" tabindex="-1"></a>data<span class="ot">&lt;-</span> <span class="fu">subset</span>(data, data<span class="sc">$</span>videoID<span class="sc">!=</span><span class="st">"cop_b09 z góry"</span>)</span>
-<span id="cb4-420"><a href="#cb4-420" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-421"><a href="#cb4-421" aria-hidden="true" tabindex="-1"></a><span class="co"># Add a culture grouping variable</span></span>
-<span id="cb4-422"><a href="#cb4-422" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>culture <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(<span class="fu">grepl</span>(<span class="st">"góry$"</span>, data<span class="sc">$</span>videoID), <span class="st">"Yurakare"</span>,</span>
-<span id="cb4-423"><a href="#cb4-423" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">ifelse</span>(<span class="fu">grepl</span>(<span class="st">"kam_5$"</span>, data<span class="sc">$</span>videoID), <span class="st">"Polish"</span>, <span class="cn">NA</span>))</span>
+<span id="cb4-418"><a href="#cb4-418" aria-hidden="true" tabindex="-1"></a><span class="fu"># Statistical analysis on smoothness derived from timeseries analysis (flat data)</span></span>
+<span id="cb4-419"><a href="#cb4-419" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-420"><a href="#cb4-420" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, eval=FALSE, code_folding="hide"}</span></span>
+<span id="cb4-421"><a href="#cb4-421" aria-hidden="true" tabindex="-1"></a><span class="co"># manually edited this CSV</span></span>
+<span id="cb4-422"><a href="#cb4-422" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"C:/Users/wiltshir/GitHub/InterPerDynPipelineAnalysis/Re_ Behavioral Dynamics in Social Interactions AP_SI/smoothness_data_top_view_clean.csv"</span>) </span>
+<span id="cb4-423"><a href="#cb4-423" aria-hidden="true" tabindex="-1"></a><span class="co">#data_cross_cultur&lt;-data[1:18,]</span></span>
 <span id="cb4-424"><a href="#cb4-424" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-425"><a href="#cb4-425" aria-hidden="true" tabindex="-1"></a><span class="co"># Restructure data into long format</span></span>
-<span id="cb4-426"><a href="#cb4-426" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb4-425"><a href="#cb4-425" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove a row</span></span>
+<span id="cb4-426"><a href="#cb4-426" aria-hidden="true" tabindex="-1"></a>data<span class="ot">&lt;-</span> <span class="fu">subset</span>(data, data<span class="sc">$</span>videoID<span class="sc">!=</span><span class="st">"cop_b09 z góry"</span>)</span>
 <span id="cb4-427"><a href="#cb4-427" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-428"><a href="#cb4-428" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
-<span id="cb4-429"><a href="#cb4-429" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-430"><a href="#cb4-430" aria-hidden="true" tabindex="-1"></a>data_long <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
-<span id="cb4-431"><a href="#cb4-431" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">c</span>(smoothness_p1_proximity, smoothness_p2_proximity),</span>
-<span id="cb4-432"><a href="#cb4-432" aria-hidden="true" tabindex="-1"></a>               <span class="at">names_to =</span> <span class="st">"person"</span>,</span>
-<span id="cb4-433"><a href="#cb4-433" aria-hidden="true" tabindex="-1"></a>               <span class="at">values_to =</span> <span class="st">"smoothness_value"</span>)</span>
+<span id="cb4-428"><a href="#cb4-428" aria-hidden="true" tabindex="-1"></a><span class="co"># Add a culture grouping variable</span></span>
+<span id="cb4-429"><a href="#cb4-429" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>culture <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(<span class="fu">grepl</span>(<span class="st">"góry$"</span>, data<span class="sc">$</span>videoID), <span class="st">"Yurakare"</span>,</span>
+<span id="cb4-430"><a href="#cb4-430" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">ifelse</span>(<span class="fu">grepl</span>(<span class="st">"kam_5$"</span>, data<span class="sc">$</span>videoID), <span class="st">"Polish"</span>, <span class="cn">NA</span>))</span>
+<span id="cb4-431"><a href="#cb4-431" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-432"><a href="#cb4-432" aria-hidden="true" tabindex="-1"></a><span class="co"># Restructure data into long format</span></span>
+<span id="cb4-433"><a href="#cb4-433" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
 <span id="cb4-434"><a href="#cb4-434" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-435"><a href="#cb4-435" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lme4) </span>
-<span id="cb4-436"><a href="#cb4-436" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lmerTest) </span>
-<span id="cb4-437"><a href="#cb4-437" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-438"><a href="#cb4-438" aria-hidden="true" tabindex="-1"></a>model1 <span class="ot">&lt;-</span> <span class="fu">lmer</span>(smoothness_value <span class="sc">~</span> culture <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> videoID), <span class="at">data =</span> data_long)</span>
-<span id="cb4-439"><a href="#cb4-439" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-440"><a href="#cb4-440" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model1)</span>
-<span id="cb4-441"><a href="#cb4-441" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb4-442"><a href="#cb4-442" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-443"><a href="#cb4-443" aria-hidden="true" tabindex="-1"></a><span class="fu"># Statistical analysis on measures derived from non-linear time series analysis</span></span>
+<span id="cb4-435"><a href="#cb4-435" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb4-436"><a href="#cb4-436" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-437"><a href="#cb4-437" aria-hidden="true" tabindex="-1"></a>data_long <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
+<span id="cb4-438"><a href="#cb4-438" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">c</span>(smoothness_p1_proximity, smoothness_p2_proximity),</span>
+<span id="cb4-439"><a href="#cb4-439" aria-hidden="true" tabindex="-1"></a>               <span class="at">names_to =</span> <span class="st">"person"</span>,</span>
+<span id="cb4-440"><a href="#cb4-440" aria-hidden="true" tabindex="-1"></a>               <span class="at">values_to =</span> <span class="st">"smoothness_value"</span>)</span>
+<span id="cb4-441"><a href="#cb4-441" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-442"><a href="#cb4-442" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lme4) </span>
+<span id="cb4-443"><a href="#cb4-443" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lmerTest) </span>
 <span id="cb4-444"><a href="#cb4-444" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-445"><a href="#cb4-445" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-445"><a href="#cb4-445" aria-hidden="true" tabindex="-1"></a>model1 <span class="ot">&lt;-</span> <span class="fu">lmer</span>(smoothness_value <span class="sc">~</span> culture <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> videoID), <span class="at">data =</span> data_long)</span>
 <span id="cb4-446"><a href="#cb4-446" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-447"><a href="#cb4-447" aria-hidden="true" tabindex="-1"></a><span class="fu"># References</span></span>
+<span id="cb4-447"><a href="#cb4-447" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model1)</span>
+<span id="cb4-448"><a href="#cb4-448" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb4-449"><a href="#cb4-449" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-450"><a href="#cb4-450" aria-hidden="true" tabindex="-1"></a><span class="fu"># Statistical analysis on measures derived from non-linear time series analysis</span></span>
+<span id="cb4-451"><a href="#cb4-451" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-452"><a href="#cb4-452" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-453"><a href="#cb4-453" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-454"><a href="#cb4-454" aria-hidden="true" tabindex="-1"></a><span class="fu"># References</span></span>
 </code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->

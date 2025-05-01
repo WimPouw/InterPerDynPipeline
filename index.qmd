@@ -1,6 +1,7 @@
 ---
 title: "An Open-source Standardized Pipeline for Tracing the Behavioral Dynamics in Social Interactions"
 subtitle: "Computationally Reproducible Extended Methods Section"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
 author: 
   - name: Arkadiusz Białek
     affiliation: Jagiellonian University, Poland
@@ -171,7 +172,12 @@ plt.close()
 
 # Motion tracking and signal processing and wrangling
 
-## Step 1: Tracking two persons in videos for top-view
+The motion tracking and signal processing pipeline is divided into two main steps: 
+1. **Tracking**: This step involves tracking the movements of individuals in the videos using a pose estimation model. The output is a video with annotated keypoints and a CSV file containing the coordinates of these keypoints.
+2. **Signal Processing**: This step involves processing the keypoint data to extract relevant features for analysis. The output are processed timeseries files, and a flat dataset containing our smoothness measures that are directly ready for statistical analysis.
+
+
+## Step 1: Tracking two persons in videos for top-view (Python)
 
 We have tried several pose tracking solutions. From this experience we concluded yolo worked best for top-view tracking.
 
@@ -186,7 +192,8 @@ pip install requirements.txt
 ```
 :::
 
-```{python,eval=FALSE, code_folding="hide"}
+```{python, eval=FALSE, code_folding="hide"}
+
 from ultralytics import YOLO
 from pydantic import BaseModel
 import cv2
@@ -406,7 +413,7 @@ for video_path in video_files:
 
 ## Step 2: Timeseries preparation and flat data for statistics
 
-# Statistical analysis on smoothness derived from timeseries analysis (flat data)
+# Statistical analysis on smoothness derived from timeseries analysis (R)
 
 ```{r, eval=FALSE, code_folding="hide"}
 # manually edited this CSV
