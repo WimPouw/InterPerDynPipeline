@@ -1,4 +1,4 @@
-Code,P1agedays,P2agedays,GenderP1,GenderP2,Date_of_study
+Code,Age of the child on the left (P1),Age of the child on the right (P2),Gender P1 ,Gender P2,Date of the study
 cop_p01,78,60,M,F,04 2023
 cop_p02,43,90,F,M,04 2023
 cop_p03,54,73,F,M,04 2023
@@ -13,7 +13,7 @@ cop_y01,77,100,M,M,07 2022
 cop_y02,88,61,F,F,07 2022
 cop_y03,34,66,F,F,07 2022
 cop_y04,59,89,F,F,07 2022
-cop_y05,55,72,F,F,07 2022
+cop_y05,72,55,F,F,07 2022
 cop_y06,62,75,F,F,07 2022
 cop_y07,71,41,F,F,07 2022
 cop_y08,54,30,M,M,07 2022
