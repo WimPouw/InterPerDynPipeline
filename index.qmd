@@ -179,12 +179,14 @@ The motion tracking and signal processing pipeline is divided into two main step
 
 ## Step 1: Tracking two persons in videos for top-view (Python)
 
-We have tried several pose tracking solutions. From this experience we concluded yolo worked best for top-view tracking.
+We have tried several pose tracking solutions, such as OpenPose (model 25B), Mediapipe (default highest complexity blazepose model) and we found that these models are not well equipped to track persons from top view, most likely because these models are not trained on ground-truth poses of persons from those camera angles. However, we found the heaviest model of yolo v8 ("yolov8x-pose-p6.pt") worked best for reliable top-view tracking.
 
 ::: {.callout-note .callout-installation collapse="true"}
 ## Installation Guide 🛠️
 
-The yolo model we used is the YOLOv8 pose model. This model is the heaviest and will run slowly on a CPU. We recommend using a GPU for this model.
+The yolo model we used is the YOLOv8 pose model yolov8x-pose-p6.pt (~189MB). In the current github repo we have a lighter model for testing "yolov8n-pose.pt" (~6.5MB). 
+
+This model is the heaviest and will run slowly on a CPU. We recommend using a GPU for this model.
 
 ### Step 1: Install requirements
 ```bash

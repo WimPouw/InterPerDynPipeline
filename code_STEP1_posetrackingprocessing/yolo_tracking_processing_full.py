@@ -9,14 +9,19 @@ import torch # for gpu support
 from itertools import combinations
 import sys
 
+torch.cuda.set_device(0) # setting up GPU
 
-torch.cuda.set_device(0)
 # Load the model
-model = YOLO('yolov8x-pose-p6.pt') # heaviest model
+modelfolder = './model/'
+modellocation = glob.glob(modelfolder+"*.pt")
+modelfile = os.path.basename(modellocation)
+print(f"We are loading in the following YOLO model: {modelfile}")
+model = YOLO(modellocation)
+
 # main variables
 video_folder = "../data_fulldata_raw/"
 # avi mp4 or other video formats
-video_files = glob.glob(video_folder + "*.mp4") + glob.glob(video_folder + "*.avi")
+video_files = glob.glob(video_folder + "*.mp4") + glob.glob(video_folder + "*.avi") + glob.glob(video_folder + "*.MOV")
 step1resultfolder = "../data_fulldatatracked_afterSTEP1/" # we can replace with full data
 print(video_files)
 
