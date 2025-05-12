@@ -27,8 +27,13 @@ theme: journal
 css: quarto_dependencies/styles/styles.css
 format:
   html:
+    toc: true
+    toc-location: left
+    toc-title: "Contents"
+    toc-depth: 3
+    number-sections: true
     code-fold: true
-    code-tools: true  # Adds a code button to toggle all code
+    code-tools: true
 ---
 ![](images/ts.gif)
 
