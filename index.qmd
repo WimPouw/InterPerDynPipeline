@@ -42,24 +42,188 @@ The following data has been made available in masked form.
 
 ::: {.callout-note .callout-download collapse="true"}
 ## Download Guide ⬇️
-
 The masked data can be downloaded from the repository of Jagellonian University [here](). The unmasked data can be requested from the authors. The unmasked data is not available in this repository for privacy reasons.
 :::
 
 ### Dataset Mother Infant
+```{python, eval=FALSE, code_folding="hide"}
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
+plt.ioff()
+plt.clf() # Clear any existing figures
+
+import pandas as pd
+import numpy as np
+import os
+
+# Load the data
+df = pd.read_csv('./meta/project_point_metadata_ages.csv')
+
+# Convert gender to categorical label
+df['gender_label'] = df['gender'].map({0: 'Female', 1: 'Male'})
+
+# Create a 2x2 subplot layout
+fig, axs = plt.subplots(2, 2, figsize=(12, 10), gridspec_kw={'width_ratios': [1.5, 1], 'height_ratios': [1.5, 1]})
+fig.suptitle('Mother-Infant Dataset Overview', fontsize=16, fontfamily='serif')
+
+# Define colors for gender
+colors = {
+    'Female': '#C55A11',   # Orange for females
+    'Male': '#4472C4'       # Blue for males
+}
+
+# 1. Line plot - Age progression across time points
+for idx, row in df.iterrows():
+    gender = row['gender_label']
+    # Create arrays for days and time points, handling NaN values
+    days = []
+    timepoints = []
+
+    for i in range(1, 8):   # T1 to T7
+        day_col = f'age_T{i}_days'
+        if day_col in df.columns and pd.notna(row[day_col]) and row[day_col] > 0:
+            days.append(row[day_col])
+            timepoints.append(i)
+
+    # Plot the line for this infant
+    axs[0, 0].plot(
+        timepoints,
+        days,
+        marker='o',
+        color=colors[gender],
+        alpha=0.5,
+        linewidth=1.5
+    )
+
+# Customize the plot
+axs[0, 0].set_xlabel('Time Point', fontfamily='serif')
+axs[0, 0].set_ylabel('Age (days)', fontfamily='serif')
+axs[0, 0].set_title('Infant Age Progression', fontfamily='serif')
+axs[0, 0].set_xticks(range(1, 8))
+axs[0, 0].set_xticklabels([f'T{i}' for i in range(1, 8)])
+axs[0, 0].grid(True, alpha=0.3)
+
+# Add legend patches
+from matplotlib.patches import Patch
+legend_elements = [
+    Patch(facecolor=colors['Female'], edgecolor='w', label='Female'),
+    Patch(facecolor=colors['Male'], edgecolor='w', label='Male')
+]
+axs[0, 0].legend(handles=legend_elements, loc='upper left')
+
+# 2. Box plot - Age distribution at each time point
+time_point_data = []
+labels = []
+
+for i in range(1, 8):   # T1 to T7
+    col = f'age_T{i}_days'
+    if col in df.columns:
+        valid_data = df[col].dropna()
+        if len(valid_data) > 0:
+            time_point_data.append(valid_data)
+            labels.append(f'T{i}')
+
+# Create violin plots
+if time_point_data:
+    violin_parts = axs[0, 1].violinplot(
+        time_point_data,
+        showmeans=True,
+        showmedians=True
+    )
+
+    # Color the violin plots
+    for i, pc in enumerate(violin_parts['bodies']):
+        pc.set_facecolor('#7030A0')  # Purple
+        pc.set_edgecolor('black')
+        pc.set_alpha(0.7)
+
+# Set labels
+axs[0, 1].set_xticks(range(1, len(labels) + 1))
+axs[0, 1].set_xticklabels(labels)
+axs[0, 1].set_xlabel('Time Point', fontfamily='serif')
+axs[0, 1].set_ylabel('Age (days)', fontfamily='serif')
+axs[0, 1].set_title('Age Distribution by Time Point', fontfamily='serif')
+axs[0, 1].grid(True, alpha=0.3, axis='y')
+
+# 3. Pie chart - Gender distribution
+gender_counts = df['gender_label'].value_counts()
+axs[1, 0].pie(
+    gender_counts,
+    labels=gender_counts.index,
+    autopct='%1.1f%%',
+    colors=[colors[g] for g in gender_counts.index],
+    wedgeprops={'edgecolor': 'w', 'linewidth': 1}
+)
+axs[1, 0].set_title('Gender Distribution', fontfamily='serif')
+
+# 4. Summary table
+# Calculate averages for each time point, handling NaN values
+averages_days = []
+for i in range(1, 8):
+    col = f'age_T{i}_days'
+    if col in df.columns:
+        avg = df[col].mean()
+        if not pd.isna(avg):
+            avg_months = avg / 30.44  # Convert to months
+            averages_days.append([f"T{i} Average Age", f"{avg:.1f} days ({avg_months:.1f} months)"])
+
+# Count participants at each time point
+participants = []
+for i in range(1, 8):
+    col = f'age_T{i}_days'
+    if col in df.columns:
+        count = df[col].notna().sum()
+        participants.append([f"Participants at T{i}", f"{count}"])
+
+# Overall statistics
+summary_data = [
+    ["Total Infants", f"{len(df)}"],
+    ["Females", f"{(df['gender'] == 0).sum()}"],
+    ["Males", f"{(df['gender'] == 1).sum()}"]
+]
+
+# Add age ranges if columns exist
+if 'age_T1_days' in df.columns:
+    summary_data.append(["Age Range T1", f"{df['age_T1_days'].min():.0f}-{df['age_T1_days'].max():.0f} days"])
+
+last_tp = 7
+while last_tp > 0:
+    col = f'age_T{last_tp}_days'
+    if col in df.columns and df[col].notna().sum() > 0:
+        summary_data.append([f"Age Range T{last_tp}", f"{df[col].min():.0f}-{df[col].max():.0f} days"])
+        break
+    last_tp -= 1
+
+# Create the table with the most important summary statistics
+axs[1, 1].axis('off')
+table = axs[1, 1].table(
+    cellText=summary_data + participants,
+    loc='center',
+    cellLoc='left'
+)
+table.auto_set_font_size(False)
+table.set_fontsize(10)
+table.scale(1, 1.5)
+axs[1, 1].set_title('Dataset Summary', fontfamily='serif')
+
+plt.tight_layout()
+plt.subplots_adjust(top=0.9)
+
+# Save the figure to a file
+output_path = "images/mother_infant_analysis.png"
+os.makedirs(os.path.dirname(output_path), exist_ok=True)
+plt.savefig(output_path, dpi=300, bbox_inches='tight')
+plt.close(fig) # Explicitly close the figure object
+```
+
+![](images/mother_infant_analysis.png){fig-align="center" width=600}
+
+In our github repository we use a sample data from this dataset from an infant-mother pair whom we are allowed to share the video data for the current purposes.
 
 ### Dataset Siblings
 
-
-```{python}
-#| warning: false
-#| error: false
-#| message: false
-#| results: false
-#| echo: false
-#| code-fold: true
-#| code-summary: "Code for generating plot"
-
+```{python, eval=FALSE, code_folding="hide"}
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -166,9 +330,14 @@ plt.savefig(output_path, dpi=300, bbox_inches='tight')
 plt.close()
 ```
 
-
 ![](images/sibling_analysis.png){fig-align="center" width=600}
 
+::: {.callout-note .callout-settingup collapse="true"}
+## Setting up 🛠️
+
+
+
+:::
 
 # Motion tracking and signal processing and wrangling
 
@@ -178,24 +347,42 @@ The motion tracking and signal processing pipeline is divided into two main step
 
 
 ## Step 1: Tracking two persons in videos for top-view (Python)
-
-We have tried several pose tracking solutions, such as OpenPose (model 25B), Mediapipe (default highest complexity blazepose model) and we found that these models are not well equipped to track persons from top view, most likely because these models are not trained on ground-truth poses of persons from those camera angles. However, we found the heaviest model of yolo v8 ("yolov8x-pose-p6.pt") worked best for reliable top-view tracking.
+We have tried several pose tracking solutions, such as OpenPose (model 25B; @caoOpenPoseRealtimeMultiPerson2021), Mediapipe (default highest complexity blazepose model; @lugaresiMediaPipeFrameworkBuilding2019) and we found that these models are not well equipped to track persons from top view, most likely because these models are not trained on ground-truth poses of persons from top-view camera angles. However, we found the heaviest model of yolo v8 ("yolov8x-pose-p6.pt") does perform very well, especially as compared to the other models we tested. Thus, for this pipeline we recommend using YOLOv8 model for top-view tracking.
 
 ::: {.callout-note .callout-installation collapse="true"}
 ## Installation Guide 🛠️
 
-The yolo model we used is the YOLOv8 pose model yolov8x-pose-p6.pt (~189MB). In the current github repo we have a lighter model for testing "yolov8n-pose.pt" (~6.5MB). 
-
-This model is the heaviest and will run slowly on a CPU. We recommend using a GPU for this model.
+### Step 0: Github repo
+We assume you have cloned the repository [InterPerDynPipeline](https://github.com/WimPouw/InterPerDynPipeline) and are in the root directory. The step 1 code for tracking is in the `./code_STEP1_posetrackingprocessing/` folder. In this folder you will find the Python script `yolo_tracking_processing.py`. To check whether you have the correct script you can compare against the code chunk provided below.
 
 ### Step 1: Install requirements
+For each script we have provided a `requirements.txt` file. You can install the requirements using pip, by first navigating to the folder where the script is located and then running the following command in your terminal:
+
 ```bash
-pip install requirements.txt
+cd [yourspecificrootadress]/code_STEP1_posetrackingprocessing/
+pip install -r requirements.txt
+```
+
+### Step 2: Download the YOLOv8 model
+In the current GitHub repo we have a light-weight model `yolov8n-pose.pt` (~6.5MB) for immediate testing of the code. However, this model is not as accurate as the heaviest model.
+
+We should download the heaviest model (`yolov8x-pose-p6.pt`) and save it to the `./code_STEP1_posetrackingprocessing/model/` directory:  
+https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8x-pose-p6.pt
+
+**Note**: If you're running the heavyweight model, you will need GPU support for this to run in a reasonable time. The lightweight model can run on CPU.
+
+### Step 3: Run the python script
+Assuming you have videos in your data folder (`./data_raw/`) and you have a `.pt` model in the model folder, you can run the script using the following command:
+
+```bash
+cd [yourspecificrootadress]/code_STEP1_posetrackingprocessing/
+python yolo_tracking_processing.py
 ```
 :::
 
-```{python, eval=FALSE, code_folding="hide"}
+The code below is the script `yolo_tracking_processing.py` that you can run to track the videos. The output will be a video with annotated keypoints and a CSV file containing the coordinates of these keypoints. The script processes each video frame-by-frame, detecting people and their pose keypoints (17 points as listed in the script; see the `GetKeypoint class`). We filter out duplicate detections or skeletons with excessive missing data. Specifically, for each processed video, the script generates two output files: an annotated video showing the original footage with skeleton overlays (green points for accepted keypoints, red for filtered ones, and blue lines connecting the points), and a CSV file containing the raw coordinate data (frame number, person ID, keypoint ID, x-coordinate, y-coordinate). The output filenames include parameters like "c150" (150px proximity threshold) and "miss95" (95% missing data tolerance), which control how the system handles potential duplicate detections and incomplete skeletons. The user could adjust the parameter `close_threshold` and `miss_tolerance` to adjust the detection dynamics. We output the annotated video and the CSV file in the `./datatracked_afterSTEP1/` folder.
 
+```{python, eval=FALSE, code_folding="hide"}
 from ultralytics import YOLO
 from pydantic import BaseModel
 import cv2
@@ -207,52 +394,82 @@ import torch # for gpu support
 from itertools import combinations
 import sys
 
-
 torch.cuda.set_device(0)
 # Load the model
-model = YOLO('yolov8x-pose-p6.pt') # heaviest model
+modelfolder = './model/'
+modellocation = glob.glob(modelfolder+"*.pt")[0]
+modelfile = os.path.basename(modellocation)
+print(f"We are loading in the following YOLO model: {modelfile}")
+model = YOLO(modellocation)
 # main variables
-video_folder = "../data_fulldata_raw/"
+video_folder = "../data_raw/"
 # avi mp4 or other video formats
-video_files = glob.glob(video_folder + "*.mp4") + glob.glob(video_folder + "*.avi")
-step1resultfolder = "../data_fulldatatracked_afterSTEP1/" # we can replace with full data
+video_files = glob.glob(video_folder + "*.mp4") + glob.glob(video_folder + "*.avi") + glob.glob(video_folder + "*.mov") + glob.glob(video_folder + "*.mkv")
+step1resultfolder = "../datatracked_afterSTEP1/"
 print(video_files)
+
+# keypoint names
+class GetKeypoint(BaseModel):
+    NOSE:           int = 0
+    LEFT_EYE:       int = 1
+    RIGHT_EYE:      int = 2
+    LEFT_EAR:       int = 3
+    RIGHT_EAR:      int = 4
+    LEFT_SHOULDER:  int = 5
+    RIGHT_SHOULDER: int = 6
+    LEFT_ELBOW:     int = 7
+    RIGHT_ELBOW:    int = 8
+    LEFT_WRIST:     int = 9
+    RIGHT_WRIST:    int = 10
+    LEFT_HIP:       int = 11
+    RIGHT_HIP:      int = 12
+    LEFT_KNEE:      int = 13
+    RIGHT_KNEE:     int = 14
+    LEFT_ANKLE:     int = 15
+    RIGHT_ANKLE:    int = 16
+get_keypoint = GetKeypoint()
+
+
+# Define skeleton connections
+skeleton = [
+    (get_keypoint.LEFT_SHOULDER, get_keypoint.RIGHT_SHOULDER),
+    (get_keypoint.LEFT_SHOULDER, get_keypoint.LEFT_ELBOW),
+    (get_keypoint.RIGHT_SHOULDER, get_keypoint.RIGHT_ELBOW),
+    (get_keypoint.LEFT_ELBOW, get_keypoint.LEFT_WRIST),
+    (get_keypoint.RIGHT_ELBOW, get_keypoint.RIGHT_WRIST),
+    (get_keypoint.LEFT_SHOULDER, get_keypoint.LEFT_HIP),
+    (get_keypoint.RIGHT_SHOULDER, get_keypoint.RIGHT_HIP),
+    (get_keypoint.LEFT_HIP, get_keypoint.RIGHT_HIP),
+    (get_keypoint.LEFT_HIP, get_keypoint.LEFT_KNEE),
+    (get_keypoint.RIGHT_HIP, get_keypoint.RIGHT_KNEE),
+    (get_keypoint.LEFT_KNEE, get_keypoint.LEFT_ANKLE),
+    (get_keypoint.RIGHT_KNEE, get_keypoint.RIGHT_ANKLE),
+]
 
 def tensor_to_matrix(results_tensor):
     # this just takes the results output of YOLO and coverts it to a matrix,
     # making it easier to do quick calculations on the coordinates
     results_list = results_tensor.tolist()
     results_matrix = np.matrix(results_list)
-    
     results_matrix[results_matrix==0] = np.nan
-    
     return results_matrix
 
-
 def check_for_duplication(results):
-    
     # this threshold determines how close two skeletons must be in order to be
     # considered the same person. Arbitrarily chosen for now.
     close_threshold =150
-    
     # missing data tolerance
     miss_tolerance = 0.95 # this means we can miss up to 75% of the keypoints
-    
     drop_indices = []
-    
     if len(results[0].keypoints.xy) > 1:
-        
-        
-        
         conf_scores = []
         # get detection confidence for each skeleton
         for person in tensor_to_matrix(results[0].keypoints.conf):
             conf_scores.append(np.mean(person))
-                
+           
         # this list will stores which comparisons need to be made
         combos = list(combinations(range(len(results[0].keypoints.xy)), 2))
-        
-        
+
         # now loop through these comparisons
         for combo in combos:
             closeness = abs(np.nanmean(tensor_to_matrix(results[0].keypoints.xy[combo[0]]) - 
@@ -274,47 +491,8 @@ def check_for_duplication(results):
            if perc_missed > miss_tolerance:
                drop_indices.append(person)
         
-        
     return list(set(drop_indices))
 
-
-
-class GetKeypoint(BaseModel):
-    NOSE:           int = 0
-    LEFT_EYE:       int = 1
-    RIGHT_EYE:      int = 2
-    LEFT_EAR:       int = 3
-    RIGHT_EAR:      int = 4
-    LEFT_SHOULDER:  int = 5
-    RIGHT_SHOULDER: int = 6
-    LEFT_ELBOW:     int = 7
-    RIGHT_ELBOW:    int = 8
-    LEFT_WRIST:     int = 9
-    RIGHT_WRIST:    int = 10
-    LEFT_HIP:       int = 11
-    RIGHT_HIP:      int = 12
-    LEFT_KNEE:      int = 13
-    RIGHT_KNEE:     int = 14
-    LEFT_ANKLE:     int = 15
-    RIGHT_ANKLE:    int = 16
-
-get_keypoint = GetKeypoint()
-
-# Define skeleton connections
-skeleton = [
-    (get_keypoint.LEFT_SHOULDER, get_keypoint.RIGHT_SHOULDER),
-    (get_keypoint.LEFT_SHOULDER, get_keypoint.LEFT_ELBOW),
-    (get_keypoint.RIGHT_SHOULDER, get_keypoint.RIGHT_ELBOW),
-    (get_keypoint.LEFT_ELBOW, get_keypoint.LEFT_WRIST),
-    (get_keypoint.RIGHT_ELBOW, get_keypoint.RIGHT_WRIST),
-    (get_keypoint.LEFT_SHOULDER, get_keypoint.LEFT_HIP),
-    (get_keypoint.RIGHT_SHOULDER, get_keypoint.RIGHT_HIP),
-    (get_keypoint.LEFT_HIP, get_keypoint.RIGHT_HIP),
-    (get_keypoint.LEFT_HIP, get_keypoint.LEFT_KNEE),
-    (get_keypoint.RIGHT_HIP, get_keypoint.RIGHT_KNEE),
-    (get_keypoint.LEFT_KNEE, get_keypoint.LEFT_ANKLE),
-    (get_keypoint.RIGHT_KNEE, get_keypoint.RIGHT_ANKLE),
-]
 
 for video_path in video_files:
     # Video path
@@ -359,10 +537,7 @@ for video_path in video_files:
     
         # Run YOLOv8 inference on the frame
         results = model(frame)
-        
-        # Visualize the results on the frame
-        #annotated_frame = results[0].plot()
-        
+               
         # write empty rows if no person is detected
         if len(results[0].keypoints.xy) == 0:
             csv_writer.writerow([frame_count, None, None, None, None])
@@ -413,7 +588,36 @@ for video_path in video_files:
     print(f"Keypoints data saved as {csv_path}")
 ```
 
+Here is an example of the output video with annotated keypoints and skeletons. The green points indicate accepted keypoints, while the red points indicate filtered ones. The blue lines connect the keypoints to form a skeleton.
+
+<html>
+<video width="300" height="200" controls>
+  <source src="./images/videosrerendered/sample.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+</html>
+
+
+Here is an example of the output csv file containing the coordinates of the keypoints. The CSV file contains the following columns: frame number, person ID, keypoint ID, x-coordinate, and y-coordinate. Each row corresponds to a detected keypoint in a specific frame.
+
+```{python, code_folding="hide"}
+import pandas as pd
+import glob as glob
+
+folderstep1output = "./datatracked_afterSTEP1/"
+# Load the CSV file
+csv_file = glob.glob(folderstep1output + "*.csv")[0]
+df = pd.read_csv(csv_file)
+
+# Display the first few rows of the DataFrame
+print(df.head())
+```
+
 ## Step 2: Timeseries preparation and flat data for statistics
+
+
+
+
 
 # Statistical analysis on smoothness derived from timeseries analysis (R)
 
