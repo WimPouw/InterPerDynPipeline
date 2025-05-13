@@ -1421,7 +1421,7 @@ model1 <- lmer(smoothness_value ~ culture + (1 | videoID), data = data_long)
 summary(model1)
 ```
 
-# Statistical analysis on measures derived from non-linear time series analysis
+# Step 5: Non-linear Time Series Analysis
 
 
 
