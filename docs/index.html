@@ -117,15 +117,13 @@ div.csl-indent {
   <li><a href="#dataset-mother-infant" id="toc-dataset-mother-infant" class="nav-link" data-scroll-target="#dataset-mother-infant"><span class="header-section-number">2.0.1</span> Dataset Mother Infant</a></li>
   <li><a href="#dataset-siblings" id="toc-dataset-siblings" class="nav-link" data-scroll-target="#dataset-siblings"><span class="header-section-number">2.0.2</span> Dataset Siblings</a></li>
   </ul></li>
-  <li><a href="#motion-tracking-and-signal-processing-and-wrangling" id="toc-motion-tracking-and-signal-processing-and-wrangling" class="nav-link" data-scroll-target="#motion-tracking-and-signal-processing-and-wrangling"><span class="header-section-number">3</span> Motion tracking and signal processing and wrangling</a>
-  <ul class="collapse">
-  <li><a href="#step-1-tracking-two-persons-in-videos-for-top-view-python" id="toc-step-1-tracking-two-persons-in-videos-for-top-view-python" class="nav-link" data-scroll-target="#step-1-tracking-two-persons-in-videos-for-top-view-python"><span class="header-section-number">3.1</span> Step 1: Tracking two persons in videos for top-view (Python)</a></li>
-  <li><a href="#step-2-raw-pose-data-post-processing-for-timeseries-matrices-python" id="toc-step-2-raw-pose-data-post-processing-for-timeseries-matrices-python" class="nav-link" data-scroll-target="#step-2-raw-pose-data-post-processing-for-timeseries-matrices-python"><span class="header-section-number">3.2</span> Step 2: Raw pose data post-processing for timeseries matrices (Python)</a></li>
-  <li><a href="#step-3-calculating-feature-data-e.g.-jerkiness-from-timeseries-python" id="toc-step-3-calculating-feature-data-e.g.-jerkiness-from-timeseries-python" class="nav-link" data-scroll-target="#step-3-calculating-feature-data-e.g.-jerkiness-from-timeseries-python"><span class="header-section-number">3.3</span> Step 3: Calculating feature data (e.g., jerkiness) from timeseries (Python)</a></li>
-  <li><a href="#step-4-statistical-analysis-on-smoothness-derived-from-timeseries-analysis-r" id="toc-step-4-statistical-analysis-on-smoothness-derived-from-timeseries-analysis-r" class="nav-link" data-scroll-target="#step-4-statistical-analysis-on-smoothness-derived-from-timeseries-analysis-r"><span class="header-section-number">3.4</span> Step 4: Statistical analysis on smoothness derived from timeseries analysis (R)</a></li>
-  </ul></li>
-  <li><a href="#step-5-non-linear-time-series-analysis" id="toc-step-5-non-linear-time-series-analysis" class="nav-link" data-scroll-target="#step-5-non-linear-time-series-analysis"><span class="header-section-number">4</span> Step 5: Non-linear Time Series Analysis</a></li>
-  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">5</span> References</a></li>
+  <li><a href="#motion-tracking-and-signal-processing-and-wrangling" id="toc-motion-tracking-and-signal-processing-and-wrangling" class="nav-link" data-scroll-target="#motion-tracking-and-signal-processing-and-wrangling"><span class="header-section-number">3</span> Motion tracking and signal processing and wrangling</a></li>
+  <li><a href="#step-1-tracking-two-persons-in-videos-for-top-view-python" id="toc-step-1-tracking-two-persons-in-videos-for-top-view-python" class="nav-link" data-scroll-target="#step-1-tracking-two-persons-in-videos-for-top-view-python"><span class="header-section-number">4</span> Step 1: Tracking two persons in videos for top-view (Python)</a></li>
+  <li><a href="#step-2-raw-pose-data-post-processing-for-timeseries-matrices-python" id="toc-step-2-raw-pose-data-post-processing-for-timeseries-matrices-python" class="nav-link" data-scroll-target="#step-2-raw-pose-data-post-processing-for-timeseries-matrices-python"><span class="header-section-number">5</span> Step 2: Raw pose data post-processing for timeseries matrices (Python)</a></li>
+  <li><a href="#step-3-calculating-feature-data-e.g.-jerkiness-from-timeseries-python" id="toc-step-3-calculating-feature-data-e.g.-jerkiness-from-timeseries-python" class="nav-link" data-scroll-target="#step-3-calculating-feature-data-e.g.-jerkiness-from-timeseries-python"><span class="header-section-number">6</span> Step 3: Calculating feature data (e.g., jerkiness) from timeseries (Python)</a></li>
+  <li><a href="#step-4-statistical-analysis-on-smoothness-derived-from-timeseries-analysis-r" id="toc-step-4-statistical-analysis-on-smoothness-derived-from-timeseries-analysis-r" class="nav-link" data-scroll-target="#step-4-statistical-analysis-on-smoothness-derived-from-timeseries-analysis-r"><span class="header-section-number">7</span> Step 4: Statistical analysis on smoothness derived from timeseries analysis (R)</a></li>
+  <li><a href="#step-5-non-linear-time-series-analysis" id="toc-step-5-non-linear-time-series-analysis" class="nav-link" data-scroll-target="#step-5-non-linear-time-series-analysis"><span class="header-section-number">8</span> Step 5: Non-linear Time Series Analysis</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">9</span> References</a></li>
   </ul>
 </nav>
 </div>
@@ -571,8 +569,9 @@ Setting up 🛠️
 <section id="motion-tracking-and-signal-processing-and-wrangling" class="level1" data-number="3">
 <h1 data-number="3"><span class="header-section-number">3</span> Motion tracking and signal processing and wrangling</h1>
 <p>The motion tracking and signal processing pipeline is divided into two main steps: 1. <strong>Tracking</strong>: This step involves tracking the movements of individuals in the videos using a pose estimation model. The output is a video with annotated keypoints and a CSV file containing the coordinates of these keypoints. 2. <strong>Signal Processing</strong>: This step involves processing the keypoint data to extract relevant features for analysis. The output are processed timeseries files, and a flat dataset containing our smoothness measures that are directly ready for statistical analysis.</p>
-<section id="step-1-tracking-two-persons-in-videos-for-top-view-python" class="level2" data-number="3.1">
-<h2 data-number="3.1" class="anchored" data-anchor-id="step-1-tracking-two-persons-in-videos-for-top-view-python"><span class="header-section-number">3.1</span> Step 1: Tracking two persons in videos for top-view (Python)</h2>
+</section>
+<section id="step-1-tracking-two-persons-in-videos-for-top-view-python" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Step 1: Tracking two persons in videos for top-view (Python)</h1>
 <p>We have tried several pose tracking solutions, such as OpenPose (model 25B; <span class="citation" data-cites="caoOpenPoseRealtimeMultiPerson2021">Cao et al. (<a href="#ref-caoOpenPoseRealtimeMultiPerson2021" role="doc-biblioref">2021</a>)</span>), Mediapipe (default highest complexity blazepose model; <span class="citation" data-cites="lugaresiMediaPipeFrameworkBuilding2019">Lugaresi et al. (<a href="#ref-lugaresiMediaPipeFrameworkBuilding2019" role="doc-biblioref">2019</a>)</span>) and we found that these models are not well equipped to track persons from top view, most likely because these models are not trained on ground-truth poses of persons from top-view camera angles. However, we found the heaviest model of yolo v8 (“yolov8x-pose-p6.pt”) does perform very well, especially as compared to the other models we tested. Thus, for this pipeline we recommend using YOLOv8 model for top-view tracking.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
@@ -586,25 +585,25 @@ Installation Guide 🛠️
 </div>
 <div id="callout-3" class="callout-3-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<section id="step-0-github-repo" class="level3" data-number="3.1.1">
-<h3 data-number="3.1.1" class="anchored" data-anchor-id="step-0-github-repo"><span class="header-section-number">3.1.1</span> Step 0: Github repo</h3>
+<section id="step-0-github-repo" class="level3" data-number="4.0.1">
+<h3 data-number="4.0.1" class="anchored" data-anchor-id="step-0-github-repo"><span class="header-section-number">4.0.1</span> Step 0: Github repo</h3>
 <p>We assume you have cloned the repository <a href="https://github.com/WimPouw/InterPerDynPipeline">InterPerDynPipeline</a> and are in the root directory. The step 1 code for tracking is in the <code>./code_STEP1_posetrackingprocessing/</code> folder. In this folder you will find the Python script <code>yolo_tracking_processing.py</code>. To check whether you have the correct script you can compare against the code chunk provided below.</p>
 </section>
-<section id="step-1-install-requirements" class="level3" data-number="3.1.2">
-<h3 data-number="3.1.2" class="anchored" data-anchor-id="step-1-install-requirements"><span class="header-section-number">3.1.2</span> Step 1: Install requirements</h3>
+<section id="step-1-install-requirements" class="level3" data-number="4.0.2">
+<h3 data-number="4.0.2" class="anchored" data-anchor-id="step-1-install-requirements"><span class="header-section-number">4.0.2</span> Step 1: Install requirements</h3>
 <p>For each script we have provided a <code>requirements.txt</code> file. You can install the requirements using pip, by first navigating to the folder where the script is located and then running the following command in your terminal:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="pp">[</span><span class="ss">yourspecificrootadress</span><span class="pp">]</span>/code_STEP1_posetrackingprocessing/</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">-r</span> requirements.txt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="step-2-download-the-yolov8-model" class="level3" data-number="3.1.3">
-<h3 data-number="3.1.3" class="anchored" data-anchor-id="step-2-download-the-yolov8-model"><span class="header-section-number">3.1.3</span> Step 2: Download the YOLOv8 model</h3>
+<section id="step-2-download-the-yolov8-model" class="level3" data-number="4.0.3">
+<h3 data-number="4.0.3" class="anchored" data-anchor-id="step-2-download-the-yolov8-model"><span class="header-section-number">4.0.3</span> Step 2: Download the YOLOv8 model</h3>
 <p>In the current GitHub repo we have a light-weight model <code>yolov8n-pose.pt</code> (~6.5MB) for immediate testing of the code. However, this model is not as accurate as the heaviest model.</p>
 <p>We should download the heaviest model (<code>yolov8x-pose-p6.pt</code>) and save it to the <code>./code_STEP1_posetrackingprocessing/model/</code> directory:<br>
 https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8x-pose-p6.pt</p>
 <p><strong>Note</strong>: If you’re running the heavyweight model, you will need GPU support for this to run in a reasonable time. The lightweight model can run on CPU.</p>
 </section>
-<section id="step-3-run-the-python-script" class="level3" data-number="3.1.4">
-<h3 data-number="3.1.4" class="anchored" data-anchor-id="step-3-run-the-python-script"><span class="header-section-number">3.1.4</span> Step 3: Run the python script</h3>
+<section id="step-3-run-the-python-script" class="level3" data-number="4.0.4">
+<h3 data-number="4.0.4" class="anchored" data-anchor-id="step-3-run-the-python-script"><span class="header-section-number">4.0.4</span> Step 3: Run the python script</h3>
 <p>Assuming you have videos in your data folder (<code>./data_raw/</code>) and you have a <code>.pt</code> model in the model folder, you can run the script using the following command:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="pp">[</span><span class="ss">yourspecificrootadress</span><span class="pp">]</span>/code_STEP1_posetrackingprocessing/</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> yolo_tracking_processing.py</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -852,8 +851,8 @@ Your browser does not support the video tag. </video>
 </div>
 </div>
 </section>
-<section id="step-2-raw-pose-data-post-processing-for-timeseries-matrices-python" class="level2" data-number="3.2">
-<h2 data-number="3.2" class="anchored" data-anchor-id="step-2-raw-pose-data-post-processing-for-timeseries-matrices-python"><span class="header-section-number">3.2</span> Step 2: Raw pose data post-processing for timeseries matrices (Python)</h2>
+<section id="step-2-raw-pose-data-post-processing-for-timeseries-matrices-python" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Step 2: Raw pose data post-processing for timeseries matrices (Python)</h1>
 <p>The raw pose data with frame, person, keypoint, and x,y position data that we end up with is not yet in a format that is easy to work with for our purposes. Additionally, sometimes we dont have a person or two persons detected in the frame. We want to transform these raw pose data to timeseries matrix format, whereby we have time in seconds as one column and different meaningful time-varying variables in the other columns. Furthermore, we will smooth and interpolate the data if necessary. The below python code executes this second step whereby we store the position data per person, and furthe derive interpersonal distances measures, and kinematic metrics (e.g.&nbsp;speed) and tracking quality indicators (e.g.&nbsp;tracking status that says something about where it concerns interpolated data).</p>
 <p>Next to determining time in seconds from the frame rate of the videos, the script starts with assigning left and right person IDs based on the horizontal position in the frame (with left being ID 1 and right being ID 2). It then processes the time data to calculate statistics for tracked people using upper body keypoints (as the lower body keypoints are unreliable from top-view and may be ignored). Specifically, we reduce the dimensionality of all upper body keypoints by determined relative positions and their distances: We calculate a bounding box (determined by the outer edges of the keypoints) and determine the center in x and y coordinates (<code>centroid_x</code>, <code>centroid_y</code>) and their P1-P2 distance of those centroids (<code>distance</code>), and the center of mass (<code>com_x</code>, <code>com_y</code>) for each person and the distnace (<code>distance_com</code>). Further we determine the midpoint of the shoulders as another relevant position (<code>shoulder_midpoint_x</code>, <code>shoulder_midpoint_y</code>) and compute its distance (<code>distance_shoulder_midpoint</code>). Additionally, information about body parts such as arm motions by taking the wrist positions (<code>wrist_left_x</code>, <code>wrist_left_y</code>, <code>wrist_right_x</code>, <code>wrist_right_y</code>), and further deriving total motion per second, called speed (based on a euclidean sum of the changes of position along x and y).</p>
 <p>The Savitzky-Golay filter is applied for smoothing jittering position data (using a window size of 11 frames, polynomial order of 3). The script handles missing data through two complementary techniques: linear interpolation for brief gaps in tracking (up to 5 frames) and we take the last known location for longer gaps (up to 20 frames). The script also calculates the speed of the center of mass and wrist positions, and here we also smooth the values using the Savitzky-Golay filter to reduce noise that is amplified during differientation (see <span class="citation" data-cites="winterBiomechanicsMotorControl2009">Winter (<a href="#ref-winterBiomechanicsMotorControl2009" role="doc-biblioref">2009</a>)</span>).</p>
@@ -1622,11 +1621,11 @@ GIF created successfully in the 'images/proximity_visualization' folder.</code><
 </div>
 <p>To provide an example of the data we plot here a timeseries of the resultant data.</p>
 </section>
-<section id="step-3-calculating-feature-data-e.g.-jerkiness-from-timeseries-python" class="level2" data-number="3.3">
-<h2 data-number="3.3" class="anchored" data-anchor-id="step-3-calculating-feature-data-e.g.-jerkiness-from-timeseries-python"><span class="header-section-number">3.3</span> Step 3: Calculating feature data (e.g., jerkiness) from timeseries (Python)</h2>
+<section id="step-3-calculating-feature-data-e.g.-jerkiness-from-timeseries-python" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Step 3: Calculating feature data (e.g., jerkiness) from timeseries (Python)</h1>
 </section>
-<section id="step-4-statistical-analysis-on-smoothness-derived-from-timeseries-analysis-r" class="level2" data-number="3.4">
-<h2 data-number="3.4" class="anchored" data-anchor-id="step-4-statistical-analysis-on-smoothness-derived-from-timeseries-analysis-r"><span class="header-section-number">3.4</span> Step 4: Statistical analysis on smoothness derived from timeseries analysis (R)</h2>
+<section id="step-4-statistical-analysis-on-smoothness-derived-from-timeseries-analysis-r" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Step 4: Statistical analysis on smoothness derived from timeseries analysis (R)</h1>
 <div class="cell" data-code_folding="hide">
 <details class="code-fold">
 <summary>Code</summary>
@@ -1660,18 +1659,17 @@ GIF created successfully in the 'images/proximity_visualization' folder.</code><
 </details>
 </div>
 </section>
+<section id="step-5-non-linear-time-series-analysis" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> Step 5: Non-linear Time Series Analysis</h1>
 </section>
-<section id="step-5-non-linear-time-series-analysis" class="level1" data-number="4">
-<h1 data-number="4"><span class="header-section-number">4</span> Step 5: Non-linear Time Series Analysis</h1>
-</section>
-<section id="references" class="level1" data-number="5">
+<section id="references" class="level1" data-number="9">
 
 <!-- -->
 
 
 </section>
 
-<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">5 References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">9 References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
 <div id="ref-caoOpenPoseRealtimeMultiPerson2021" class="csl-entry" role="listitem">
 Cao, Zhe, Gines Hidalgo, Tomas Simon, Shih-En Wei, and Yaser Sheikh. 2021. <span>“<span>OpenPose</span>: <span>Realtime Multi-Person 2D Pose Estimation Using Part Affinity Fields</span>.”</span> <em>IEEE Transactions on Pattern Analysis and Machine Intelligence</em> 43 (1): 172–86. <a href="https://doi.org/10.1109/TPAMI.2019.2929257">https://doi.org/10.1109/TPAMI.2019.2929257</a>.
 </div>
@@ -2489,7 +2487,7 @@ Winter, David A. 2009. <em>Biomechanics and <span>Motor Control</span> of <span>
 <span id="cb12-351"><a href="#cb12-351" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**Signal Processing**: This step involves processing the keypoint data to extract relevant features for analysis. The output are processed timeseries files, and a flat dataset containing our smoothness measures that are directly ready for statistical analysis.</span>
 <span id="cb12-352"><a href="#cb12-352" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-353"><a href="#cb12-353" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-354"><a href="#cb12-354" aria-hidden="true" tabindex="-1"></a><span class="fu">## Step 1: Tracking two persons in videos for top-view (Python)</span></span>
+<span id="cb12-354"><a href="#cb12-354" aria-hidden="true" tabindex="-1"></a><span class="fu"># Step 1: Tracking two persons in videos for top-view (Python)</span></span>
 <span id="cb12-355"><a href="#cb12-355" aria-hidden="true" tabindex="-1"></a>We have tried several pose tracking solutions, such as OpenPose (model 25B; @caoOpenPoseRealtimeMultiPerson2021), Mediapipe (default highest complexity blazepose model; @lugaresiMediaPipeFrameworkBuilding2019) and we found that these models are not well equipped to track persons from top view, most likely because these models are not trained on ground-truth poses of persons from top-view camera angles. However, we found the heaviest model of yolo v8 ("yolov8x-pose-p6.pt") does perform very well, especially as compared to the other models we tested. Thus, for this pipeline we recommend using YOLOv8 model for top-view tracking.</span>
 <span id="cb12-356"><a href="#cb12-356" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-357"><a href="#cb12-357" aria-hidden="true" tabindex="-1"></a>::: {.callout-note .callout-installation collapse="true"}</span>
@@ -2756,7 +2754,7 @@ Winter, David A. 2009. <em>Biomechanics and <span>Motor Control</span> of <span>
 <span id="cb12-618"><a href="#cb12-618" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.head())</span>
 <span id="cb12-619"><a href="#cb12-619" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb12-620"><a href="#cb12-620" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-621"><a href="#cb12-621" aria-hidden="true" tabindex="-1"></a><span class="fu">## Step 2: Raw pose data post-processing for timeseries matrices (Python)</span></span>
+<span id="cb12-621"><a href="#cb12-621" aria-hidden="true" tabindex="-1"></a><span class="fu"># Step 2: Raw pose data post-processing for timeseries matrices (Python)</span></span>
 <span id="cb12-622"><a href="#cb12-622" aria-hidden="true" tabindex="-1"></a>The raw pose data with frame, person, keypoint, and x,y  position data that we end up with is not yet in a format that is easy to work with for our purposes. Additionally, sometimes we dont have a person or two persons detected in the frame. We want to transform these raw pose data to timeseries matrix format, whereby we have time in seconds as one column and different meaningful time-varying variables in the other columns. Furthermore, we will smooth and interpolate the data if necessary. The below python code executes this second step whereby we store the position data per person, and furthe derive interpersonal distances measures, and kinematic metrics (e.g. speed) and tracking quality indicators (e.g. tracking status that says something about where it concerns interpolated data).</span>
 <span id="cb12-623"><a href="#cb12-623" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-624"><a href="#cb12-624" aria-hidden="true" tabindex="-1"></a>Next to determining time in seconds from the frame rate of the videos, the script starts with assigning left and right person IDs based on the horizontal position in the frame (with left being ID 1 and right being ID 2). It then processes the time data to calculate statistics for tracked people using upper body keypoints (as the lower body keypoints are unreliable from top-view and may be ignored). Specifically, we reduce the dimensionality of all upper body keypoints by determined relative positions and their distances: We calculate a bounding box (determined by the outer edges of the keypoints) and determine the center in x and y coordinates (<span class="in">`centroid_x`</span>, <span class="in">`centroid_y`</span>) and their P1-P2 distance of those centroids (<span class="in">`distance`</span>), and the center of mass (<span class="in">`com_x`</span>, <span class="in">`com_y`</span>) for each person and the distnace (<span class="in">`distance_com`</span>). Further we determine the midpoint of the shoulders as another relevant position (<span class="in">`shoulder_midpoint_x`</span>, <span class="in">`shoulder_midpoint_y`</span>) and compute its distance (<span class="in">`distance_shoulder_midpoint`</span>). Additionally, information about body parts such as arm motions by taking the wrist positions (<span class="in">`wrist_left_x`</span>, <span class="in">`wrist_left_y`</span>, <span class="in">`wrist_right_x`</span>, <span class="in">`wrist_right_y`</span>), and further deriving total motion per second, called speed (based on a euclidean sum of the changes of position along x and y). </span>
@@ -3525,9 +3523,9 @@ Winter, David A. 2009. <em>Biomechanics and <span>Motor Control</span> of <span>
 <span id="cb12-1387"><a href="#cb12-1387" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-1388"><a href="#cb12-1388" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-1389"><a href="#cb12-1389" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-1390"><a href="#cb12-1390" aria-hidden="true" tabindex="-1"></a><span class="fu">## Step 3: Calculating feature data (e.g., jerkiness) from timeseries (Python)</span></span>
+<span id="cb12-1390"><a href="#cb12-1390" aria-hidden="true" tabindex="-1"></a><span class="fu"># Step 3: Calculating feature data (e.g., jerkiness) from timeseries (Python)</span></span>
 <span id="cb12-1391"><a href="#cb12-1391" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-1392"><a href="#cb12-1392" aria-hidden="true" tabindex="-1"></a><span class="fu">## Step 4: Statistical analysis on smoothness derived from timeseries analysis (R)</span></span>
+<span id="cb12-1392"><a href="#cb12-1392" aria-hidden="true" tabindex="-1"></a><span class="fu"># Step 4: Statistical analysis on smoothness derived from timeseries analysis (R)</span></span>
 <span id="cb12-1393"><a href="#cb12-1393" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-1394"><a href="#cb12-1394" aria-hidden="true" tabindex="-1"></a><span class="in">```{r, eval=FALSE, code_folding="hide"}</span></span>
 <span id="cb12-1395"><a href="#cb12-1395" aria-hidden="true" tabindex="-1"></a><span class="co"># manually edited this CSV</span></span>

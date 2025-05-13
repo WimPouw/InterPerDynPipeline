@@ -351,7 +351,7 @@ The motion tracking and signal processing pipeline is divided into two main step
 2. **Signal Processing**: This step involves processing the keypoint data to extract relevant features for analysis. The output are processed timeseries files, and a flat dataset containing our smoothness measures that are directly ready for statistical analysis.
 
 
-## Step 1: Tracking two persons in videos for top-view (Python)
+# Step 1: Tracking two persons in videos for top-view (Python)
 We have tried several pose tracking solutions, such as OpenPose (model 25B; @caoOpenPoseRealtimeMultiPerson2021), Mediapipe (default highest complexity blazepose model; @lugaresiMediaPipeFrameworkBuilding2019) and we found that these models are not well equipped to track persons from top view, most likely because these models are not trained on ground-truth poses of persons from top-view camera angles. However, we found the heaviest model of yolo v8 ("yolov8x-pose-p6.pt") does perform very well, especially as compared to the other models we tested. Thus, for this pipeline we recommend using YOLOv8 model for top-view tracking.
 
 ::: {.callout-note .callout-installation collapse="true"}
@@ -618,7 +618,7 @@ df = pd.read_csv(csv_file)
 print(df.head())
 ```
 
-## Step 2: Raw pose data post-processing for timeseries matrices (Python)
+# Step 2: Raw pose data post-processing for timeseries matrices (Python)
 The raw pose data with frame, person, keypoint, and x,y  position data that we end up with is not yet in a format that is easy to work with for our purposes. Additionally, sometimes we dont have a person or two persons detected in the frame. We want to transform these raw pose data to timeseries matrix format, whereby we have time in seconds as one column and different meaningful time-varying variables in the other columns. Furthermore, we will smooth and interpolate the data if necessary. The below python code executes this second step whereby we store the position data per person, and furthe derive interpersonal distances measures, and kinematic metrics (e.g. speed) and tracking quality indicators (e.g. tracking status that says something about where it concerns interpolated data).
 
 Next to determining time in seconds from the frame rate of the videos, the script starts with assigning left and right person IDs based on the horizontal position in the frame (with left being ID 1 and right being ID 2). It then processes the time data to calculate statistics for tracked people using upper body keypoints (as the lower body keypoints are unreliable from top-view and may be ignored). Specifically, we reduce the dimensionality of all upper body keypoints by determined relative positions and their distances: We calculate a bounding box (determined by the outer edges of the keypoints) and determine the center in x and y coordinates (`centroid_x`, `centroid_y`) and their P1-P2 distance of those centroids (`distance`), and the center of mass (`com_x`, `com_y`) for each person and the distnace (`distance_com`). Further we determine the midpoint of the shoulders as another relevant position (`shoulder_midpoint_x`, `shoulder_midpoint_y`) and compute its distance (`distance_shoulder_midpoint`). Additionally, information about body parts such as arm motions by taking the wrist positions (`wrist_left_x`, `wrist_left_y`, `wrist_right_x`, `wrist_right_y`), and further deriving total motion per second, called speed (based on a euclidean sum of the changes of position along x and y). 
@@ -1387,9 +1387,9 @@ To provide an example of the data we plot here a timeseries of the resultant dat
 
 
 
-## Step 3: Calculating feature data (e.g., jerkiness) from timeseries (Python)
+# Step 3: Calculating feature data (e.g., jerkiness) from timeseries (Python)
 
-## Step 4: Statistical analysis on smoothness derived from timeseries analysis (R)
+# Step 4: Statistical analysis on smoothness derived from timeseries analysis (R)
 
 ```{r, eval=FALSE, code_folding="hide"}
 # manually edited this CSV
