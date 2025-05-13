@@ -983,7 +983,7 @@ except Exception as e:
 
 We further check for any remaining missing values after processing and confirms time continuity to detect any frame drops or temporal misalignments. 
 
-The output of this script is a timeseries matrix for each video, which contains the time in seconds and the calculated variables. The timeseries matrices are saved in the `./data_timeseries_afterSTEP2/` folder. The code below is the script `process_timeseries.py` that you can run to process the raw pose data.
+The output of this script is a timeseries matrix for each video, which contains the time in seconds and the calculated variables. The timeseries matrices are saved in the `./data_timeseries_afterSTEP2/` folder. The code below is the script `STEP2_process_timeseries.py` that you can run to process the raw pose data.
 
 ```{python, eval=FALSE, code_folding="hide"}
 import pandas as pd
