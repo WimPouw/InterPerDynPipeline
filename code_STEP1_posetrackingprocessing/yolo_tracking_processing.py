@@ -35,7 +35,7 @@ model = YOLO(modellocation)
 video_folder = "../data_raw/"
 # avi mp4 or other video formats
 video_files = glob.glob(video_folder + "*.mp4") + glob.glob(video_folder + "*.avi") + glob.glob(video_folder + "*.mov") + glob.glob(video_folder + "*.mkv")
-step1resultfolder = "../datatracked_afterSTEP1/"
+step1resultfolder = "../data_tracked_afterSTEP1/"
 print(video_files)
 
 # keypoint names

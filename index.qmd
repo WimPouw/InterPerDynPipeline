@@ -609,7 +609,7 @@ Here is an example of the output csv file containing the coordinates of the keyp
 import pandas as pd
 import glob as glob
 
-folderstep1output = "./datatracked_afterSTEP1/"
+folderstep1output = "./data_tracked_afterSTEP1/"
 # Load the CSV file
 csv_file = glob.glob(folderstep1output + "*.csv")[0]
 df = pd.read_csv(csv_file)
@@ -618,13 +618,778 @@ df = pd.read_csv(csv_file)
 print(df.head())
 ```
 
-## Step 2: Timeseries preparation and flat data for statistics
+## Step 2: Raw pose data post-processing for timeseries matrices (Python)
+The raw pose data with frame, person, keypoint, and x,y  position data that we end up with is not yet in a format that is easy to work with for our purposes. Additionally, sometimes we dont have a person or two persons detected in the frame. We want to transform these raw pose data to timeseries matrix format, whereby we have time in seconds as one column and different meaningful time-varying variables in the other columns. Furthermore, we will smooth and interpolate the data if necessary. The below python code executes this second step whereby we store the position data per person, and furthe derive interpersonal distances measures, and kinematic metrics (e.g. speed) and tracking quality indicators (e.g. tracking status that says something about where it concerns interpolated data).
+
+Next to determining time in seconds from the frame rate of the videos, the script starts with assigning left and right person IDs based on the horizontal position in the frame (with left being ID 1 and right being ID 2). It then processes the time data to calculate statistics for tracked people using upper body keypoints (as the lower body keypoints are unreliable from top-view and may be ignored). Specifically, we reduce the dimensionality of all upper body keypoints by determined relative positions and their distances: We calculate a bounding box (determined by the outer edges of the keypoints) and determine the center in x and y coordinates (`centroid_x`, `centroid_y`) and their P1-P2 distance of those centroids (`distance`), and the center of mass (`com_x`, `com_y`) for each person and the distnace (`distance_com`). Further we determine the midpoint of the shoulders as another relevant position (`shoulder_midpoint_x`, `shoulder_midpoint_y`) and compute its distance (`distance_shoulder_midpoint`). Additionally, information about body parts such as arm motions by taking the wrist positions (`wrist_left_x`, `wrist_left_y`, `wrist_right_x`, `wrist_right_y`), and further deriving total motion per second, called speed (based on a euclidean sum of the changes of position along x and y). 
+
+The Savitzky-Golay filter is applied for smoothing jittering position data (using a window size of 11 frames, polynomial order of 3). The script handles missing data through two complementary techniques: linear interpolation for brief gaps in tracking (up to 5 frames) and we take the last known location for longer gaps (up to 20 frames). The script also calculates the speed of the center of mass and wrist positions, and here we also smooth the values using the Savitzky-Golay filter to reduce noise that is amplified during differientation (see @winterBiomechanicsMotorControl2009).
+
+The more sophisticated measure that we have created is the proximity calculation measure (see function `calculate_approach()` in the step2 script). This function establishes initial reference position for both participants and then projects their subsequent movements onto the connecting line between them. This allows for quantifying approach and retreat behaviors for each person seperately (which a distance measure does not allow for) while allowing for relative angle changes between them - positive values indicate movement toward the other person (relative from start), while negative values indicate withdrawal (relative from start).
+
+Below is an animation to what we are measuring. We are here capturing only movements that are changing the distance between them. When someone moves in a circle around the other person we want to make sure we do not register that as approach or retreat (which we would do if we just capture horizontal position for example). However we also want capture each person their own approach/avoidance value (which would not be possible when using a simple distance measure). By always measuring the signed length of the projected line from the initial position (based on the current connected position), the method tracks cumulative approach/avoidance for each person over time. 
+
+```{python, code_folding="hide"}
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+import matplotlib.patches as patches
+import matplotlib.lines as mlines
+import os
+import matplotlib
+# Force matplotlib to use Agg backend to avoid display issues
+matplotlib.use('Agg')
+
+# Create output directory if it doesn't exist
+os.makedirs("images/proximity_visualization", exist_ok=True)
+
+# Simulation parameters
+num_frames = 100
+p1_color = '#3498db'  # Blue
+p2_color = '#e74c3c'  # Red
+vector_color = '#2ecc71'  # Green
+
+# Create initial positions for two people - now on a horizontal line
+# Person 1 on the left, Person 2 on the right (same y-coordinate)
+p1_initial = np.array([3, 5])
+p2_initial = np.array([7, 5])
+
+# Generate movement paths with MORE EXTREME approach and avoidance
+# Person 1 will make a dramatic approach followed by retreat
+# Person 2 will make a clear retreat followed by approach
+t = np.linspace(0, 2*np.pi, num_frames)
+
+# Create more dramatic movement path for Person 1
+# Increase the amplitude of movement to make it more extreme
+p1_path_x = p1_initial[0] + 2.5 * np.sin(t/2)  # Larger horizontal movement (was 1.5)
+p1_path_y = p1_initial[1] + 2.5 * np.sin(t)   # Larger vertical movement (was 2.0)
+
+# Create more dramatic movement path for Person 2
+# Make the retreat phase more obvious
+p2_path_x = p2_initial[0] - 1.2 * np.sin(t)    # More horizontal movement (was 0.5)
+p2_path_y = p2_initial[1] - 2.0 * np.sin(t*1.5)  # More vertical movement (was 1.0)
+
+# Store positions for each frame
+p1_positions = np.column_stack((p1_path_x, p1_path_y))
+p2_positions = np.column_stack((p2_path_x, p2_path_y))
+
+# Arrays to store approach values
+p1_approach_values = np.zeros(num_frames)
+p2_approach_values = np.zeros(num_frames)
+
+# Calculate proximity approach values
+def calculate_approach(positions1, positions2):
+    """Calculate approach values similar to the script's approach"""
+    # Use first frame as reference
+    reference_p1_pos = positions1[0].copy()
+    reference_p2_pos = positions2[0].copy()
+    
+    p1_approach = np.zeros(len(positions1))
+    p2_approach = np.zeros(len(positions2))
+    
+    for i in range(len(positions1)):
+        # Current positions
+        p1_pos = positions1[i]
+        p2_pos = positions2[i]
+        
+        # Current connecting vector and direction
+        current_connect = p2_pos - p1_pos
+        current_distance = np.linalg.norm(current_connect)
+        
+        if current_distance > 0:
+            current_direction = current_connect / current_distance
+            
+            # Vectors from reference positions
+            p1_vector = p1_pos - reference_p1_pos
+            p2_vector = p2_pos - reference_p2_pos
+            
+            # Project onto connecting line
+            p1_approach[i] = np.dot(p1_vector, current_direction)
+            
+            # For P2, a positive value should mean movement toward P1
+            # So we use the negative connecting direction (from P2 to P1)
+            # And a positive dot product means approaching
+            p2_direction = -current_direction  # Direction from P2 to P1
+            p2_approach[i] = np.dot(p2_vector, p2_direction)
+    
+    return p1_approach, p2_approach
+
+# Calculate approach values
+p1_approach_values, p2_approach_values = calculate_approach(p1_positions, p2_positions)
+
+# Create the main visualization
+def create_detailed_animation():
+    # Set up the figure explicitly with DPI
+    fig, ax = plt.subplots(figsize=(12, 10), dpi=100)  # Larger figure for better visibility
+    
+    def init():
+        ax.clear()
+        ax.set_xlim(0, 10)
+        ax.set_ylim(0, 10)
+        ax.set_aspect('equal')
+        return []
+
+    def animate(i):
+        ax.clear()
+        
+        # Set up the axes
+        ax.set_xlim(0, 10)
+        ax.set_ylim(0, 10)
+        ax.set_aspect('equal')
+        ax.set_title('Proximity Approach Visualization (Extreme Movements)', fontsize=16)
+        ax.set_xlabel('X Position', fontsize=12)
+        ax.set_ylabel('Y Position', fontsize=12)
+        
+        # Get current positions
+        p1_pos = p1_positions[i]
+        p2_pos = p2_positions[i]
+        
+        # Draw the initial connecting vector (reference)
+        ax.plot([p1_positions[0][0], p2_positions[0][0]], 
+                [p1_positions[0][1], p2_positions[0][1]], 
+                color=vector_color, linewidth=1, linestyle='--', alpha=0.5, zorder=0)
+        
+        # Draw the current connection vector
+        ax.plot([p1_pos[0], p2_pos[0]], [p1_pos[1], p2_pos[1]], 
+                 color=vector_color, linewidth=2.5, linestyle='-', zorder=1)
+        
+        # Draw person markers
+        ax.scatter(p1_pos[0], p1_pos[1], s=180, color=p1_color, edgecolor='black', linewidth=1.5, zorder=3)
+        ax.scatter(p2_pos[0], p2_pos[1], s=180, color=p2_color, edgecolor='black', linewidth=1.5, zorder=3)
+        
+        # Draw initial positions
+        ax.scatter(p1_positions[0][0], p1_positions[0][1], s=90, color=p1_color, 
+                   alpha=0.5, edgecolor='black', linewidth=1, zorder=2)
+        ax.scatter(p2_positions[0][0], p2_positions[0][1], s=90, color=p2_color, 
+                   alpha=0.5, edgecolor='black', linewidth=1, zorder=2)
+        
+        # Draw trails (last 15 positions)
+        start_idx = max(0, i-15)
+        ax.plot(p1_positions[start_idx:i+1, 0], p1_positions[start_idx:i+1, 1], 
+                '-', color=p1_color, alpha=0.5, linewidth=2)
+        ax.plot(p2_positions[start_idx:i+1, 0], p2_positions[start_idx:i+1, 1], 
+                '-', color=p2_color, alpha=0.5, linewidth=2)
+        
+        # Visualize the approach values with text - make them larger and more visible
+        approach_text = (f"P1 approach: {p1_approach_values[i]:.2f}\n"
+                        f"P2 approach: {p2_approach_values[i]:.2f}")
+        ax.text(0.05, 0.95, approach_text, transform=ax.transAxes, 
+                verticalalignment='top', fontsize=14, fontweight='bold',
+                bbox=dict(boxstyle='round', facecolor='white', alpha=0.9))
+        
+        # Add projection visualization
+        if i > 0:
+            # Get current connecting direction
+            connect_vector = p2_pos - p1_pos
+            connect_distance = np.linalg.norm(connect_vector)
+            connect_direction = connect_vector / connect_distance
+            
+            # Person 1 projection
+            p1_vector = p1_pos - p1_positions[0]
+            p1_projection = np.dot(p1_vector, connect_direction) * connect_direction
+            
+            # Draw projection line for P1
+            p1_proj_point = p1_positions[0] + p1_projection
+            
+            # Person 2 projection - use direction from P2 to P1
+            p2_vector = p2_pos - p2_positions[0]
+            p2_direction = -connect_direction  # Direction from P2 to P1
+            p2_projection = np.dot(p2_vector, p2_direction) * p2_direction
+            
+            # Draw projection line for P2
+            p2_proj_point = p2_positions[0] + p2_projection
+            
+            # Draw projection lines with arrows to show direction
+            # For P1
+            p1_approach = p1_approach_values[i]
+            if abs(p1_approach) > 0.1:  # Only draw if there's a significant approach value
+                # Draw line with increased width
+                ax.plot([p1_positions[0][0], p1_proj_point[0]], 
+                        [p1_positions[0][1], p1_proj_point[1]], 
+                        '--', color=p1_color, linewidth=2.5)
+                
+                # Add arrow to show direction - make arrow larger
+                arrow_length = min(abs(p1_approach) * 0.2, 0.6)  # Scale arrow size
+                arrow_width = 0.15
+                if p1_approach > 0:  # Approaching
+                    # Arrow pointing from initial position toward projection point
+                    ax.arrow(p1_positions[0][0], p1_positions[0][1], 
+                            arrow_length * connect_direction[0], arrow_length * connect_direction[1],
+                            head_width=arrow_width, head_length=arrow_width*1.5, 
+                            fc=p1_color, ec='black', linewidth=1, zorder=4)
+                else:  # Retreating
+                    # Arrow pointing from initial position away from projection point
+                    ax.arrow(p1_positions[0][0], p1_positions[0][1], 
+                            -arrow_length * connect_direction[0], -arrow_length * connect_direction[1],
+                            head_width=arrow_width, head_length=arrow_width*1.5, 
+                            fc=p1_color, ec='black', linewidth=1, zorder=4)
+                
+                # Add value label near the projection line
+                mid_x = (p1_positions[0][0] + p1_proj_point[0]) / 2
+                mid_y = (p1_positions[0][1] + p1_proj_point[1]) / 2
+                ax.text(mid_x, mid_y, f"{p1_approach:.2f}", 
+                        color=p1_color, fontsize=10, fontweight='bold',
+                        bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.2'))
+            
+            # For P2
+            p2_approach = p2_approach_values[i]
+            if abs(p2_approach) > 0.1:  # Only draw if there's a significant approach value
+                # Draw line with increased width
+                ax.plot([p2_positions[0][0], p2_proj_point[0]], 
+                        [p2_positions[0][1], p2_proj_point[1]], 
+                        '--', color=p2_color, linewidth=2.5)
+                
+                # Add arrow to show direction - make arrow larger
+                arrow_length = min(abs(p2_approach) * 0.2, 0.6)  # Scale arrow size
+                arrow_width = 0.15
+                if p2_approach > 0:  # Approaching
+                    # Arrow pointing from initial position toward P1
+                    ax.arrow(p2_positions[0][0], p2_positions[0][1], 
+                            arrow_length * p2_direction[0], arrow_length * p2_direction[1],
+                            head_width=arrow_width, head_length=arrow_width*1.5, 
+                            fc=p2_color, ec='black', linewidth=1, zorder=4)
+                else:  # Retreating
+                    # Arrow pointing from initial position away from P1
+                    ax.arrow(p2_positions[0][0], p2_positions[0][1], 
+                            -arrow_length * p2_direction[0], -arrow_length * p2_direction[1],
+                            head_width=arrow_width, head_length=arrow_width*1.5, 
+                            fc=p2_color, ec='black', linewidth=1, zorder=4)
+                
+                # Add value label near the projection line
+                mid_x = (p2_positions[0][0] + p2_proj_point[0]) / 2
+                mid_y = (p2_positions[0][1] + p2_proj_point[1]) / 2
+                ax.text(mid_x, mid_y, f"{p2_approach:.2f}", 
+                        color=p2_color, fontsize=10, fontweight='bold',
+                        bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.2'))
+            
+            # Add small markers at projection points
+            ax.scatter(p1_proj_point[0], p1_proj_point[1], 
+                      color=p1_color, s=70, marker='x')
+            ax.scatter(p2_proj_point[0], p2_proj_point[1], 
+                      color=p2_color, s=70, marker='x')
+            
+            # Draw horizontal dotted line at initial y-coordinate to emphasize horizontal start
+            ax.axhline(y=p1_initial[1], color='gray', linestyle=':', alpha=0.5)
+            
+        # Add legend
+        legend_elements = [
+            patches.Patch(facecolor=p1_color, edgecolor='black', label='Person 1'),
+            patches.Patch(facecolor=p2_color, edgecolor='black', label='Person 2'),
+            patches.Patch(facecolor=vector_color, edgecolor='black', label='Connection Vector'),
+            mlines.Line2D([], [], color='gray', linestyle=':', label='Initial Horizontal Line'),
+            mlines.Line2D([], [], color=p1_color, linestyle='--', linewidth=2, label='Projection Length = Approach Value')
+        ]
+        ax.legend(handles=legend_elements, loc='upper right', fontsize=10)
+        
+        # Add a frame counter
+        ax.text(0.95, 0.05, f"Frame: {i}/{num_frames-1}", transform=ax.transAxes,
+               horizontalalignment='right', verticalalignment='bottom', fontsize=10,
+               bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
+        
+        # Add description text
+        description = (
+            "Proximity Calculation Visualization\n"
+            "- Large dots: Current positions\n"
+            "- Small dots: Initial positions (horizontal alignment)\n"
+            "- Green line: Current connecting vector\n"
+            "- Dashed lines: Projection of movement (length = approach value)\n"
+            "- Arrows: Direction of approach/retreat\n"
+            "- Positive values: Movement toward other person\n"
+            "- Negative values: Movement away from other person\n"
+            "- X markers: Projected positions"
+        )
+        ax.text(0.05, 0.05, description, transform=ax.transAxes,
+               verticalalignment='bottom', fontsize=9,
+               bbox=dict(boxstyle='round', facecolor='white', alpha=0.7))
+        
+        return []
+
+    # Create the animation with explicit FPS and DPI
+    ani = FuncAnimation(fig, animate, frames=num_frames, init_func=init, 
+                        blit=True, interval=100)
+    
+    # Save the animation as a GIF with explicit DPI
+    ani.save('images/proximity_visualization/proximity_calculation_extreme.gif', writer='pillow', fps=10, dpi=100)
+    plt.close(fig)
+
+# Run the animation
+try:
+    print("Creating detailed animation with extreme movements...")
+    create_detailed_animation()
+    print("GIF created successfully in the 'images/proximity_visualization' folder.")
+except Exception as e:
+    print(f"Error creating animation: {e}")
+    
+    # Alternative approach if the above fails - create static frames
+    print("Trying alternative approach with static frames...")
+    try:
+        # Create a static image sequence instead
+        os.makedirs("images/proximity_visualization/frames", exist_ok=True)
+        
+        # Create 10 static frames instead of full animation
+        sample_frames = np.linspace(0, num_frames-1, 10, dtype=int)
+        
+        for idx, i in enumerate(sample_frames):
+            fig, ax = plt.subplots(figsize=(10, 8), dpi=100)
+            
+            # Set up the axes
+            ax.set_xlim(0, 10)
+            ax.set_ylim(0, 10)
+            ax.set_title(f'Proximity Calculation (Frame {i})', fontsize=14)
+            
+            # Get current positions
+            p1_pos = p1_positions[i]
+            p2_pos = p2_positions[i]
+            
+            # Draw the connection vector
+            ax.plot([p1_pos[0], p2_pos[0]], [p1_pos[1], p2_pos[1]], 
+                    color=vector_color, linewidth=2)
+            
+            # Draw person markers
+            ax.scatter(p1_pos[0], p1_pos[1], s=150, color=p1_color, label='Person 1')
+            ax.scatter(p2_pos[0], p2_pos[1], s=150, color=p2_color, label='Person 2')
+            
+            # Draw initial positions
+            ax.scatter(p1_positions[0][0], p1_positions[0][1], s=50, color=p1_color, alpha=0.5)
+            ax.scatter(p2_positions[0][0], p2_positions[0][1], s=50, color=p2_color, alpha=0.5)
+            
+            # Draw horizontal dotted line at initial y-coordinate
+            ax.axhline(y=p1_initial[1], color='gray', linestyle=':', alpha=0.5)
+            
+            # Show approach values
+            ax.text(0.5, 0.95, f"Person 1 approach: {p1_approach_values[i]:.2f}", 
+                    transform=ax.transAxes, ha='center', va='top',
+                    bbox=dict(boxstyle='round', facecolor=p1_color, alpha=0.3))
+            
+            ax.text(0.5, 0.9, f"Person 2 approach: {p2_approach_values[i]:.2f}", 
+                    transform=ax.transAxes, ha='center', va='top',
+                    bbox=dict(boxstyle='round', facecolor=p2_color, alpha=0.3))
+            
+            ax.legend()
+            
+            # Save the frame
+            plt.tight_layout()
+            plt.savefig(f'images/proximity_visualization/frames/frame_{idx:02d}.png')
+            plt.close(fig)
+            
+        print("Static frames created successfully in 'images/proximity_visualization/frames' folder.")
+    except Exception as e:
+        print(f"Alternative approach also failed: {e}")
+```
+
+![Proximity Calculation Visualization](./images/proximity_visualization/proximity_calculation.gif)
+
+
+
+We further check for any remaining missing values after processing and confirms time continuity to detect any frame drops or temporal misalignments. 
+
+The output of this script is a timeseries matrix for each video, which contains the time in seconds and the calculated variables. The timeseries matrices are saved in the `./data_timeseries_afterSTEP2/` folder. The code below is the script `process_timeseries.py` that you can run to process the raw pose data.
+
+```{python, eval=FALSE, code_folding="hide"}
+import pandas as pd
+import numpy as np
+import glob
+import os
+import cv2
+import math
+from bisect import bisect_left
+from scipy.signal import savgol_filter
+
+# Path Definitions
+INPUT_LAYER1_PATH = '../data_tracked_afterSTEP1/'  # Input directory containing tracked keypoint data from STEP1
+VIDEO_PATH = "../data_raw/"                        # Raw video files directory
+OUTPUT_PATH = '../data_timeseries_afterSTEP2/'     # Output directory for processed timeseries data
+
+# Variable Explanations:
+# =====================================================
+# Positional Variables:
+# - x, y: 2D coordinates in the image frame
+# - x_min, x_max, y_min, y_max: Bounding box coordinates for a person
+# - centroid_x, centroid_y: Center point of a person's bounding box
+# - com_x, com_y: Center of mass for a person (average of upper body keypoint positions)
+# - shoulder_midpoint_*: Midpoint between left and right shoulders for each person (p1, p2)
+# - wrist_left_*, wrist_right_*: Positions of left and right wrists for each person (p1, p2)
+#
+# Distance Variables:
+# - distance: Euclidean distance between the centroids of both people
+# - distance_com: Euclidean distance between centers of mass of both people
+# - distance_shoulder_midpoint: Distance between shoulder midpoints of both people
+# - *_speed: Euclidean speed of different body parts (calculated from position differences)
+# - *_speed_smooth: Smoothed version of speed using Savitzky-Golay filter
+#
+# Movement Analysis:
+# - p1_com_approach_pos, p2_com_approach_pos: Position of each person's COM relative to their
+#   initial position, projected onto the connecting line between people. Positive values 
+#   indicate movement toward the other person.
+#
+# Tracking Status:
+# - both_tracked: Boolean indicating if both people are tracked in the current frame
+# - single_tracked: Boolean indicating if only one person is tracked in the current frame
+# =====================================================
+
+
+def frame_to_time(ts, fps):
+    """Convert frame numbers to time in seconds"""
+    ts["time"] = [row[1]["frame"] / fps for row in ts.iterrows()]
+    return ts
+
+
+def take_closest(myList, myNumber):
+    """
+    Assumes myList is sorted. Returns closest value to myNumber.
+    If two numbers are equally close, return the smallest number.
+    """
+    pos = bisect_left(myList, myNumber)
+    if pos == 0:
+        return myList[0]
+    if pos == len(myList):
+        return myList[-1]
+    before = myList[pos - 1]
+    after = myList[pos]
+    if after - myNumber < myNumber - before:
+        return after
+    else:
+        return before
+
+
+def assign_left_right(ts):
+    """Assign person IDs (0 or 1) based on x-position in the frame"""
+    min_x = np.min([val for val in ts['x'] if val != 0])
+    max_x = np.max([val for val in ts['x'] if val != 0])
+    for index, row in ts.iterrows():
+        if row['x'] == 0:  # Skip untracked points
+            continue
+        if take_closest([min_x, max_x], row['x']) == min_x:
+            ts.loc[index, 'person'] = 0  # Left person
+        else:
+            ts.loc[index, 'person'] = 1  # Right person
+    return ts
+
+
+def process_time_data(ts):
+    """Calculate statistics for tracked people using upper body keypoints"""
+    ts_upper = ts[ts['keypoint'] < 11]  # Filter to upper body keypoints only
+    
+    # Calculate stats per person and time
+    stats = ts_upper.groupby(['time', 'person']).agg({
+        'x': ['min', 'max', 'mean'],
+        'y': ['min', 'max', 'mean']
+    }).reset_index()
+    
+    stats.columns = ['time', 'person', 'x_min', 'x_max', 'com_x', 'y_min', 'y_max', 'com_y']
+    stats['centroid_x'] = (stats['x_min'] + stats['x_max']) / 2
+    stats['centroid_y'] = (stats['y_min'] + stats['y_max']) / 2
+    
+    return stats
+
+
+def process_people_data_vectorized(ts, stats):
+    """
+    Process keypoint data to calculate relative positions and distances.
+    Preserves time alignment and handles COM/centroid assignment.
+    """
+    # Get all unique times from the original data
+    all_times = sorted(ts['time'].unique())
+    result = pd.DataFrame(index=all_times)
+    result.index.name = 'time'
+    
+    # Process shoulders first (keypoints 5 and 6)
+    shoulders = ts[ts['keypoint'].isin([5, 6])].groupby(['time', 'person']).agg({
+        'x': 'mean',
+        'y': 'mean'
+    }).reset_index()
+    
+    # Process wrists (keypoints 7 and 8)
+    wrists = ts[ts['keypoint'].isin([7, 8])].pivot_table(
+        index=['time', 'person'],
+        columns='keypoint',
+        values=['x', 'y']
+    ).reset_index()
+    wrists.columns = ['time', 'person', 'left_x', 'right_x', 'left_y', 'right_y']
+    
+    # Get person-specific data
+    p0_stats = stats[stats['person'] == 0].set_index('time')
+    p1_stats = stats[stats['person'] == 1].set_index('time')
+    
+    # Process distances where both people exist
+    common_times = sorted(set(p0_stats.index) & set(p1_stats.index))
+    if common_times:  # Only calculate if we have common times
+        result.loc[common_times, 'distance'] = np.sqrt(
+            (p0_stats.loc[common_times, 'centroid_x'] - p1_stats.loc[common_times, 'centroid_x'])**2 + 
+            (p0_stats.loc[common_times, 'centroid_y'] - p1_stats.loc[common_times, 'centroid_y'])**2
+        )
+        result.loc[common_times, 'distance_com'] = np.sqrt(
+            (p0_stats.loc[common_times, 'com_x'] - p1_stats.loc[common_times, 'com_x'])**2 + 
+            (p0_stats.loc[common_times, 'com_y'] - p1_stats.loc[common_times, 'com_y'])**2
+        )
+    
+    # Process shoulders per person
+    for person, prefix in [(0, 'p1'), (1, 'p2')]:
+        s_person = shoulders[shoulders['person'] == person].set_index('time')
+        result[f'shoulder_midpoint_{prefix}_x'] = s_person['x']
+        result[f'shoulder_midpoint_{prefix}_y'] = s_person['y']
+    
+    # Calculate shoulder midpoint distance where possible
+    shoulder_cols = ['shoulder_midpoint_p1_x', 'shoulder_midpoint_p2_x',
+                    'shoulder_midpoint_p1_y', 'shoulder_midpoint_p2_y']
+    shoulder_mask = result[shoulder_cols].notna().all(axis=1)
+    if shoulder_mask.any():
+        result.loc[shoulder_mask, 'distance_shoulder_midpoint'] = np.sqrt(
+            (result.loc[shoulder_mask, 'shoulder_midpoint_p1_x'] - result.loc[shoulder_mask, 'shoulder_midpoint_p2_x'])**2 + 
+            (result.loc[shoulder_mask, 'shoulder_midpoint_p1_y'] - result.loc[shoulder_mask, 'shoulder_midpoint_p2_y'])**2
+        )
+    
+    # Process wrists per person and add COM/centroid
+    for person, prefix in [(0, 'p1'), (1, 'p2')]:
+        w_person = wrists[wrists['person'] == person].set_index('time')
+        result[f'wrist_left_{prefix}_x'] = w_person['left_x']
+        result[f'wrist_left_{prefix}_y'] = w_person['left_y']
+        result[f'wrist_right_{prefix}_x'] = w_person['right_x']
+        result[f'wrist_right_{prefix}_y'] = w_person['right_y']
+        
+        # Use the correct stats object based on person ID
+        person_stats = p0_stats if person == 0 else p1_stats
+            
+        # Add com and centroid with the correct stats object
+        result[f'com_{prefix}_x'] = person_stats['com_x']
+        result[f'com_{prefix}_y'] = person_stats['com_y']
+        result[f'centroid_{prefix}_x'] = person_stats['centroid_x']
+        result[f'centroid_{prefix}_y'] = person_stats['centroid_y']
+
+    # Add tracking quality indicators using original data
+    person_counts = ts.groupby('time')['person'].nunique()
+    result['both_tracked'] = result.index.map(lambda x: person_counts.get(x, 0) == 2)
+    result['single_tracked'] = result.index.map(lambda x: person_counts.get(x, 0) == 1)
+        
+    return result
+
+
+def calculate_proximity_approach(timeseries_data):
+    """
+    Calculate each person's position relative to their initial position,
+    projecting movement onto the current connecting line between people.
+    
+    This handles rotation and changing spatial relationships between people.
+    Positive values indicate movement toward the other person from initial position.
+    
+    The reference positions are only established when both people are detected.
+    """
+    # Create columns for our measurements
+    if 'p1_com_approach_pos' not in timeseries_data.columns:
+        timeseries_data['p1_com_approach_pos'] = np.nan
+    if 'p2_com_approach_pos' not in timeseries_data.columns:
+        timeseries_data['p2_com_approach_pos'] = np.nan
+    
+    # Sort data by time
+    sorted_data = timeseries_data.sort_values('time')
+    
+    # Find first valid frame to establish reference positions
+    reference_p1_pos = None
+    reference_p2_pos = None
+    reference_distance = None
+    
+    # First pass: find reference frame where both people are detected
+    for idx, row in sorted_data.iterrows():
+        # Skip rows with NaN values or where both_tracked is False
+        if (np.isnan(row['com_p1_x']) or np.isnan(row['com_p1_y']) or 
+            np.isnan(row['com_p2_x']) or np.isnan(row['com_p2_y']) or
+            ('both_tracked' in row.index and row['both_tracked'] == False)):
+            continue
+            
+        # Get positions for this frame
+        p1_pos = np.array([row['com_p1_x'], row['com_p1_y']])
+        p2_pos = np.array([row['com_p2_x'], row['com_p2_y']])
+        
+        # Calculate connecting vector
+        connect_vector = p2_pos - p1_pos
+        distance = np.linalg.norm(connect_vector)
+        
+        if distance > 0:
+            # We found a valid reference frame
+            reference_p1_pos = p1_pos.copy()
+            reference_p2_pos = p2_pos.copy()
+            reference_distance = distance
+            print(f"Reference frame established at time={row['time']}")
+            print(f"  Reference p1_pos: {reference_p1_pos}")
+            print(f"  Reference p2_pos: {reference_p2_pos}")
+            print(f"  Reference distance: {reference_distance}")
+            break
+    
+    if reference_p1_pos is None:
+        print("ERROR: Could not establish a reference frame. No valid frames found with both people detected.")
+        return timeseries_data
+    
+    # Second pass: calculate projected positions for all frames
+    for idx, row in sorted_data.iterrows():
+        # Skip rows with NaN values
+        if (np.isnan(row['com_p1_x']) or np.isnan(row['com_p1_y']) or 
+            np.isnan(row['com_p2_x']) or np.isnan(row['com_p2_y'])):
+            continue
+            
+        # Get current positions
+        p1_pos = np.array([row['com_p1_x'], row['com_p1_y']])
+        p2_pos = np.array([row['com_p2_x'], row['com_p2_y']])
+        
+        # Calculate current connecting vector and direction
+        current_connect = p2_pos - p1_pos
+        current_distance = np.linalg.norm(current_connect)
+        
+        # Skip frames where people are at the same position
+        if current_distance == 0:
+            continue
+            
+        current_direction = current_connect / current_distance
+        
+        # Calculate vector from reference position to current position
+        p1_vector = p1_pos - reference_p1_pos
+        p2_vector = p2_pos - reference_p2_pos
+        
+        # Project these vectors onto the current connecting line
+        # Positive values mean moving toward the other person
+        p1_projection = np.dot(p1_vector, current_direction)
+        p2_projection = -np.dot(p2_vector, -current_direction)
+        
+        # Store values
+        timeseries_data.loc[idx, 'p1_com_approach_pos'] = p1_projection
+        timeseries_data.loc[idx, 'p2_com_approach_pos'] = p2_projection
+    
+    # Verify results
+    filled_p1 = timeseries_data['p1_com_approach_pos'].notna().sum()
+    filled_p2 = timeseries_data['p2_com_approach_pos'].notna().sum()
+    
+    print(f"Frames with filled values - p1: {filled_p1}, p2: {filled_p2}")
+    
+    return timeseries_data
+
+
+def main():
+    """Main processing function"""
+    # Create output directory if it doesn't exist
+    os.makedirs(OUTPUT_PATH, exist_ok=True)
+    
+    # Get all CSV files from layer 1 processing
+    layer1_files = glob.glob(INPUT_LAYER1_PATH + '*.csv')
+    
+    # Process each file
+    for file_path in layer1_files:
+        # Extract video name from file path
+        vid_name = os.path.basename(file_path).split('_keypoints_data_layer1.csv')[0]
+        print(f"Processing video: {vid_name}")
+        
+        # Check if already processed
+        output_file = f"{OUTPUT_PATH}/{vid_name}_processed_data_layer2.csv"
+        if os.path.exists(output_file):
+            print("Already processed, skipping...")
+            continue
+            
+        # Determine video format and get FPS
+        video_path = None
+        for ext in ['.avi', '.mp4', '.mov']:
+            if os.path.exists(f"{VIDEO_PATH}/{vid_name}{ext}"):
+                video_path = f"{VIDEO_PATH}/{vid_name}{ext}"
+                break
+                
+        if not video_path:
+            print(f"Video file not found for {vid_name}")
+            continue
+            
+        cap = cv2.VideoCapture(video_path)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        cap.release()
+        print(f"Working on: {vid_name} with fps = {fps}")
+        
+        # Load and preprocess data
+        ts = pd.read_csv(file_path)
+        ts = frame_to_time(ts, fps=fps)
+        ts = assign_left_right(ts)
+        
+        # Calculate statistics
+        stats = process_time_data(ts)
+        
+        # Process tracked data
+        processed_data = process_people_data_vectorized(ts, stats)
+        
+        # Create final data frame
+        bb_data = pd.merge(
+            stats, 
+            processed_data.reset_index(), 
+            on='time', 
+            how='outer'
+        )
+        
+        # Extract time series data (using person 0 as reference)
+        timeseries_data = bb_data[bb_data['person'] == 0].copy()  # Make a copy to avoid SettingWithCopyWarning
+        
+        # Remove unnecessary columns
+        timeseries_data = timeseries_data.drop(columns='person')
+        
+        # Calculate desired time step based on FPS
+        desired_time_step = 1/fps
+        
+        # Interpolate missing values
+        nan_cols = timeseries_data.columns[timeseries_data.isna().any()].tolist()
+        timeseries_data[nan_cols] = timeseries_data[nan_cols].interpolate()
+        
+        # Smooth distance with Savitzky-Golay filter
+        timeseries_data['distance_smooth'] = savgol_filter(timeseries_data['distance'].values, 11, 3)
+        
+        # Calculate and smooth wrist speeds
+        for wrist in ['wrist_left_p1', 'wrist_right_p1', 'wrist_left_p2', 'wrist_right_p2']:
+            # Calculate speed as Euclidean distance between consecutive positions
+            timeseries_data[f'{wrist}_speed'] = np.sqrt(
+                timeseries_data[f'{wrist}_x'].diff()**2 + timeseries_data[f'{wrist}_y'].diff()**2
+            )
+            
+            # Apply Savitzky-Golay filter for smoothing
+            timeseries_data[f'{wrist}_speed_smooth'] = savgol_filter(
+                timeseries_data[f'{wrist}_speed'].values, 11, 3
+            )
+        
+        # Fill NaN values before calculating proximity approach
+        timeseries_data = timeseries_data.fillna(method='ffill')
+        
+        # Calculate proximity approach
+        timeseries_data = calculate_proximity_approach(timeseries_data)
+        
+        # Fill any remaining NaN values
+        timeseries_data = timeseries_data.fillna(method='ffill')
+        
+        # Smooth proximity approach values
+        timeseries_data['p1_com_approach_pos'] = savgol_filter(timeseries_data['p1_com_approach_pos'].values, 11, 3)
+        timeseries_data['p2_com_approach_pos'] = savgol_filter(timeseries_data['p2_com_approach_pos'].values, 11, 3)
+        
+        # Check for any remaining NaN values
+        print("Checking for NaN values...")
+        nan_counts = timeseries_data.isna().sum()
+        if nan_counts.sum() > 0:
+            print("Found NaN values after processing:")
+            print(nan_counts)
+        else:
+            print("No NaN values found.")
+        
+        # Save processed data
+        timeseries_data.to_csv(output_file, index=False)
+        
+        # Check for time continuity
+        print("Checking time continuity...")
+        time_diffs = np.array([round(val, 2) for val in np.diff(timeseries_data['time'])])
+        if not np.all(time_diffs == desired_time_step):
+            print(f"Found gaps at times: {np.where(time_diffs != desired_time_step)[0]}")
+        else:
+            print("No missing time points.")
+
+if __name__ == "__main__":
+    main()
+```
+
+To provide an example of the data we plot here a timeseries of the resultant data.
 
 
 
 
+## Step 3: Calculating feature data (e.g., jerkiness) from timeseries (Python)
 
-# Statistical analysis on smoothness derived from timeseries analysis (R)
+## Step 4: Statistical analysis on smoothness derived from timeseries analysis (R)
 
 ```{r, eval=FALSE, code_folding="hide"}
 # manually edited this CSV
