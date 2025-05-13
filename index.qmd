@@ -914,7 +914,7 @@ def create_detailed_animation():
 
 # Run the animation
 try:
-    print("Creating detailed animation with extreme movements...")
+    print("Creating animation...")
     create_detailed_animation()
     print("GIF created successfully in the 'images/proximity_visualization' folder.")
 except Exception as e:
