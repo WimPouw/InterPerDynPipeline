@@ -10,7 +10,7 @@ author:
   - name: Travis J. Wiltshire
     affiliation: Tilburg University, Netherlands
   - name: James Trujillo
-    affiliation: University of Amsterdam, USA
+    affiliation: University of Amsterdam, Netherlands
   - name: Fred Hasselman
     affiliation: Radboud University, Netherlands
   - name: Babajide Alamu Owoyele
@@ -39,7 +39,22 @@ format:
 
 # Overview
 
-To increase privacy we apply maskanyone [@owoyeleMaskAnyoneToolkitOffering2024].
+The purpose of this Quarto notebook is to provide a detailed overview of the analysis processing and analysis steps. Rather than being purely written description, the notebook is intended to combined written description with several data explanation formats:
+
+- **code snippets** that highlight key portions of code, for example to explain a particiular function, highlight a potentially highly-adaptable plotting function, etc.
+
+- **example output** that shows what type of output you can expect, and to directly link these outputs with labels and descriptions of (e.g., how to interpret a plot, what variables in a data table represent)
+
+- **DIY blocks** that provide shorter, step-by-step links to the full code for executing a particular step in the pipeline on your own code
+
+
+
+**What the Quarto notebook is not intended to do:** The notebook is not a complete collection of every piece of code needed to replicate the pipeline. It is not intended to be run on its own when replicating the pipeline (whether on your own data, or on the sample data). For actually applying this code, see the  **DIY** blocks.
+
+
+To increase privacy we apply maskanyone [@owoyeleMaskAnyoneToolkitOffering2024].<br>
+
+
 
 # Dataset
 
@@ -52,6 +67,7 @@ The masked data can be downloaded from the repository of Jagellonian University 
 
 ### Dataset Mother Infant
 ```{python, eval=FALSE, code_folding="hide"}
+
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
@@ -338,9 +354,15 @@ plt.close()
 ![](images/sibling_analysis.png){fig-align="center" width=600}
 
 ::: {.callout-note .callout-settingup collapse="true"}
-## Setting up 🛠️
+## DIY: Setting up 🛠️
 
+### Step 0: Github repo
+You should first clone the repository [InterPerDynPipeline](https://github.com/WimPouw/InterPerDynPipeline) and move to the root directory. The step 1 code for tracking is in the `./code_STEP1_posetrackingprocessing/` folder. In this folder you will find the Python script `yolo_tracking_processing.py`. To check whether you have the correct script you can compare against the code chunk provided below.
 
+```bash
+git clone https://github.com/WimPouw/InterPerDynPipeline
+cd ./InterPerDynPipeline/
+```
 
 :::
 
@@ -355,10 +377,7 @@ The motion tracking and signal processing pipeline is divided into two main step
 We have tried several pose tracking solutions, such as OpenPose (model 25B; @caoOpenPoseRealtimeMultiPerson2021), Mediapipe (default highest complexity blazepose model; @lugaresiMediaPipeFrameworkBuilding2019) and we found that these models are not well equipped to track persons from top view, most likely because these models are not trained on ground-truth poses of persons from top-view camera angles. However, we found the heaviest model of yolo v8 ("yolov8x-pose-p6.pt") does perform very well, especially as compared to the other models we tested. Thus, for this pipeline we recommend using YOLOv8 model for top-view tracking.
 
 ::: {.callout-note .callout-installation collapse="true"}
-## Installation Guide 🛠️
-
-### Step 0: Github repo
-We assume you have cloned the repository [InterPerDynPipeline](https://github.com/WimPouw/InterPerDynPipeline) and are in the root directory. The step 1 code for tracking is in the `./code_STEP1_posetrackingprocessing/` folder. In this folder you will find the Python script `yolo_tracking_processing.py`. To check whether you have the correct script you can compare against the code chunk provided below.
+## DIY: Motion Tracking Set-Up and Execution 🛠️
 
 ### Step 1: Install requirements
 For each script we have provided a `requirements.txt` file. You can install the requirements using pip, by first navigating to the folder where the script is located and then running the following command in your terminal:
@@ -367,6 +386,8 @@ For each script we have provided a `requirements.txt` file. You can install the 
 cd [yourspecificrootadress]/code_STEP1_posetrackingprocessing/
 pip install -r requirements.txt
 ```
+:::
+
 
 ### Step 2: Download the YOLOv8 model
 In the current GitHub repo we have a light-weight model `yolov8n-pose.pt` (~6.5MB) for immediate testing of the code. However, this model is not as accurate as the heaviest model.
@@ -1384,12 +1405,25 @@ if __name__ == "__main__":
 
 To provide an example of the data we plot here a timeseries of the resultant data.
 
+::: {.callout-note .callout-settingup collapse="true"}
+## DIY: Post-Processing 🛠️
 
+
+
+:::
 
 
 # Step 3: Calculating feature data (e.g., jerkiness) from timeseries (Python)
 
-# Step 4: Statistical analysis on smoothness derived from timeseries analysis (R)
+
+::: {.callout-note .callout-settingup collapse="true"}
+## DIY: Feature Extraction 🛠️
+
+
+
+:::
+
+# Step 4: Statistical analysis (e.g., jerkiness of proximity/approach/avoidance, or non-linear recurrence) (R)
 
 ```{r, eval=FALSE, code_folding="hide"}
 # manually edited this CSV
@@ -1421,8 +1455,14 @@ model1 <- lmer(smoothness_value ~ culture + (1 | videoID), data = data_long)
 summary(model1)
 ```
 
-# Step 5: Non-linear Time Series Analysis
 
+
+::: {.callout-note .callout-settingup collapse="true"}
+## DIY: Analysis 🛠️
+
+
+
+:::
 
 
 # References
