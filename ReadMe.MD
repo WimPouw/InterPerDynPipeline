@@ -15,7 +15,7 @@ https://wimpouw.github.io/InterPerDynPipeline/
 This is a start of the sample code for a Open-source Standardized Pipeline for Tracing the Behavioral Dynamics in Social Interaction. In this repo we have sample data that we can work with to build our pipelines, which will then be rolled out on the full longitudinal dataset.
 
 ## Contact
-If you want to be added to the github as a collaborator ask wim.pouw@donders.ru.nl with you github username.
+If you want to be added to the github as a collaborator ask wim.pouw@donders.ru.nl with your github username.
 
 ## To Do's
 - make time series more robust against tracking errors
