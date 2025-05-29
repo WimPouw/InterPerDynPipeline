@@ -12,21 +12,28 @@ import sys
 torch.cuda.set_device(0)
 # Load the model
 modelfolder = './model/'
-modellocation = glob.glob(modelfolder+"*.pt")
+models = glob.glob(modelfolder+"*.pt")
+print(f"Found YOLO models: {models}")
+target_model = "yolov8x-pose-p6.pt"
+modellocation = None
 
-#  check if yolov8x-pose-p6.pt is in the folder
-if len(modellocation) == 0:
+######################## MODEL LOADING ########################
+# check if there are models
+if not models:
     print("No YOLO model found in the specified folder. Please check the path.")
     sys.exit(1)
-elif len(modellocation) > 1:
-    # check if yolov8x-pose-p6.pt
-    if "yolov8x-pose-p6.pt" in modellocation:
-        modellocation = [x for x in modellocation if "yolov8x-pose-p6.pt" in x][0]
-    # else if take any model
-    else:
-        modellocation = modellocation[0]
-else:
-    modellocation = modellocation[0]
+# Look for target model first
+for model in models:
+    if target_model in model:
+        modellocation = model
+        print(f"Using YOLO target model: {model}")
+        break
+
+# Fall back to first model if target not found
+if not modellocation:
+    modellocation = models[0]
+    print(f"Using first YOLO model we found: {modellocation}")
+
     
 modelfile = os.path.basename(modellocation)
 print(f"We are loading in the following YOLO model: {modelfile}")
