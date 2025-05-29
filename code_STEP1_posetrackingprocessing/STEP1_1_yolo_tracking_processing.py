@@ -17,6 +17,10 @@ print(f"Found YOLO models: {models}")
 target_model = "yolov8x-pose-p6.pt"
 modellocation = None
 
+# Folders
+video_folder = "../data_raw/"
+step1resultfolder = "../data_tracked_afterSTEP1_1/"
+
 ######################## MODEL LOADING ########################
 # check if there are models
 if not models:
@@ -38,11 +42,8 @@ if not modellocation:
 modelfile = os.path.basename(modellocation)
 print(f"We are loading in the following YOLO model: {modelfile}")
 model = YOLO(modellocation)
-# main variables
-video_folder = "../data_raw/"
 # avi mp4 or other video formats
 video_files = glob.glob(video_folder + "*.mp4") + glob.glob(video_folder + "*.avi") + glob.glob(video_folder + "*.mov") + glob.glob(video_folder + "*.mkv")
-step1resultfolder = "../data_tracked_afterSTEP1/"
 print(video_files)
 
 # keypoint names

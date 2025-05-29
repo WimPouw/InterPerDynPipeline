@@ -39,22 +39,17 @@ format:
 
 # Overview
 
-The purpose of this Quarto notebook is to provide a detailed overview of the analysis processing and analysis steps. Rather than being purely written description, the notebook is intended to combined written description with several data explanation formats:
+To increase reproducibility of our approach we have designed this Quarto notebook that provides the user with what is effectively a manual-style extended methods and results section. Next to staging and (visually) explaining key Python and R code elements, the notebook contains detailed further “Do It Yourself” (DIY) instructions that can be accessed on demand by clicking on DIY sections, for example providing the technical steps needed to install and then run code for YOLO tracking on (user-defined) data. This Notebook is not simply an add-on supplemental text, but it is a key part of our contribution as it allows for newcomers to social processing to start implementing this pipeline step by step.
 
-- **code snippets** that highlight key portions of code, for example to explain a particiular function, highlight a potentially highly-adaptable plotting function, etc.
+The Quarto notebook is structured to have the following components, next to steps:
 
-- **example output** that shows what type of output you can expect, and to directly link these outputs with labels and descriptions of (e.g., how to interpret a plot, what variables in a data table represent)
+- **code snippets** that overview complete code, or shorter code chunks to for example explain a particular function. Denoted with the symbol 🚩.
 
-- **DIY blocks** that provide shorter, step-by-step links to the full code for executing a particular step in the pipeline on your own code
+- **example output** that shows example output. Denoted with the symbol 📊.
 
+- **DIY blocks** that provide shorter, step-by-step links to the full code for executing a particular step in the pipeline on your own code 🛠️.
 
-
-**What the Quarto notebook is not intended to do:** The notebook is not a complete collection of every piece of code needed to replicate the pipeline. It is not intended to be run on its own when replicating the pipeline (whether on your own data, or on the sample data). For actually applying this code, see the  **DIY** blocks.
-
-
-To increase privacy we apply maskanyone [@owoyeleMaskAnyoneToolkitOffering2024].<br>
-
-
+**What the Quarto notebook is not intended to do:** The notebook is not a complete collection of every piece of code needed to replicate the pipeline. It is not intended to be run on its own when replicating the pipeline (whether on your own data, or on the sample data). For actually applying this code, see the  **DIY** blocks. 
 
 # Dataset
 
@@ -366,7 +361,7 @@ cd ./InterPerDynPipeline/
 
 :::
 
-# Motion tracking and signal processing and wrangling
+# Step 1: Motion tracking and signal processing and wrangling
 
 The motion tracking and signal processing pipeline is divided into two main steps: 
 1. **Tracking**: This step involves tracking the movements of individuals in the videos using a pose estimation model. The output is a video with annotated keypoints and a CSV file containing the coordinates of these keypoints.
@@ -631,7 +626,7 @@ Here is an example of the output csv file containing the coordinates of the keyp
 import pandas as pd
 import glob as glob
 
-folderstep1output = "./data_tracked_afterSTEP1/"
+folderstep1output = "./data_tracked_afterSTEP1_1"
 # Load the CSV file
 csv_file = glob.glob(folderstep1output + "*.csv")[0]
 df = pd.read_csv(csv_file)
