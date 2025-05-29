@@ -6,6 +6,7 @@ import cv2
 import math
 from bisect import bisect_left
 from scipy.signal import savgol_filter
+from tqdm import tqdm
 
 # Path Definitions
 INPUT_LAYER1_PATH = '../dataoutput_STEP1_1_rawposedata/'  # Input directory containing tracked keypoint data from STEP1
@@ -45,7 +46,6 @@ def frame_to_time(ts, fps):
     ts["time"] = [row[1]["frame"] / fps for row in ts.iterrows()]
     return ts
 
-
 def take_closest(myList, myNumber):
     """
     Assumes myList is sorted. Returns closest value to myNumber.
@@ -63,7 +63,6 @@ def take_closest(myList, myNumber):
     else:
         return before
 
-
 def assign_left_right(ts):
     """Assign person IDs (0 or 1) based on x-position in the frame"""
     min_x = np.min([val for val in ts['x'] if val != 0])
@@ -76,7 +75,6 @@ def assign_left_right(ts):
         else:
             ts.loc[index, 'person'] = 1  # Right person
     return ts
-
 
 def process_time_data(ts):
     """Calculate statistics for tracked people using upper body keypoints"""
@@ -93,7 +91,6 @@ def process_time_data(ts):
     stats['centroid_y'] = (stats['y_min'] + stats['y_max']) / 2
     
     return stats
-
 
 def process_people_data_vectorized(ts, stats):
     """
@@ -175,7 +172,59 @@ def process_people_data_vectorized(ts, stats):
         
     return result
 
+# smoothing with svitzky-golay filter but with error handling for when smoothing fails
+def careful_savgol_filter(data, window_length=11, polyorder=3, min_window=5):
+    """
+    Apply Savitzky-Golay filter with error handling.
+    
+    Args:
+        data: Input data array
+        window_length: Window length for the filter (must be odd)
+        polyorder: Polynomial order for fitting
+        min_window: Minimum window length to attempt
+    
+    Returns:
+        Filtered data array
+    """
+    data = np.array(data, dtype=np.float64)
+    
+    # Basic validation
+    if len(data) < 5:
+        return data
+    
+    # Handle NaN values with simple interpolation
+    if np.any(np.isnan(data)):
+        valid_mask = ~np.isnan(data)
+        if np.sum(valid_mask) < 3:
+            return data
+        indices = np.arange(len(data))
+        data = np.interp(indices, indices[valid_mask], data[valid_mask])
+    
+    # Check for constant data
+    if np.std(data) < 1e-10:
+        return data
+    
+    # Ensure odd window length
+    if window_length % 2 == 0:
+        window_length += 1
+    
+    # Adjust window if too large
+    window_length = min(window_length, len(data))
+    if window_length % 2 == 0:
+        window_length -= 1
+    
+    # Ensure minimum window
+    window_length = max(window_length, 5)
+    polyorder = min(polyorder, window_length - 1, 3)
+    
+    # Try Savitzky-Golay filter
+    try:
+        return savgol_filter(data, window_length, polyorder)
+    except:
+        # Return original data if filtering fails
+        return data
 
+# main function to calculate proximity approach
 def calculate_proximity_approach(timeseries_data):
     """
     Calculate each person's position relative to their initial position,
@@ -232,7 +281,7 @@ def calculate_proximity_approach(timeseries_data):
         return timeseries_data
     
     # Second pass: calculate projected positions for all frames
-    for idx, row in sorted_data.iterrows():
+    for idx, row in tqdm(sorted_data.iterrows(), total=len(sorted_data), desc="Calculating approach positions", leave=False):
         # Skip rows with NaN values
         if (np.isnan(row['com_p1_x']) or np.isnan(row['com_p1_y']) or 
             np.isnan(row['com_p2_x']) or np.isnan(row['com_p2_y'])):
@@ -283,7 +332,7 @@ def main():
     layer1_files = glob.glob(INPUT_LAYER1_PATH + '*.csv')
     
     # Process each file
-    for file_path in layer1_files:
+    for file_path in tqdm(layer1_files, desc="Processing videos"):
         # Extract video name from file path
         vid_name = os.path.basename(file_path).split('_keypoints_data_layer1.csv')[0]
         print(f"Processing video: {vid_name}")
@@ -341,9 +390,11 @@ def main():
         # Interpolate missing values
         nan_cols = timeseries_data.columns[timeseries_data.isna().any()].tolist()
         timeseries_data[nan_cols] = timeseries_data[nan_cols].interpolate()
-        
+        # fill remaining trailing NaNs
+        timeseries_data = timeseries_data.fillna(method='ffill')
+
         # Smooth distance with Savitzky-Golay filter
-        timeseries_data['distance_smooth'] = savgol_filter(timeseries_data['distance'].values, 11, 3)
+        timeseries_data['distance_smooth'] = careful_savgol_filter(timeseries_data['distance'].values, 11, 3)
         
         # Calculate and smooth wrist speeds
         for wrist in ['wrist_left_p1', 'wrist_right_p1', 'wrist_left_p2', 'wrist_right_p2']:
@@ -356,7 +407,7 @@ def main():
             timeseries_data[f'{wrist}_speed'] = timeseries_data[f'{wrist}_speed'].fillna(0)
             
             # Apply Savitzky-Golay filter for smoothing
-            timeseries_data[f'{wrist}_speed_smooth'] = savgol_filter(
+            timeseries_data[f'{wrist}_speed_smooth'] = careful_savgol_filter(
                 timeseries_data[f'{wrist}_speed'].values, 11, 3
             )
         
@@ -370,8 +421,8 @@ def main():
         timeseries_data = timeseries_data.fillna(method='ffill')
         
         # Smooth proximity approach values
-        timeseries_data['p1_com_approach_pos'] = savgol_filter(timeseries_data['p1_com_approach_pos'].values, 11, 3)
-        timeseries_data['p2_com_approach_pos'] = savgol_filter(timeseries_data['p2_com_approach_pos'].values, 11, 3)
+        timeseries_data['p1_com_approach_pos'] = careful_savgol_filter(timeseries_data['p1_com_approach_pos'].values, 11, 3)
+        timeseries_data['p2_com_approach_pos'] = careful_savgol_filter(timeseries_data['p2_com_approach_pos'].values, 11, 3)
         
         # Check for any remaining NaN values
         print("Checking for NaN values...")

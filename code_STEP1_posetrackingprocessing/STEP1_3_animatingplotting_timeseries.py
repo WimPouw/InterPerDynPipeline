@@ -10,21 +10,26 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import tqdm
 import tempfile
-from moviepy.editor import VideoFileClip
+from moviepy import VideoFileClip
 
 # Path Definitions
 INPUT_LAYER1_PATH = '../dataoutput_STEP1_2_timeseries/'  # Input directory containing tracked keypoint data from STEP1
-VIDEO_PATH = "../data_raw/"                        # Raw video files directory
+VIDEO_PATH = "../dataoutput_STEP1_1_rawposedata/"                        # Raw video files directory
 OUTPUT_PATH = '../dataoutput_STEP1_3_animations/'     # Output directory for processed timeseries data
-
+targetvideo = "cop_p01_annotated_layer1_c150_miss95.mp4"#"sample_annotated_layer1_c150_miss95.mp4" # note that sample video must be set to True to process only a sample video
+SAMPLE_VIDEO = False  # Set to True to process only a sample video, False to process all videos
 # Create output directory if it doesn't exist
 os.makedirs(OUTPUT_PATH, exist_ok=True)
 
 # animate only sample video?
-SAMPLE_VIDEO = True  # Set to True to process only a sample video, False to process all videos
+
 if SAMPLE_VIDEO:
     # For sample video, use a specific video file
-    allvidsnew = [os.path.join(VIDEO_PATH, "sample_annotated_layer1_c150_miss95.mp4")]
+    allvidsnew =  glob.glob(VIDEO_PATH + "*" + targetvideo)
+else:
+    allvidsnew = glob.glob(VIDEO_PATH + "*.mp4") + glob.glob(VIDEO_PATH + "*.avi") + glob.glob(VIDEO_PATH + "*.mov") + glob.glob(VIDEO_PATH + "*.mkv")
+
+print(f"Found {len(allvidsnew)} videos to process")
 
 # what variables to animate with video
 animate_variables = {
@@ -37,12 +42,12 @@ animate_variables = {
     'centroid_x': False,
     'centroid_y': False,
     'distance': False,
-    'distance_com': False,
+    'distance_com': True,
     'shoulder_midpoint_p1_x': False,
     'shoulder_midpoint_p1_y': False,
     'shoulder_midpoint_p2_x': False,
     'shoulder_midpoint_p2_y': False,
-    'distance_shoulder_midpoint': True,
+    'distance_shoulder_midpoint': False,
     'wrist_left_p1_x': False,
     'wrist_left_p1_y': False,
     'wrist_right_p1_x': False,
@@ -59,33 +64,33 @@ animate_variables = {
     'com_p2_y': False,
     'centroid_p2_x': False,
     'centroid_p2_y': False,
-    'distance_smooth': True,
+    'distance_smooth': False,
     'wrist_left_p1_speed': False,
-    'wrist_left_p1_speed_smooth': True,
+    'wrist_left_p1_speed_smooth': False,
     'wrist_right_p1_speed': False,
-    'wrist_right_p1_speed_smooth': True,
+    'wrist_right_p1_speed_smooth': False,
     'wrist_left_p2_speed': False,
-    'wrist_left_p2_speed_smooth': True,
+    'wrist_left_p2_speed_smooth': False,
     'wrist_right_p2_speed': False,
-    'wrist_right_p2_speed_smooth': True,
+    'wrist_right_p2_speed_smooth': False,
     'p1_com_approach_pos': True,
     'p2_com_approach_pos': True
 }
 
 # plotting functions
-def plot_timeseries(timeseries_data, current_time=None, figsize=(15, 8)):
+def plot_timeseries(timeseries_data, current_time=None, figsize=(12, 6)):
     """
-    Create a comprehensive visualization of motion analysis data.
+    Visualizing of the processed 1_2 motion variable data together with the original video.
     Groups variables by modality with consistent coloring for p1/p2 and left/right.
     
     Parameters:
     -----------
     timeseries_data : pandas.DataFrame
          DataFrame containing all the motion analysis columns
-    current_time : int, optional
-         time number to mark with vertical line
+    current_time : float, optional
+         current time in seconds to mark with vertical line
     figsize : tuple, optional
-         Figure size in inches (width, height)
+         Figure size in inches (width, height) - reduced height for split layout
     """
     # Filter data for only variables marked as True in animate_variables
     active_vars = [var for var, active in animate_variables.items() if active and var in timeseries_data.columns]
@@ -94,11 +99,10 @@ def plot_timeseries(timeseries_data, current_time=None, figsize=(15, 8)):
         print("No variables selected for animation!")
         return None
     
-    # Define consistent color scheme
-    # Colors for p1/p2 (blue family for p1, red family for p2)
-    p1_colors = {'left': '#1f77b4', 'right': '#aec7e8'}  # Dark blue, light blue
-    p2_colors = {'left': '#d62728', 'right': '#ff9896'}  # Dark red, light red
-    other_colors = ['#ff7f0e', '#2ca02c', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+    # Define FIXED color scheme - consistent colors for p1 and p2
+    p1_color = '#1f77b4'  # Blue for p1
+    p2_color = '#d62728'  # Red for p2
+    other_color = '#2ca02c'  # Green for other variables
     
     # Group variables by modality
     distance_vars = [var for var in active_vars if 'distance' in var]
@@ -111,75 +115,72 @@ def plot_timeseries(timeseries_data, current_time=None, figsize=(15, 8)):
     if n_plots == 0:
         return None
     
-    # Create figure with subplots
-    fig, axes = plt.subplots(n_plots, 1, figsize=figsize, squeeze=False)
+    # Create figure with subplots - use tight layout and high DPI
+    fig, axes = plt.subplots(n_plots, 1, figsize=figsize, squeeze=False, dpi=100)
     axes = axes.flatten()
+    
+    # Set consistent style
+    plt.style.use('default')
+    fig.patch.set_facecolor('white')
     
     plot_idx = 0
     
     # Helper function to get consistent color and style
     def get_style(var_name):
-        # Determine person (p1/p2)
-        if '_p1_' in var_name:
-            person = 'p1'
-        elif '_p2_' in var_name:
-            person = 'p2'
+        # Determine person and assign CONSISTENT colors
+        if '_p1_' in var_name or 'p1_' in var_name:
+            color = p1_color
+            person_label = 'P1'
+        elif '_p2_' in var_name or 'p2_' in var_name:
+            color = p2_color
+            person_label = 'P2'
         else:
-            person = 'other'
+            color = other_color
+            person_label = ''
         
-        # Determine side (left/right)
+        # Determine side for linestyle - SOLID for left, DASHED for right
         if 'left' in var_name:
-            side = 'left'
+            linestyle = '-'  # Solid line for LEFT
+            side_label = 'Left'
         elif 'right' in var_name:
-            side = 'right'
-        else:
-            side = 'other'
-        
-        # Get color
-        if person == 'p1':
-            color = p1_colors.get(side, p1_colors['left'])
-        elif person == 'p2':
-            color = p2_colors.get(side, p2_colors['left'])
-        else:
-            color = other_colors[0]  # Use first color for non-person variables
-        
-        # Get linestyle (solid for left, dashed for right)
-        if side == 'right':
-            linestyle = '--'
+            linestyle = '--'  # Dashed line for RIGHT
+            side_label = 'Right'
         else:
             linestyle = '-'
+            side_label = ''
         
-        # Get alpha (lower for raw data, full for smoothed)
+        # Get alpha and linewidth
         if 'smooth' in var_name:
             alpha = 1.0
-        elif any(x in var_name for x in ['speed', 'velocity']) and 'smooth' not in var_name:
-            alpha = 0.3
+            linewidth = 3.0  # Thicker for smoothed data
         else:
-            alpha = 1.0
+            alpha = 0.7
+            linewidth = 2.0
         
-        return color, linestyle, alpha
+        # Create descriptive label with clear left/right indication
+        base_name = var_name.replace('_', ' ').title()
+        if person_label and side_label:
+            label = f"{person_label} {side_label} {base_name.replace(person_label, '').strip()}"
+        elif person_label:
+            label = f"{person_label} {base_name.replace(person_label, '').strip()}"
+        else:
+            label = base_name
+        
+        return color, linestyle, alpha, linewidth, label
     
     # 1. Distance Plots
     if distance_vars:
         ax = axes[plot_idx]
-        color_idx = 0
         for var in distance_vars:
-            if any(x in var for x in ['_p1_', '_p2_']):
-                color, linestyle, alpha = get_style(var)
-            else:
-                color = other_colors[color_idx % len(other_colors)]
-                linestyle = '-'
-                alpha = 1.0
-                color_idx += 1
-            
+            color, linestyle, alpha, linewidth, label = get_style(var)
             ax.plot(timeseries_data['time'], timeseries_data[var], 
-                   label=var.replace('_', ' '), linewidth=2, 
+                   label=label, linewidth=linewidth, 
                    color=color, linestyle=linestyle, alpha=alpha)
         
-        ax.set_title('Distances Over Time')
-        ax.set_ylabel('Distance')
+        ax.set_title('Distances Over Time', fontsize=12, fontweight='bold')
+        ax.set_ylabel('Distance (pixels)', fontsize=10)
         ax.grid(True, alpha=0.3)
-        ax.legend()
+        ax.legend(fontsize=8)
         if 'distance_shoulder_midpoint' in distance_vars or 'distance' in distance_vars:
             ax.invert_yaxis()
         plot_idx += 1
@@ -187,54 +188,45 @@ def plot_timeseries(timeseries_data, current_time=None, figsize=(15, 8)):
     # 2. Position Plots (group p1/p2 and left/right together)
     if position_vars:
         ax = axes[plot_idx]
-        
         for var in position_vars:
-            color, linestyle, alpha = get_style(var)
+            color, linestyle, alpha, linewidth, label = get_style(var)
             ax.plot(timeseries_data['time'], timeseries_data[var], 
-                   label=var.replace('_', ' '), linewidth=2, 
+                   label=label, linewidth=linewidth, 
                    color=color, linestyle=linestyle, alpha=alpha)
         
-        ax.set_title('Positions Over Time')
-        ax.set_ylabel('Position')
+        ax.set_title('Positions Over Time', fontsize=12, fontweight='bold')
+        ax.set_ylabel('Position', fontsize=10)
         ax.grid(True, alpha=0.3)
-        ax.legend()
+        ax.legend(fontsize=8)
         plot_idx += 1
     
     # 3. Speed Plots (group p1/p2 and left/right together)
     if speed_vars:
         ax = axes[plot_idx]
-        
         for var in speed_vars:
-            color, linestyle, alpha = get_style(var)
+            color, linestyle, alpha, linewidth, label = get_style(var)
             ax.plot(timeseries_data['time'], timeseries_data[var], 
-                   label=var.replace('_', ' '), linewidth=2, 
+                   label=label, linewidth=linewidth, 
                    color=color, linestyle=linestyle, alpha=alpha)
         
-        ax.set_title('Speeds Over Time')
-        ax.set_ylabel('Speed')
+        ax.set_title('Speeds Over Time', fontsize=12, fontweight='bold')
+        ax.set_ylabel('Speed (pixels/sec)', fontsize=10)
         ax.grid(True, alpha=0.3)
-        ax.legend()
+        ax.legend(fontsize=8)
         plot_idx += 1
     
     # Add vertical line for current time if specified
     if current_time is not None:
         for ax in axes[:plot_idx]:
-            ax.axvline(x=current_time, color='red', linestyle='--', alpha=0.7, linewidth=2)
+            ax.axvline(x=current_time, color='black', linestyle='--', alpha=0.8, linewidth=2)
     
     # Set common x-label
-    axes[plot_idx-1].set_xlabel('Time (frames)')
+    axes[plot_idx-1].set_xlabel('Time (seconds)', fontsize=10)
     
-    # Adjust layout
-    plt.tight_layout()
+    # Improve layout - tighter for split screen
+    plt.tight_layout(pad=1.0)
     
     return fig
-
-# Get all video files
-allvidsnew = glob.glob(VIDEO_PATH + "/*_annotated_layer1.mp4")
-inputfol2 = INPUT_LAYER1_PATH
-outputfol = OUTPUT_PATH
-
-print(f"Found {len(allvidsnew)} videos to process")
 
 # Create animation for each video
 for vids in allvidsnew:
@@ -243,21 +235,23 @@ for vids in allvidsnew:
     lab = "_annotated_layer1"
     vidname = vidname.replace(lab, "")     
     vidname = vidname[:-4]
+    # also remove substring "_c150_miss95"
+    vidname = vidname.replace("_c150_miss95", "")
     
     print(f"\nProcessing video: {vidname}")
     
     # Check if CSV file exists
-    csv_path = os.path.join(inputfol2, f'{vidname}_processed_data_layer2.csv')
+    csv_path = os.path.join(INPUT_LAYER1_PATH, f'{vidname}_processed_data_layer2.csv')
     if not os.path.exists(csv_path):
         print(f"CSV file not found: {csv_path}")
         continue
         
     # Load the CSV file
     timeseries_data = pd.read_csv(csv_path)
-    
+
     # Output paths
-    temp_output = os.path.join(outputfol, f'{vidname}_distance_layer2_temp.mp4')
-    final_output = os.path.join(outputfol, f'{vidname}_distance_layer2.mp4')
+    temp_output = os.path.join(OUTPUT_PATH, f'{vidname}_distance_layer2_temp.mp4')
+    final_output = os.path.join(OUTPUT_PATH, f'{vidname}_distance_layer2.mp4')
     
     # if already exists, skip
     if os.path.exists(final_output):
@@ -278,6 +272,10 @@ for vids in allvidsnew:
     
     print(f"Video properties: {width}x{height}, {fps} FPS, {total_frames} frames")
     
+    # Calculate time step based on FPS
+    time_step = 1.0 / fps
+    print(f"Time step: {time_step:.4f} seconds per frame")
+    
     # Define the output video writer
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(temp_output, fourcc, fps, (width, height))
@@ -287,24 +285,25 @@ for vids in allvidsnew:
         print("Creating animated video...")
         
         # loop over the frames with tqdm progress bar
-        time_count = 0
+        current_time = 0.0  # Start at time 0
         for frame_idx in tqdm.tqdm(range(total_frames), desc=f"Processing {vidname}"):
             # read the frame
             success, frame = cap.read()
             if not success:
                 break
             
-            # plot the timeseries
-            fig = plot_timeseries(timeseries_data, time_count)
+            # plot the timeseries with current time
+            fig = plot_timeseries(timeseries_data, current_time)
             if fig is None:
                 print("No plot generated, skipping frame")
                 out.write(frame)
-                time_count += 1
+                current_time += time_step  # Increment by time step
                 continue
             
-            # save the plot to a temp file
+            # save the plot to a temp file with higher DPI
             plot_path = os.path.join(temp_dir, f'plot_{frame_idx:06d}.png')
-            fig.savefig(plot_path, dpi=100, bbox_inches='tight')
+            fig.savefig(plot_path, dpi=120, bbox_inches='tight', 
+                       facecolor='white', edgecolor='none', pad_inches=0.1)
             plt.close(fig)  # Important: close figure to free memory
             
             # Read the plot image
@@ -312,23 +311,26 @@ for vids in allvidsnew:
             if plot_img is None:
                 print(f"Error reading plot image: {plot_path}")
                 out.write(frame)
-                time_count += 1
+                current_time += time_step  # Increment by time step
                 continue
             
-            # Calculate overlay area (bottom third of the frame)
-            slice_start = 2 * (height // 3)
-            slice_height = height - slice_start
+            # TOP-BOTTOM SPLIT: Video on top, plot on bottom
+            # Video on top half
+            video_height = height // 2
+            frame_resized = cv2.resize(frame, (width, video_height))
             
-            # Resize plot to fit overlay area
-            plot_img_resized = cv2.resize(plot_img, (width, slice_height))
+            # Plot on bottom half
+            plot_height = height - video_height
+            plot_img_resized = cv2.resize(plot_img, (width, plot_height))
             
-            # Create overlay on the frame
-            frame_copy = frame.copy()
-            frame_copy[slice_start:slice_start + slice_height, :, :] = plot_img_resized
+            # Create combined frame
+            frame_copy = np.zeros((height, width, 3), dtype=np.uint8)
+            frame_copy[:video_height, :, :] = frame_resized
+            frame_copy[video_height:, :, :] = plot_img_resized
             
             # write the frame to the output video
             out.write(frame_copy)
-            time_count += 1
+            current_time += time_step  # Increment by time step (seconds)
         
         # Release everything
         cap.release()
