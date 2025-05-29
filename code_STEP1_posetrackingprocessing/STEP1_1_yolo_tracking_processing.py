@@ -9,6 +9,7 @@ import torch # for gpu support
 from itertools import combinations
 import sys
 
+# Set the device to GPU
 torch.cuda.set_device(0)
 # Load the model
 modelfolder = './model/'
@@ -38,7 +39,7 @@ if not modellocation:
     modellocation = models[0]
     print(f"Using first YOLO model we found: {modellocation}")
 
-    
+# Load the model
 modelfile = os.path.basename(modellocation)
 print(f"We are loading in the following YOLO model: {modelfile}")
 model = YOLO(modellocation)
