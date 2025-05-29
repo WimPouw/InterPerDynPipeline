@@ -5,11 +5,14 @@
 *point_7_5_plakaty_krzeselko_kam_5_bitrate_920.avi
 /.quarto/
 
-
-# Point files (point_X_Y_kam_5_chair)
+# Point files (point_X_Y_kam_5_chair) - ignore all except CSV
 **/point_*_*_kam_5_chair*
+!**/point_*_*_kam_5_chair*.csv
 
-# COP files (cop_pXX and cop_yXX patterns)
+# COP files (cop_pXX and cop_yXX patterns) - ignore all except CSV
 **/cop_p[0-9][0-9]*
+!**/cop_p[0-9][0-9]*.csv
 **/cop_y[0-9][0-9]*
+!**/cop_y[0-9][0-9]*.csv
 **/cop_y[0-9][0-9]_stab*
+!**/cop_y[0-9][0-9]_stab*.csv

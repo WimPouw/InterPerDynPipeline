@@ -619,21 +619,26 @@ Here is an example of the output video with annotated keypoints and skeletons. T
 </video>
 </html>
 
-
 Here is an example of the output csv file containing the coordinates of the keypoints. The CSV file contains the following columns: frame number, person ID, keypoint ID, x-coordinate, and y-coordinate. Each row corresponds to a detected keypoint in a specific frame.
 
-```{python, code_folding="hide"}
+::: {.callout-note .callout-installation collapse="true"}
+## Example output and code example for YOLO tracking: 📊
+
+```{python examplecsvfile}
 import pandas as pd
 import glob as glob
+import os
 
-folderstep1output = "./data_tracked_afterSTEP1_1"
+folderstep1output = "./data_tracked_afterSTEP1_1/"
 # Load the CSV file
-csv_file = glob.glob(folderstep1output + "*.csv")[0]
+csv_file = glob.glob(os.path.join(folderstep1output + "*.csv"))[0]
 df = pd.read_csv(csv_file)
 
 # Display the first few rows of the DataFrame
 print(df.head())
 ```
+
+:::
 
 # Step 1.2: Raw pose data post-processing for timeseries matrices (Python)
 The raw pose data with frame, person, keypoint, and x,y  position data that we end up with is not yet in a format that is easy to work with for our purposes. Additionally, sometimes we dont have a person or two persons detected in the frame. We want to transform these raw pose data to timeseries matrix format, whereby we have time in seconds as one column and different meaningful time-varying variables in the other columns. Furthermore, we will smooth and interpolate the data if necessary. The below python code executes this second step whereby we store the position data per person, and furthe derive interpersonal distances measures, and kinematic metrics (e.g. speed) and tracking quality indicators (e.g. tracking status that says something about where it concerns interpolated data).

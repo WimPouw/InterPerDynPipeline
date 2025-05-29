@@ -8,9 +8,9 @@ from bisect import bisect_left
 from scipy.signal import savgol_filter
 
 # Path Definitions
-INPUT_LAYER1_PATH = '../data_tracked_afterSTEP1/'  # Input directory containing tracked keypoint data from STEP1
-VIDEO_PATH = "../data_raw/"                        # Raw video files directory
-OUTPUT_PATH = '../data_timeseries_afterSTEP2/'     # Output directory for processed timeseries data
+INPUT_LAYER1_PATH = '../data_tracked_afterSTEP1_1/'  # Input directory containing tracked keypoint data from STEP1
+VIDEO_PATH = "../data_raw/"                          # Raw video files directory
+OUTPUT_PATH = '../data_timeseries_afterSTEP1_2/'     # Output directory for processed timeseries data
 
 # Variable Explanations:
 # =====================================================
@@ -351,6 +351,9 @@ def main():
             timeseries_data[f'{wrist}_speed'] = np.sqrt(
                 timeseries_data[f'{wrist}_x'].diff()**2 + timeseries_data[f'{wrist}_y'].diff()**2
             )
+
+            # Fill NaN values resulting from diff
+            timeseries_data[f'{wrist}_speed'] = timeseries_data[f'{wrist}_speed'].fillna(0)
             
             # Apply Savitzky-Golay filter for smoothing
             timeseries_data[f'{wrist}_speed_smooth'] = savgol_filter(
