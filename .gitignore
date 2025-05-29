@@ -7,9 +7,9 @@
 
 
 # Point files (point_X_Y_kam_5_chair)
-**/point_*_*_kam_5_chair.*
+**/point_*_*_kam_5_chair*
 
 # COP files (cop_pXX and cop_yXX patterns)
-**/cop_p[0-9][0-9].*
-**/cop_y[0-9][0-9].*
-**/cop_y[0-9][0-9]_stab.*
+**/cop_p[0-9][0-9]*
+**/cop_y[0-9][0-9]*
+**/cop_y[0-9][0-9]_stab*
