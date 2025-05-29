@@ -20,7 +20,7 @@ modellocation = None
 
 # Folders
 video_folder = "../data_raw/"
-step1resultfolder = "../data_tracked_afterSTEP1_1/"
+step1resultfolder = "../dataoutput_STEP1_1_rawposedata/"
 
 ######################## MODEL LOADING ########################
 # check if there are models

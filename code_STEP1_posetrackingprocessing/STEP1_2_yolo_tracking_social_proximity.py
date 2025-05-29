@@ -8,9 +8,9 @@ from bisect import bisect_left
 from scipy.signal import savgol_filter
 
 # Path Definitions
-INPUT_LAYER1_PATH = '../data_tracked_afterSTEP1_1/'  # Input directory containing tracked keypoint data from STEP1
+INPUT_LAYER1_PATH = '../dataoutput_STEP1_1_rawposedata/'  # Input directory containing tracked keypoint data from STEP1
 VIDEO_PATH = "../data_raw/"                          # Raw video files directory
-OUTPUT_PATH = '../data_timeseries_afterSTEP1_2/'     # Output directory for processed timeseries data
+OUTPUT_PATH = '../dataoutput_STEP1_2_timeseries/'     # Output directory for processed timeseries data
 
 # Variable Explanations:
 # =====================================================
