@@ -391,10 +391,10 @@ The motion tracking and signal processing pipeline is divided into three steps:
 
 
 ## Step 1.1: Tracking two persons in videos for top-view (Python)
-We have tried several pose tracking solutions, such as OpenPose (model 25B; @caoOpenPoseRealtimeMultiPerson2021), Mediapipe (default highest complexity blazepose model; @lugaresiMediaPipeFrameworkBuilding2019). We found that these models are not well equipped to track persons from top view, most likely because these models are not trained on ground-truth poses of persons from top-view camera angles. However, we found the heaviest model of YOLOv8 ("yolov8x-pose-p6.pt") does perform very well, especially as compared to the other models we tested. Thus, for this pipeline we recommend using YOLOv8 model [@jocherYOLOUltralytics2023] for top-view tracking.
+We have tried several pose tracking solutions, such as OpenPose (model 25B; @caoOpenPoseRealtimeMultiPerson2021a), Mediapipe (default highest complexity blazepose model; @lugaresiMediaPipeFrameworkBuilding2019). We found that these models are not well equipped to track persons from top view, most likely because these models are not trained on ground-truth poses of persons from top-view camera angles. However, we found the heaviest model of YOLOv8 ("yolov8x-pose-p6.pt") does perform very well, especially as compared to the other models we tested. Thus, for this pipeline we recommend using YOLOv8 model [@jocherYOLOUltralytics2023] for top-view tracking.
 
 ::: {.callout-note .callout-installation collapse="true"}
-## DIY: Motion Tracking Set-Up and Execution 🛠️
+## DIY Step 1.1 Motion Tracking Set-Up and Execution 🛠️
 
 ### Step 1: Install requirements
 For each script we have provided a `requirements.txt` file. You can install the requirements using pip, by first navigating to the folder where the script is located and then running the following command in your terminal:
@@ -639,7 +639,7 @@ for video_path in video_files:
 Here is an example of the output video with annotated keypoints and skeletons. The green points indicate accepted keypoints, while the red points indicate filtered ones. The blue lines connect the keypoints to form a skeleton.
 
 <html>
-<video width="300" height="200" controls>
+<video width="600" height="400" controls>
   <source src="./images/videosrerendered/sample.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
@@ -1444,14 +1444,14 @@ To provide an example of the data we plot here a timeseries of the resultant dat
 ::: {.callout-note .callout-installation collapse="true"}
 ## Example output timeseries: 📊
 
-```{python examplecsvfilelayer2}
+```{python examplecsvfilelayer12}
 import pandas as pd
 import glob as glob
 import os
 
-folderstep1output = "./dataoutput_STEP1_2_timeseries/"
+folderstep12output = "./dataoutput_STEP1_2_timeseries/"
 # Load the CSV file
-csv_file = glob.glob(os.path.join(folderstep1output + "*.csv"))[0]
+csv_file = glob.glob(os.path.join(folderstep12output + "*.csv"))[0]
 df = pd.read_csv(csv_file)
 
 # Display the first few rows of the DataFrame
@@ -1832,7 +1832,7 @@ print("\nAll videos processed!")
 
 :::
 
-![Animation of motion tracking data coupled with video](../images/com_distance_example.gif)
+![Animation of motion tracking data coupled with video](./images/com_distance_example.gif)
 
 # Step 2: Summary feature extraction: Smoothness and other features
 We have motivated in the main paper accompanying this notebook that smoothness can be a useful feature to understand the quality of interactions. And our pipeline focuses on the extraction of this specific feature, while we also show how easy it is to generate other features from the time series data that are processed after step 1.
@@ -1930,6 +1930,7 @@ def spectral_arclength(movement, fs, padlevel=4, fc=10.0, amp_th=0.05):
 :::
 
 The second approach is based on the log dimensionless squared jerk metric, which is the traditional measure of smoothness in biomechanics [@hoganSensitivitySmoothnessMeasures2009]. Below the function that calculates the dimensionless squared jerk metric from position data.  This measure is based on taking the third derivative with respect to time (jerk), squared and integrated over the movement duration, and then normalized by the amplitude of the movement. The log of this value is taken keep the values in a reasonable range. 
+
 ::: {.callout-note .callout-installation collapse="true"}
 ## Pipeline code step 2, function for calculating log dimensionless jerk 🚩 
 
@@ -2023,11 +2024,15 @@ def dimensionless_squared_jerk_from_position(ts, time):
 
     return dimensionless_jerk
 ```
+
 :::
 
 ## Example smoothness results on simulated time series data
 
+In the below example we show how the two smoothness metrics behave for three different time series data. The first time series is a smooth sinusoidal signal, the second is a noisy version of the first, and the third is a more noisy version of the second. The spectral arc length metric should be higher for the smooth signal, while the dimensionless squared jerk metric should be lower for the smooth signal (as it is less jerky).
+
 ::: {.callout-note .callout-installation collapse="true"}
+
 ## Example code for checking behavior of the smoothness metrics 🏴
 ```{python, code_folding="hide"}
 import matplotlib.pyplot as plt
@@ -2103,12 +2108,15 @@ for bar, value in zip(bars2, jerk_values):
              f'{value:.3f}', ha='center', va='bottom', fontweight='bold', fontsize=10)
 # Adjust layout to prevent overlap
 plt.tight_layout(rect=[0, 0.12, 1, 0.95])
-plt.show()
+#plt.show()
+# save plot
+plt.savefig('./images/smoothness_metrics_comparison.png', dpi=300, bbox_inches='tight')
 ```
 :::
 
-In the below pipeline code for step 2, we calculate smoothness for the distance between the two hands, as well as the distance to the center of mass (COM) and centroid of the two hands. We also calculate the smoothness of the wrist speed profiles, which are derived from the distance time series data. When SPARC is in the variable name, it refers to the spectral arc length metric, while smoothness will refer to the dimensionless squared jerk metric.
+![Smoothness metrics comparison](./images/smoothness_metrics_comparison.png)
 
+In the below pipeline code for step 2, we calculate smoothness for the distance between the two hands, as well as the distance to the center of mass (COM) and centroid of the two hands. We also calculate the smoothness of the wrist speed profiles, which are derived from the distance time series data. When SPARC is in the variable name, it refers to the spectral arc length metric, while smoothness will refer to the dimensionless squared jerk metric.
 
 ::: {.callout-note .callout-installation collapse="true"}
 ## Pipeline code step 2 complete procedure 🚩
@@ -2473,14 +2481,14 @@ print("Done with smoothness processing pipeline!")
 ::: {.callout-note .callout-installation collapse="true"}
 ## Example output smoothness: 📊
 For each video we will now have a smoothness feature set. 
-```{python examplecsvfilelayer2}
+
+```{python examplecsvfilelayer20}
 import pandas as pd
 import glob as glob
 import os
 
-folderstep1output = "./dataoutput_STEP2_features/smoothness_data.csv"
 # Load the CSV file
-csv_file = glob.glob(os.path.join(folderstep1output + "*.csv"))[0]
+csv_file = "./dataoutput_STEP2_features/smoothness_data.csv"
 df = pd.read_csv(csv_file)
 
 # Display the first few rows of the DataFrame
@@ -2491,6 +2499,10 @@ print(df.head())
 
 ### Extract features for all videos using tsfresh
 To show how easy it is to extract features from the time series data, we use the `tsfresh` library [@christTimeSeriesFeatuRe2018]. This library contains a large number of features designed to characterize time series data. While we do not use them in our analysis, it provides a convenient example of how easy it is to extract features from the created time series in a data-driven way. The user can of course change this code to add more features or to extract only a subset of features.
+
+
+::: {.callout-note .callout-installation collapse="true"}
+## Extracting more features example tsfresh 🏴
 
 ```{python, code_folding="hide"}
 import pandas as pd
@@ -2542,17 +2554,19 @@ print(f"Total: Extracted {len(combined_features.columns)} features from {len(com
 combined_features.to_csv('./dataoutput_STEP2_features/tsfresh_features_fromCOMdistance.csv')
 ```
 
+:::
+
+
 ::: {.callout-note .callout-installation collapse="true"}
 ## Example output tsfresh: 📊
 For each video we will now have a smoothness feature set. 
-```{python examplecsvfilelayer2}
+```{python examplecsvfilelayer21}
 import pandas as pd
 import glob as glob
 import os
 
-folderstep1output = "./dataoutput_STEP2_features/tsfresh_features_fromCOMdistance.csv"
 # Load the CSV file
-csv_file = glob.glob(os.path.join(folderstep1output + "*.csv"))[0]
+csv_file = "./dataoutput_STEP2_features/tsfresh_features_fromCOMdistance.csv"
 df = pd.read_csv(csv_file)
 
 # Display the first few rows of the DataFrame
@@ -2581,11 +2595,11 @@ python STEP2_featureextraction.py
 
 :::
 
-# Step 3: Non-linear time series analysis
+# Step 3: Non-linear time series analysis (R)
 
 
 
-# Step 4: Statistical analysis (e.g., jerkiness of proximity/approach/avoidance, or non-linear recurrence) (R)
+# Step 4: Statistical analysis (R)
 
 ```{r, eval=FALSE, code_folding="hide"}
 # manually edited this CSV
