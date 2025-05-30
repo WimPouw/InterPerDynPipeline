@@ -60,18 +60,21 @@ The Quarto notebook is structured to have the following components, next to trad
 Below is a description of the two datasets that were used as test cases for the pipeline. The datasets are available in masked form to reduce identifiability of the individuals in the dataset. Following the download guide for further information on how to access the datasets.
 
 ::: {.callout-note .callout-download collapse="true"}
-## ⬇️ Download Guide ⬇️
+## Download Guide ⬇️
 The masked data can be downloaded from the repository of Jagellonian University [here](). The unmasked data can be requested from the authors.
 
 Please note that the masked data is not the input of the pipeline. YOLO tracking would not work well on masked data as detailed information about the body is lost, and only represented as the motion tracking data that comes with it (and is present in the repository). Rather the masked data can be used to check for qualitative changes in the behavior of the inviduals, and can be used to create animations such as in step 1.3.
 
+## Example of masked data
+![Example masking](./images/masked_example.jpeg){fig-align="center" width=600}
 :::
 
 ### Dataset Mother Infant
 Thirteen infant-caregiver pairs visited the child laboratory monthly for a total of seven visits. The infants' ages at the first visit ranged from 7 to 9 months. Parents were instructed to "play as usual," with a set of different toys to encourage spontaneous interactions. Each visit lasted approximately 30 minutes and was divided into four stages. For our analyses, we focus on recordings from the stage where the infant was seated in a feeding chair, facing the caregiver sitting directly across. This controlled setup minimizes movement around the room, facilitating video motion tracking analysis. Additionally, our analyses are restricted to top-view recordings, ensuring that both the caregiver and the infant are captured within a single frame.
 
 ::: {.callout-note .callout-download collapse="true"}
-## 🏴 Plotting code for the Mother-Infant dataset 🏴
+## Plotting code for the Mother-Infant dataset 🏴
+
 ```{python, eval=FALSE}
 
 import matplotlib
@@ -245,6 +248,7 @@ plt.close(fig) # Explicitly close the figure object
 ```
 
 :::
+
 ![](images/mother_infant_analysis.png){fig-align="center" width=600}
 
 Note that in our github repository we use short sample data from this dataset from an infant-mother pair whom we are allowed to share the video data for the current purposes.
@@ -252,7 +256,8 @@ Note that in our github repository we use short sample data from this dataset fr
 ### Dataset Siblings
 Ten sibling pairs (total = 20 pairs) were observed from Polish urban culture and Yurakaré indigenous culture each. Observations were made during a semi-structured play situation: in the natural environment of the Yurakaré community and laboratory conditions in Poland. Siblings were asked to build a tower together using 54 wooden blocks while sitting facing each other. Each pair had 4 minutes to complete the task. This setup allowed for a systematic comparison of coordinated and mutually adjusted movements in siblings, using our pipeline to examine the smoothness of interaction while "doing things together" in these two cultural groups.
 
-
+::: {.callout-note .callout-download collapse="true"}
+## Plotting code for the Siblings dataset 🏴
 ```{python, eval=FALSE, code_folding="hide"}
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -359,6 +364,7 @@ os.makedirs(os.path.dirname(output_path), exist_ok=True)
 plt.savefig(output_path, dpi=300, bbox_inches='tight')
 plt.close()
 ```
+:::
 
 ![](images/sibling_analysis.png){fig-align="center" width=600}
 
@@ -367,6 +373,10 @@ plt.close()
 
 ### Step 0: Github repo
 You should first clone the repository [InterPerDynPipeline](https://github.com/WimPouw/InterPerDynPipeline) and move to the root directory. The step 1 code for tracking is in the `./code_STEP1_posetrackingprocessing/` folder. In this folder you will find the Python script `yolo_tracking_processing.py`. To check whether you have the correct script you can compare against the code chunk provided below.
+
+First install git if you do not have it installed yet. You can find instructions on how to install git [here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
+
+Then you can clone the repository using the following commands in your (anaconda) terminal:
 
 ```bash
 git clone https://github.com/WimPouw/InterPerDynPipeline
