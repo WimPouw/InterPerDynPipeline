@@ -1931,6 +1931,14 @@ def spectral_arclength(movement, fs, padlevel=4, fc=10.0, amp_th=0.05):
 
 The second approach is based on the log dimensionless squared jerk metric, which is the traditional measure of smoothness in biomechanics [@hoganSensitivitySmoothnessMeasures2009]. Below the function that calculates the dimensionless squared jerk metric from position data.  This measure is based on taking the third derivative with respect to time (jerk), squared and integrated over the movement duration, and then normalized by the amplitude of the movement. The log of this value is taken keep the values in a reasonable range. 
 
+## Example smoothness results on simulated time series data
+
+In the below example we show how the two smoothness metrics behave for three different time series data. The first time series is a smooth sinusoidal signal, the second is a noisy version of the first, and the third is a more noisy version of the second. The spectral arc length metric should be higher for the smooth signal, while the dimensionless squared jerk metric should be lower for the smooth signal (as it is less jerky).
+
+::: {.callout-note .callout-installation collapse="true"}
+
+
+
 ::: {.callout-note .callout-installation collapse="true"}
 ## Pipeline code step 2, function for calculating log dimensionless jerk 🚩 
 
@@ -2027,11 +2035,6 @@ def dimensionless_squared_jerk_from_position(ts, time):
 
 :::
 
-## Example smoothness results on simulated time series data
-
-In the below example we show how the two smoothness metrics behave for three different time series data. The first time series is a smooth sinusoidal signal, the second is a noisy version of the first, and the third is a more noisy version of the second. The spectral arc length metric should be higher for the smooth signal, while the dimensionless squared jerk metric should be lower for the smooth signal (as it is less jerky).
-
-::: {.callout-note .callout-installation collapse="true"}
 
 ## Example code for checking behavior of the smoothness metrics 🏴
 ```{python, code_folding="hide"}
