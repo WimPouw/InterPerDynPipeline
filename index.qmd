@@ -1959,7 +1959,7 @@ def dimensionless_squared_jerk_from_position(ts, time):
         return np.nan
     # log the result
     
-    print(f"Dimensionless squared jerk: {dimensionless_jerk}")
+    #print(f"Dimensionless squared jerk: {dimensionless_jerk}")
     # log the dimensionless jerk
     dimensionless_jerk = np.log(dimensionless_jerk)
 
@@ -1993,7 +1993,7 @@ jerkts2 = dimensionless_squared_jerk_from_position(ts2, time_axis)
 jerkts3 = dimensionless_squared_jerk_from_position(ts3, time_axis)
 
 # Create figure with subplots - 1x3 layout
-fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+fig, axes = plt.subplots(1, 3, figsize=(18, 9))
 fig.suptitle('Time Series Analysis: Spectral Arc Length and Dimensionless Squared Jerk', 
              fontsize=16, fontweight='bold', y=0.98)
 
