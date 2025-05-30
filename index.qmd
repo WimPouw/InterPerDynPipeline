@@ -1930,8 +1930,9 @@ def spectral_arclength(movement, fs, padlevel=4, fc=10.0, amp_th=0.05):
 :::
 
 The second approach is based on the log dimensionless squared jerk metric, which is the traditional measure of smoothness in biomechanics [@hoganSensitivitySmoothnessMeasures2009]. Below the function that calculates the dimensionless squared jerk metric from position data.  This measure is based on taking the third derivative with respect to time (jerk), squared and integrated over the movement duration, and then normalized by the amplitude of the movement. The log of this value is taken keep the values in a reasonable range. 
-
+::: {.callout-note .callout-installation collapse="true"}
 ## Pipeline code step 2, function for calculating log dimensionless jerk 🚩 
+
 ```{python, code_folding="hide"}
 import numpy as np
 from scipy import interpolate
@@ -2022,9 +2023,12 @@ def dimensionless_squared_jerk_from_position(ts, time):
 
     return dimensionless_jerk
 ```
+:::
 
 ## Example smoothness results on simulated time series data
 
+::: {.callout-note .callout-installation collapse="true"}
+## Example code for checking behavior of the smoothness metrics 🏴
 ```{python, code_folding="hide"}
 import matplotlib.pyplot as plt
 import numpy as np
@@ -2101,6 +2105,13 @@ for bar, value in zip(bars2, jerk_values):
 plt.tight_layout(rect=[0, 0.12, 1, 0.95])
 plt.show()
 ```
+:::
+
+In the below pipeline code for step 2, we calculate smoothness for the distance between the two hands, as well as the distance to the center of mass (COM) and centroid of the two hands. We also calculate the smoothness of the wrist speed profiles, which are derived from the distance time series data. When SPARC is in the variable name, it refers to the spectral arc length metric, while smoothness will refer to the dimensionless squared jerk metric.
+
+
+::: {.callout-note .callout-installation collapse="true"}
+## Pipeline code step 2 complete procedure 🚩
 
 ```{python, eval=FALSE, code_folding="hide"}
 import matplotlib.pyplot as plt
@@ -2456,9 +2467,30 @@ newdf.head()
 # print done
 print("Done with smoothness processing pipeline!")
 ```
+:::
+
+
+::: {.callout-note .callout-installation collapse="true"}
+## Example output smoothness: 📊
+For each video we will now have a smoothness feature set. 
+```{python examplecsvfilelayer2}
+import pandas as pd
+import glob as glob
+import os
+
+folderstep1output = "./dataoutput_STEP2_features/smoothness_data.csv"
+# Load the CSV file
+csv_file = glob.glob(os.path.join(folderstep1output + "*.csv"))[0]
+df = pd.read_csv(csv_file)
+
+# Display the first few rows of the DataFrame
+print(df.head())
+```
+:::
+
 
 ### Extract features for all videos using tsfresh
-To show how easy it is to extract features from the time series data, we use the `tsfresh` library [@christTimeSeriesFeatuRe2018]. This library contains a large number of features designed to characterize time series data. While we do not use them in our analysis, it is a good example how to extract features from time series in a data-driven way. The user can of course change this code to add more features or to extract only a subset of features.
+To show how easy it is to extract features from the time series data, we use the `tsfresh` library [@christTimeSeriesFeatuRe2018]. This library contains a large number of features designed to characterize time series data. While we do not use them in our analysis, it provides a convenient example of how easy it is to extract features from the created time series in a data-driven way. The user can of course change this code to add more features or to extract only a subset of features.
 
 ```{python, code_folding="hide"}
 import pandas as pd
@@ -2510,16 +2542,48 @@ print(f"Total: Extracted {len(combined_features.columns)} features from {len(com
 combined_features.to_csv('./dataoutput_STEP2_features/tsfresh_features_fromCOMdistance.csv')
 ```
 
+::: {.callout-note .callout-installation collapse="true"}
+## Example output tsfresh: 📊
+For each video we will now have a smoothness feature set. 
+```{python examplecsvfilelayer2}
+import pandas as pd
+import glob as glob
+import os
+
+folderstep1output = "./dataoutput_STEP2_features/tsfresh_features_fromCOMdistance.csv"
+# Load the CSV file
+csv_file = glob.glob(os.path.join(folderstep1output + "*.csv"))[0]
+df = pd.read_csv(csv_file)
+
+# Display the first few rows of the DataFrame
+print(df.head())
+```
+:::
+
+::: {.callout-note .callout-settingup collapse="true"}
+## DIY STEP 2: Feature Extraction 🛠️
+
+
+### Step 1: Install requirements
+For each script we have provided a `requirements.txt` file. You can install the requirements using pip, by first navigating to the folder where the script is located and then running the following command in your terminal:
+
+```bash
+cd [yourspecificrootadress]/code_STEP2_smoothness_features/
+pip install -r requirements.txt
+```
+### Step 2: Run the python script
+Assuming you have timeseries data (`./dataoutput_STEP1_2_timeseries/`), you can run the script using the following command:
+
+```bash
+cd [yourspecificrootadress]/code_STEP2_smoothness_features/
+python STEP2_featureextraction.py
+```
+
+:::
 
 # Step 3: Non-linear time series analysis
 
 
-::: {.callout-note .callout-settingup collapse="true"}
-## DIY: Feature Extraction 🛠️
-
-
-
-:::
 
 # Step 4: Statistical analysis (e.g., jerkiness of proximity/approach/avoidance, or non-linear recurrence) (R)
 
