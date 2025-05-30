@@ -43,9 +43,9 @@ To increase reproducibility of our approach we have designed this Quarto noteboo
 
 The Quarto notebook is structured to have the following components, next to traditional text sections:
 
-- 🚩 **pipeline code** that overview complete code associated with the pipeline, or shorter code chunks to for example explain a particular function. Denoted with the symbol 🚩.
+- 🚩 **pipeline code** that overview complete code associated with the pipeline, or shorter code chunks to for example explain a particular function. These code blocks are generally not run inside the current notebook. Denoted with the symbol 🚩.
 
-- 🏴 **other code chuncks** that we use for this quarto notebook to create sanity checks or animations related to measures or summarizing datasets. Denoted with the symbol 🏴.
+- 🏴 **other code chuncks** that we use for this quarto notebook to create sanity checks or animations related to measures or summarizing datasets. These code blocks are generally run inside the notebook. Denoted with the symbol 🏴.
 
 - 📊 **example output** that shows example output of the pipeline. Denoted with the symbol 📊.
 
@@ -53,10 +53,9 @@ The Quarto notebook is structured to have the following components, next to trad
 
 - ⬇️ **dataset download** provide information about how to download the dataset overviewed for our report. Denoted with the symbol ⬇️.
 
-**What the Quarto notebook is not intended to do:** The notebook is not itself collection of code that runs the complete pipeline. It is not intended as replicating the pipeline. It is rather a linear step-by-step manual and explainer of how to understand and implement the pipeline steps. For actually applying this code, the user can further dig into the **DIY** blocks. 
+**What the Quarto notebook is not intended to do:** This notebook is not itself the pipeline (i.e., a collection of code that runs the complete pipeline). It is rather a linear step-by-step manual and explainer of how to understand and implement the pipeline steps. For actually applying this code, the user can further dig into the **DIY** blocks. 
 
 # Dataset
-
 Below is a description of the two datasets that were used as test cases for the pipeline. The datasets are available in masked form to reduce identifiability of the individuals in the dataset. Following the download guide for further information on how to access the datasets.
 
 ::: {.callout-note .callout-download collapse="true"}
@@ -65,8 +64,8 @@ The masked data can be downloaded from the repository of Jagellonian University 
 
 Please note that the masked data is not the input of the pipeline. YOLO tracking would not work well on masked data as detailed information about the body is lost, and only represented as the motion tracking data that comes with it (and is present in the repository). Rather the masked data can be used to check for qualitative changes in the behavior of the inviduals, and can be used to create animations such as in step 1.3.
 
-## Example of masked data
-![Example masking](./images/masked_example.jpeg){fig-align="center" width=600}
+**Example of masked videodata**
+![](./images/masked_example.jpeg){fig-align="center" width=600}
 :::
 
 ### Dataset Mother Infant
@@ -387,13 +386,12 @@ cd ./InterPerDynPipeline/
 
 # Step 1: Motion tracking and signal processing and wrangling
 
-The motion tracking and signal processing pipeline is divided into two main steps: 
-1. **Tracking**: This step involves tracking the movements of individuals in the videos using a pose estimation model. The output is a video with annotated keypoints and a CSV file containing the coordinates of these keypoints.
-2. **Signal Processing**: This step involves processing the keypoint data to extract relevant features for analysis. The output are processed timeseries files, and a flat dataset containing our smoothness measures that are directly ready for statistical analysis.
+The motion tracking and signal processing pipeline is divided into three steps: 
+1. **Tracking**: This step involves tracking the movements of individuals in the videos using YOLOv8. The output is a video with annotated keypoints and a CSV file containing the coordinates of these keypoints. 2. **Signal Processing**: This step involves processing the keypoint data to extract relevant features for analysis. The output are processed timeseries files, and a flat dataset containing our smoothness measures that are directly ready for statistical analysis. 3. **Animations**: This step involves animating the processed data together with the original video data to ensure that the processed data are of sufficient quality to reflect behavioral changes.
 
 
 ## Step 1.1: Tracking two persons in videos for top-view (Python)
-We have tried several pose tracking solutions, such as OpenPose (model 25B; @caoOpenPoseRealtimeMultiPerson2021), Mediapipe (default highest complexity blazepose model; @lugaresiMediaPipeFrameworkBuilding2019) and we found that these models are not well equipped to track persons from top view, most likely because these models are not trained on ground-truth poses of persons from top-view camera angles. However, we found the heaviest model of yolo v8 ("yolov8x-pose-p6.pt") does perform very well, especially as compared to the other models we tested. Thus, for this pipeline we recommend using YOLOv8 model for top-view tracking.
+We have tried several pose tracking solutions, such as OpenPose (model 25B; @caoOpenPoseRealtimeMultiPerson2021), Mediapipe (default highest complexity blazepose model; @lugaresiMediaPipeFrameworkBuilding2019). We found that these models are not well equipped to track persons from top view, most likely because these models are not trained on ground-truth poses of persons from top-view camera angles. However, we found the heaviest model of YOLOv8 ("yolov8x-pose-p6.pt") does perform very well, especially as compared to the other models we tested. Thus, for this pipeline we recommend using YOLOv8 model [@jocherYOLOUltralytics2023] for top-view tracking.
 
 ::: {.callout-note .callout-installation collapse="true"}
 ## DIY: Motion Tracking Set-Up and Execution 🛠️
@@ -412,8 +410,8 @@ In the current GitHub repo we have a light-weight model `yolov8n-pose.pt` (~6.5M
 We should download the heaviest model (`yolov8x-pose-p6.pt`) and save it to the `./code_STEP1_posetrackingprocessing/model/` directory:  
 https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8x-pose-p6.pt
 
-**Note**: If you're running the heavyweight model, you will need GPU support for this to run in a reasonable time. The lightweight model can run on CPU.
-:::
+**Note** that if you're running the heavyweight model, you will need GPU support for this to run in a reasonable time (we processed our data on a NVIDIA GeForce RTX 4090 GPU). The lightweight model can run on CPU.
+
 
 ### Step 3: Run the python script
 Assuming you have videos in your data folder (`./data_raw/`) and you have a `.pt` model in the model folder, you can run the script using the following command:
@@ -425,6 +423,10 @@ python yolo_tracking_processing.py
 :::
 
 The code below is the script `yolo_tracking_processing.py` that you can run to track the videos. The output will be a video with annotated keypoints and a CSV file containing the coordinates of these keypoints. The script processes each video frame-by-frame, detecting people and their pose keypoints (17 points as listed in the script; see the `GetKeypoint class`). We filter out duplicate detections or skeletons with excessive missing data. Specifically, for each processed video, the script generates two output files: an annotated video showing the original footage with skeleton overlays (green points for accepted keypoints, red for filtered ones, and blue lines connecting the points), and a CSV file containing the raw coordinate data (frame number, person ID, keypoint ID, x-coordinate, y-coordinate). The output filenames include parameters like "c150" (150px proximity threshold) and "miss95" (95% missing data tolerance), which control how the system handles potential duplicate detections and incomplete skeletons. The user could adjust the parameter `close_threshold` and `miss_tolerance` to adjust the detection dynamics. We output the annotated video and the CSV file in the `./datatracked_afterSTEP1/` folder.
+
+
+::: {.callout-note .callout-installation collapse="true"}
+## Pipeline code 1.1 YOLO tracking 🚩
 
 ```{python, eval=FALSE, code_folding="hide"}
 from ultralytics import YOLO
@@ -632,6 +634,8 @@ for video_path in video_files:
     print(f"Keypoints data saved as {csv_path}")
 ```
 
+:::
+
 Here is an example of the output video with annotated keypoints and skeletons. The green points indicate accepted keypoints, while the red points indicate filtered ones. The blue lines connect the keypoints to form a skeleton.
 
 <html>
@@ -663,7 +667,7 @@ print(df.head())
 :::
 
 ## Step 1.2: Raw pose data post-processing for timeseries matrices (Python)
-The raw pose data with frame, person, keypoint, and x,y  position data that we end up with is not yet in a format that is easy to work with for our purposes. Additionally, sometimes we dont have a person or two persons detected in the frame. We want to transform these raw pose data to timeseries matrix format, whereby we have time in seconds as one column and different meaningful time-varying variables in the other columns. Furthermore, we will smooth and interpolate the data if necessary. The below python code executes this second step whereby we store the position data per person, and furthe derive interpersonal distances measures, and kinematic metrics (e.g. speed) and tracking quality indicators (e.g. tracking status that says something about where it concerns interpolated data).
+The raw pose data with frame, person, keypoint, and x,y  position data that we end up with is not yet in a format that is easy to work with for our purposes. Additionally, sometimes we dont have a person or two persons detected in the frame. We want to transform these raw pose data to timeseries matrix format, whereby we have time in seconds as one column and different time-varying variables in the other columns. Furthermore, we smooth and interpolate the data if necessary. The below python code executes this second step whereby we store the position data per person, and furthe derive interpersonal distances measures, and kinematic metrics (e.g. speed) and tracking quality indicators (e.g. tracking status that says something about where it concerns interpolated data).
 
 Next to determining time in seconds from the frame rate of the videos, the script starts with assigning left and right person IDs based on the horizontal position in the frame (with left being ID 1 and right being ID 2). It then processes the time data to calculate statistics for tracked people using upper body keypoints (as the lower body keypoints are unreliable from top-view and may be ignored). Specifically, we reduce the dimensionality of all upper body keypoints by determined relative positions and their distances: We calculate a bounding box (determined by the outer edges of the keypoints) and determine the center in x and y coordinates (`centroid_x`, `centroid_y`) and their P1-P2 distance of those centroids (`distance`), and the center of mass (`com_x`, `com_y`) for each person and the distnace (`distance_com`). Further we determine the midpoint of the shoulders as another relevant position (`shoulder_midpoint_x`, `shoulder_midpoint_y`) and compute its distance (`distance_shoulder_midpoint`). Additionally, information about body parts such as arm motions by taking the wrist positions (`wrist_left_x`, `wrist_left_y`, `wrist_right_x`, `wrist_right_y`), and further deriving total motion per second, called speed (based on a euclidean sum of the changes of position along x and y). 
 
@@ -671,9 +675,12 @@ The Savitzky-Golay filter is applied for smoothing jittering position data (usin
 
 The more sophisticated measure that we have created is the proximity calculation measure (see function `calculate_approach()` in the step2 script). This function establishes initial reference position for both participants and then projects their subsequent movements onto the connecting line between them. This allows for quantifying approach and retreat behaviors for each person seperately (which a distance measure does not allow for) while allowing for relative angle changes between them - positive values indicate movement toward the other person (relative from start), while negative values indicate withdrawal (relative from start).
 
-Below is an animation to what we are measuring. We are here capturing only movements that are changing the distance between them. When someone moves in a circle around the other person we want to make sure we do not register that as approach or retreat (which we would do if we just capture horizontal position for example). However we also want capture each person their own approach/avoidance value (which would not be possible when using a simple distance measure). By always measuring the signed length of the projected line from the initial position (based on the current connected line), the method tracks cumulative approach/avoidance for each person over time. 
+Below is an animation to exemplify what we are measuring. We are here capturing only movements that are changing the distance between them. When someone moves in a circle around the other person we want to make sure we do not register that as approach or retreat (which we would do if we just capture horizontal position for example). However we also want capture each person their own approach/avoidance value (which would not be possible when using a simple distance measure). By always measuring the signed length of the projected line from the initial position (based on the current connected line), the method tracks cumulative approach/avoidance for each person over time. 
 
-```{python, code_folding="hide"}
+::: {.callout-note .callout-installation collapse="true"}
+## Code for creating animation to exemplify behavior of proximity measure 🏴
+
+```{python,}
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -1021,11 +1028,16 @@ except Exception as e:
         print(f"Alternative approach also failed: {e}")
 ```
 
+:::
+
 ![Proximity Calculation Visualization](./images/proximity_visualization/proximity_calculation.gif)
 
 We further check for any remaining missing values after processing and confirms time continuity to detect any frame drops or temporal misalignments. 
 
 The output of this script is a timeseries matrix for each video, which contains the time in seconds and the calculated variables. The timeseries matrices are saved in the `./dataoutput_STEP1_2_timeseries/` folder. The code below is the script `STEP2_process_timeseries.py` that you can run to process the raw pose data.
+
+::: {.callout-note .callout-installation collapse="true"}
+## Pipeline code step 1.2 for processing to timeseries data 🚩
 
 ```{python, eval=FALSE, code_folding="hide"}
 import pandas as pd
@@ -1424,7 +1436,29 @@ if __name__ == "__main__":
     main()
 ```
 
+:::
+
 To provide an example of the data we plot here a timeseries of the resultant data.
+
+
+::: {.callout-note .callout-installation collapse="true"}
+## Example output timeseries: 📊
+
+```{python examplecsvfilelayer2}
+import pandas as pd
+import glob as glob
+import os
+
+folderstep1output = "./dataoutput_STEP1_2_timeseries/"
+# Load the CSV file
+csv_file = glob.glob(os.path.join(folderstep1output + "*.csv"))[0]
+df = pd.read_csv(csv_file)
+
+# Display the first few rows of the DataFrame
+print(df.head())
+```
+
+:::
 
 ## Step 1.3: Animation with original videodata
 
@@ -1798,19 +1832,15 @@ print("\nAll videos processed!")
 
 :::
 
-### Output animation of time series 📊
+![Animation of motion tracking data coupled with video](../images/com_distance_example.gif)
 
-
-::: {.callout-note .callout-installation collapse="true"}
-## DIY: Motion Tracking Set-Up and Execution 🛠️
-
-:::
 # Step 2: Summary feature extraction: Smoothness and other features
-
 We have motivated in the main paper accompanying this notebook that smoothness can be a useful feature to understand the quality of interactions. And our pipeline focuses on the extraction of this specific feature, while we also show how easy it is to generate other features from the time series data that are processed after step 1.
 
-We take two approaches to quantify smoothness of the movement data. The first approach is based on the spectral arc length metric, which has been shown to be a stable measure of smoothness for prolonged (quasi-cyclical) time series data [@balasubramanianAnalysisMovementSmoothness2015]. The approach is based on analyzing the frequency spectrum and determining the relative. Below the function is given that calculates the spectral arc length metric from speed data. This code is directly copied from the [original repository](https://github.com/siva82kb/smoothness) by the developer of the metric lead by Sivak Balasubramanian([@balasubramanianAnalysisMovementSmoothness2015]).
+We take two approaches to quantify smoothness of the movement data. The first approach is based on the spectral arc length metric, which has been shown to be a stable measure of smoothness for prolonged (quasi-cyclical) time series data [@balasubramanianAnalysisMovementSmoothness2015]. The approach is based on analyzing the frequency spectrum, specifically the changes in energy over the different frequencies, for the lower frequencies (< 10Hz; but this can be set by the user). Specifally it calculates the spectral arc length (distance of two points along a curve) from Fourier magnitude spectrum of the speed data (or in our case changes in the distance or proximity positions). This code is directly copied from the [original repository](https://github.com/siva82kb/smoothness) by the lead developer of the metric, Sivak Balasubramanian. We refer to the [@balasubramanianAnalysisMovementSmoothness2015] for further details and validation of this novel measure of smoothness. As can be seen, the higher values of the spectral arc length indicate smoother movements, while lower values indicate more jerky movements.
 
+::: {.callout-note .callout-installation collapse="true"}
+## Pipeline code step 2, function for calculating spectral arc length 🚩 
 ```{python, code_folding="hide"}
 import numpy as np
 
@@ -1897,8 +1927,11 @@ def spectral_arclength(movement, fs, padlevel=4, fc=10.0, amp_th=0.05):
     return new_sal, (f, Mf), (f_sel, Mf_sel)
 ```
 
-The second approach is based on the log dimensionless squared jerk metric, which is the traditional measure of smoothness in biomechanics [@hoganSensitivitySmoothnessMeasures2009]. Below the function that calculates the dimensionless squared jerk metric from position data. 
+:::
 
+The second approach is based on the log dimensionless squared jerk metric, which is the traditional measure of smoothness in biomechanics [@hoganSensitivitySmoothnessMeasures2009]. Below the function that calculates the dimensionless squared jerk metric from position data.  This measure is based on taking the third derivative with respect to time (jerk), squared and integrated over the movement duration, and then normalized by the amplitude of the movement. The log of this value is taken keep the values in a reasonable range. 
+
+## Pipeline code step 2, function for calculating log dimensionless jerk 🚩 
 ```{python, code_folding="hide"}
 import numpy as np
 from scipy import interpolate

@@ -16,7 +16,7 @@ from moviepy import VideoFileClip
 INPUT_LAYER1_PATH = '../dataoutput_STEP1_2_timeseries/'  # Input directory containing tracked keypoint data from STEP1
 VIDEO_PATH = "../dataoutput_STEP1_1_rawposedata/"                        # Raw video files directory
 OUTPUT_PATH = '../dataoutput_STEP1_3_animations/'     # Output directory for processed timeseries data
-targetvideo = "sample_annotated_layer1_c150_miss95.mp4" # note that sample video must be set to True to process only a sample video
+targetvideo = "sample2_annotated_layer1_c150_miss95.mp4" # note that sample video must be set to True to process only a sample video
 SAMPLE_VIDEO = False # Set to True to process only a sample video, False to process all videos
 # Create output directory if it doesn't exist
 os.makedirs(OUTPUT_PATH, exist_ok=True)
