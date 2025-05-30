@@ -1,6 +1,6 @@
 ---
 title: "An Open-source Standardized Pipeline for Tracing the Behavioral Dynamics in Social Interactions"
-subtitle: "Computationally Reproducible Extended Methods Section"
+subtitle: "Computationally Reproducible Extended Methods and Results Section"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 author: 
   - name: Arkadiusz Białek
@@ -39,17 +39,17 @@ format:
 
 # Overview
 
-To increase reproducibility of our approach we have designed this Quarto notebook that provides the user with what is effectively a manual-style extended methods and results section. Next to staging and (visually) explaining key Python and R code elements, the notebook contains detailed further “Do It Yourself” (DIY) instructions that can be accessed on demand by clicking on DIY sections, for example providing the technical steps needed to install and then run code for YOLO tracking on (user-defined) data. This Notebook is not simply an add-on supplemental text, but it is a key part of our contribution as it allows for newcomers to social processing to start implementing this pipeline step by step.
+To increase reproducibility of our approach we have designed this Quarto notebook that provides the user with what is effectively a manual-style extended methods and results section. Next to staging and (visually) explaining key Python and R code elements, the notebook contains detailed further “Do It Yourself” (DIY) instructions that can be accessed on demand by clicking on DIY sections, for example providing the technical steps needed to install and then run code for YOLO tracking on (user-defined) data. This notebook is therefore not simply an add-on supplemental text, but it is a key part of our contribution as it allows for newcomers to social signal processing to start implement this pipeline step by step.
 
-The Quarto notebook is structured to have the following components, next to steps:
+The Quarto notebook is structured to have the following components, next to traditional text sections:
 
-- **code snippets** that overview complete code, or shorter code chunks to for example explain a particular function. Denoted with the symbol 🚩.
+- 🚩 **code snippets** that overview complete code, or shorter code chunks to for example explain a particular function. Denoted with the symbol 🚩.
 
-- **example output** that shows example output. Denoted with the symbol 📊.
+- 📊 **example output** that shows example output of the pipeline. Denoted with the symbol 📊.
 
-- **DIY blocks** that provide shorter, step-by-step links to the full code for executing a particular step in the pipeline on your own code 🛠️.
+- 🛠️ **DIY blocks** that provide shorter, step-by-step links to the full code for executing a particular step in the pipeline on your own data.  Denoted with the symbol 🛠️.
 
-**What the Quarto notebook is not intended to do:** The notebook is not a complete collection of every piece of code needed to replicate the pipeline. It is not intended to be run on its own when replicating the pipeline (whether on your own data, or on the sample data). For actually applying this code, see the  **DIY** blocks. 
+**What the Quarto notebook is not intended to do:** The notebook is not itself collection of code that runs the complete pipeline. It is not intended as replicating the pipeline. It is rather a linear step-by-step manual and explainer of how to understand and implement the pipeline steps. For actually applying this code, the user can further dig into the **DIY** blocks. 
 
 # Dataset
 
