@@ -16,3 +16,4 @@
 !**/cop_y[0-9][0-9]*.csv
 **/cop_y[0-9][0-9]_stab*
 !**/cop_y[0-9][0-9]_stab*.csv
+.DS_Store
