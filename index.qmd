@@ -1418,21 +1418,199 @@ py ./code_STEP3_features/STEP3_featureextraction.py
 
 
 # Step 3: Calculating feature data (e.g., jerkiness) from timeseries (Python)
-After generating a time-series that represents interaction dynamic that we are interested in (i.e., interpersonal proximity, in the case of this example), we can calculate higher-level features by transforming or aggregating the data. In the examples given in this notebook, we demonstrate two such approaches. The first approach results in data that is aggregated at the dyad level (I.e., resulting in one value per dyad), while the other approach results in a new time-series, equal in length to the original, but representing a different dynamical feature.
+After generating a time-series that represents interaction dynamic that we are interested in (i.e., approach, as calcualted in the `p1_com_approach_pos` and `p2_com_approach_pos` variables), we can calculate higher-level features by transforming or aggregating the data. In the examples given in this notebook, we demonstrate two approaches: one that uses the data that we calculated in Step 2, without further transformation, to perform time-series focused analyses of non-linear dynamics. The second approach involves first transforming and then aggregating the time-series once more.
 
 **From raw proximity to *smoothness of proximity***:
 While the time-series that we got in the previous step provides the proximity of two individual's center of mass, we actually want something that is 1) capturing the smoothness of their *coordination*, and 2) generalizable between slightly different recording conditions. This second point is particularly important when comparing interactions captured in an unconstrained way, and/or when captured in different studios/locations . 
 
 First, we will take the proximity time-series and calculate jerk. Jerk is the third derivative of our proximity time-series. We therefore take the *change* in proximity from timepoint to timepoint, divided by the time interval. Doing this once, on the proximity values, gets us the first derivative: speed. The derivative of speed is calculated the same way, giving us *acceleration*, or how fast the speed is changing from timepoint to timepoint. The derivative of acceleration is then *jerk*. We utilize jerk here because of its theoretical importance in human movement sciences, for example in modeling complex biomechanical movements as well as interpersonal coordination. 
 
-While jerk-minimization has been a popular measure, it is affected by the amplitude and duration of movements, which can make comparisons between different movements challenging. A solution is to calculate dimensionless (squared) jerk. The mathematical underpinnings of this calculation are far outside the scope of these examples, and the accompanying manuscript. However, what is important to note here is that the measure (dimensionless jerk) was based on theoretical reasoning relating to our primary research questions. The measure is also quite useful in that it can be taken as a time-series (as will be used in the CRQA portion of step 4), or it can be aggregated to inform dyad-level analyses, as will be done in the linear analysis portion of step 4.
+While jerk-minimization has been a popular measure, it is affected by the amplitude and duration of movements, which can make comparisons between different movements challenging. A solution is to calculate dimensionless (squared) jerk. The calculation results in a single (individual-level), positive value. The mathematical underpinnings of this calculation are far outside the scope of these examples, and the accompanying manuscript. However, what is important to note here is that the measure (dimensionless jerk) was based on theoretical reasoning relating to our primary research questions. 
 
-**Dyad-Level Aggregation**
-For now, let's move on to aggregation....
 
-```{python, eval=FALSE, code_folding="hide"}
-time_series = pd.read_csv('./data_timeseries_afterSTEP2/sample_processed_data_layer2.csv')
+```{python, eval=False, code_folding="hide"}
+import pandas as pd
+import os
+os.getcwd()
+#os.listdir(main_path)
+os.path.isdir('./dataoutput_STEP1_1_rawposedata')
+ts = pd.read_csv('./dataoutput_STEP1_1_rawposedata/sample_keypoints_data_layer1.csv')
 
+def dimensionless_squared_jerk_from_position(ts, time):
+    """
+    Calculate the dimensionless squared jerk metric from position data.
+    
+    Parameters:
+    -----------
+    ts : array_like
+        Position data points, should be a 1D numpy array
+    time : array_like
+        Time points corresponding to the ts data, should be a 1D numpy array
+    
+    Returns:
+    --------
+    float
+        Dimensionless squared jerk metric or NaN if calculation fails
+    """
+    try:
+        # First check the raw inputs
+        ts = np.array(ts, dtype=float)
+        time = np.array(time, dtype=float)
+        
+        print(f"Original shape - ts: {ts.shape}, time: {time.shape}")
+        print(f"NaN count before processing - ts: {np.isnan(ts).sum()}, time: {np.isnan(time).sum()}")
+        
+        # Input validation before preprocessing
+        if len(ts) != len(time):
+            print(f"Error: Arrays must have the same length. ts: {len(ts)}, time: {len(time)}")
+            return np.nan
+            
+        if len(ts) < 11:  # Minimum length for savgol filter
+            print(f"Error: Input arrays too short for savgol window size=11. Length: {len(ts)}")
+            return np.nan
+        
+        # Check if time has NaNs - we need to fix time first
+        if np.isnan(time).any():
+            print("Warning: Time array contains NaNs, filling with linear sequence")
+            valid_time_mask = ~np.isnan(time)
+            if not valid_time_mask.any():
+                print("Error: All time values are NaN")
+                return np.nan
+                
+            # Create a proper time sequence
+            time = np.linspace(np.nanmin(time), np.nanmax(time), len(time))
+        
+        # Check if input data is all NaN
+        if np.isnan(ts).all():
+            print("Error: All input values are NaN")
+            return np.nan
+        
+        # Identify valid data points for interpolation
+        valid_mask = ~np.isnan(ts)
+        valid_indices = np.where(valid_mask)[0]
+        
+        if len(valid_indices) < 2:
+            print(f"Error: Not enough valid data points for interpolation. Found {len(valid_indices)}")
+            return np.nan
+        
+        # Handle the interpolation more carefully
+        # 1. Use valid points to interpolate
+        if np.isnan(ts).any():
+            try:               
+                # Create interpolator with valid points only
+                valid_time = time[valid_mask]
+                valid_data = ts[valid_mask]
+                
+                # Sort by time to ensure proper interpolation
+                sort_idx = np.argsort(valid_time)
+                valid_time = valid_time[sort_idx]
+                valid_data = valid_data[sort_idx]
+                
+                # Create interpolation function
+                f = interpolate.interp1d(
+                    valid_time, valid_data,
+                    bounds_error=False,
+                    fill_value=(valid_data[0], valid_data[-1])  # Extrapolate with edge values
+                )
+                
+                # Apply interpolation
+                ts_interpolated = f(time)
+                
+                # Check if interpolation fixed all NaNs
+                if np.isnan(ts_interpolated).any():
+                    print(f"Warning: Interpolation failed to fix all NaNs. Remaining: {np.isnan(ts_interpolated).sum()}")
+                    # Last resort: replace any remaining NaNs with nearest valid value
+                    ts_interpolated = pd.Series(ts_interpolated).fillna(method='ffill').fillna(method='bfill').values
+                
+                ts = ts_interpolated
+            except Exception as e:
+                print(f"Error during interpolation: {str(e)}")
+                return np.nan
+        
+        # Verify no NaNs remain after preprocessing
+        if np.isnan(ts).any() or np.isnan(time).any():
+            print("Error: Failed to remove all NaN values")
+            return np.nan
+            
+        # Ensure time steps are uniform for derivative calculation
+        uniform_time = np.linspace(time[0], time[-1], len(time))
+        if not np.allclose(time, uniform_time):
+            # If time is not uniform, resample the data
+            print("Warning: Time steps not uniform, resampling data")
+            # Use scipy's interpolation again to resample
+            f = interpolate.interp1d(time, ts, bounds_error=False, fill_value='extrapolate')
+            ts = f(uniform_time)
+            time = uniform_time
+        
+        # Calculate the time step
+        dt = np.diff(time)[0]
+        
+        if dt <= 0:
+            print(f"Error: Time steps must be positive. Got dt={dt}")
+            return np.nan
+        
+        # Print state after preprocessing
+        print(f"Data after preprocessing - Length: {len(ts)}")
+        print(f"NaN check after preprocessing - ts: {np.isnan(ts).any()}, time: {np.isnan(time).any()}")
+        print(f"Range - ts: {np.min(ts)} to {np.max(ts)}, time: {np.min(time)} to {np.max(time)}")
+        
+        # Calculate speed (exactly as in original)
+        speed = np.gradient(ts, dt)
+        sns.lineplot(data=speed)
+        # Smooth savgol filter (maintaining original settings)
+        speed = savgol_filter(speed, 11, 3)
+
+        # Calculate acceleration (exactly as in original)
+        acceleration = np.gradient(speed, dt)
+
+        # Smooth (maintaining original settings)
+        acceleration = savgol_filter(acceleration, 11, 3)
+        sns.lineplot(data=acceleration)
+        # Calculate jerk (exactly as in original)
+        jerk = np.gradient(acceleration, dt)
+        sns.lineplot(data=jerk)
+        # Smooth (maintaining original settings)
+        jerk = savgol_filter(jerk, 11, 3)
+        
+        # Calculate movement duration (D)
+        movement_duration = time[-1] - time[0]
+        
+        if movement_duration <= 0:
+            print(f"Error: Movement duration must be positive. Got {movement_duration}")
+            return np.nan
+        
+        # Calculate movement amplitude by integrating speed
+        position = integrate.simpson(speed, x=time)
+        movement_amplitude = abs(position)  # Use absolute value to ensure positive
+        
+        # Prevent division by zero
+        epsilon = 1e-10
+        if movement_amplitude < epsilon:
+            print(f"Warning: Movement amplitude very small ({movement_amplitude}). Using epsilon.")
+            movement_amplitude = epsilon
+            
+        # Calculate the squared jerk
+        squared_jerk = jerk ** 2
+        
+        # Integrate the squared jerk
+        integrated_squared_jerk = integrate.simpson(squared_jerk, x=time)
+        
+        # Ensure positive value for integral of squared jerk
+        if integrated_squared_jerk < 0:
+            print(f"Warning: Negative integral of squared jerk: {integrated_squared_jerk}. Using absolute value.")
+            integrated_squared_jerk = abs(integrated_squared_jerk)
+        
+        # Calculate the dimensionless squared jerk
+        dimensionless_jerk = integrated_squared_jerk * (movement_duration**5 / movement_amplitude**2)
+        
+
+        return dimensionless_jerk
+        
+    except Exception as e:
+        print(f"Error calculating dimensionless squared jerk: {str(e)}")
+        return np.nan
+    
+ #smoothness_p1_proximity = dimensionless_squared_jerk_from_position(ts['p1_com_approach_pos'].values, ts['time'].values)
 
 ```
 
