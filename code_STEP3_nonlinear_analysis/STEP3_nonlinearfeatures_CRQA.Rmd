@@ -39,7 +39,7 @@ p code {
 
 **An Open-source Standardized Pipeline for Equitable Observations of Interactive Behavioral Dynamics: Theory-driven Measurement, Analysis, and Archiving**
 
-Arkadiusz Białek^1, Wim Pouw^2, ^3, Travis J. Wiltshire^2, James Trujillo^4, Fred Hasselman^5, Babajide Alamu Owoyele^6, Natalia Siekiera^1 & Joanna Rączaszek-Leonardi^7
+Arkadiusz Białek^1^, Wim Pouw^2^, ^3^, Travis J. Wiltshire^2^, James Trujillo^4^, Fred Hasselman^5^, Babajide Alamu Owoyele^6^, Natalia Siekiera^1^ & Joanna Rączaszek-Leonardi^7^
 
 
 1 Institute of Psychology, Jagiellonian University
@@ -65,6 +65,8 @@ library(invctr)
 library(fpCompare)
 library(gplots)
 library(testthat)
+library(report)
+
 
 # Paths to files 
 path_repo <- "/Users/fred/GitHub/InterPerDynPipeline"
@@ -363,7 +365,7 @@ crqa_data$subject_nr_f <- laply(crqa_data$subject_nr_n, function(n){
 rio::export(crqa_data,file.path(path_results, "crqa_results_all.csv"))
 ```
 
-# Mixed models
+# Descriptive
 
 Because the ages vary between measurement occasions, center ages on the mean of the first session.
 
@@ -449,11 +451,11 @@ Not a lot going on so it seems... perhaps we need to consider `gender`?
 
 ```{r lmerGender}
 # Add gender
-m1.3 <- lmer(DET ~ poly(age_days_cS1,2) + gender_f + (poly(age_days_cS1,2)|subject_nr_n), weights = N_sessions, crqa_data)
+m1.3 <- lmer(DET ~ poly(age_days_cS1,2) + gender_f + (poly(age_days_cS1,2)|subject_nr_f), crqa_data)
 summary(m1.3)
 
 # Conditional change model
-m1.4 <- lmer(DET ~ poly(age_days_cS1,2) * gender_f + (poly(age_days_cS1,2)|subject_nr_n),weights = N_sessions,  crqa_data)
+m1.4 <- lmer(DET ~ poly(age_days_cS1,2) * gender_f + (poly(age_days_cS1,2)|subject_nr_f), crqa_data)
 saveRDS(m1.4, file = file.path(path_results, "m4_lmer.rds"))
 summary(m1.4) 
 
@@ -469,7 +471,7 @@ ggplot(crqa_data, aes(x = age_days, y = predm14, group = subject_nr_f)) +
   facet_wrap(gender_f~.) +
   theme_bw()
 
-crqa_data$subject_nr_f
+
 # Conditional change model without I-S covariance
 m1.5 <- lmer(DET ~ poly(age_days_cS1,2) * gender_f + (poly(age_days_cS1,2)||subject_nr_f), crqa_data)
 saveRDS(m1.5, file = file.path(path_results, "m5_lmer.rds"))
@@ -494,11 +496,14 @@ anova(m1.3,m1.4,m1.5)
 
 ## Results
 
-
-```{r results}
-report::report(m1.4)
+`m1.4` is preferred in terms "fit", but `m1.5` shows the mean difference more clearly... 
 
 
-report::report(m1.5)
-```
+`r report::report(m1.4)`
+
+
+----
+
+
+`r report::report(m1.5)`
 
