@@ -402,7 +402,7 @@ Assuming you have videos in your data folder (`./data_raw/`) and you have a `.pt
 
 ```bash
 cd [yourspecificrootadress]/code_STEP1_posetrackingprocessing/
-python yolo_tracking_processing.py
+python STEP1_1_yolo_tracking_processing.py
 ```
 :::
 
@@ -1407,9 +1407,10 @@ To provide an example of the data we plot here a timeseries of the resultant dat
 
 ::: {.callout-note .callout-settingup collapse="true"}
 ## DIY: Post-Processing 🛠️
-For this step, we simply need to run the corresponding python scripts:
+Assuming you installed the requirements back in the previous step (DIY: Motion Tracking Set-Up and Execution), you just need to run the python script for Step1_2. Otherwise, make sure to also run *pip install -r requirements.txt*
+
 ```bash
-py ./code_STEP3_features/STEP3_featureextraction.py
+py ./code_STEP1_posetrackingprocessing/STEP1_2_yolo_tracking_social_proximity.py
 
 ```
 
@@ -1427,10 +1428,16 @@ First, we will take the proximity time-series and calculate jerk. Jerk is the th
 
 While jerk-minimization has been a popular measure, it is affected by the amplitude and duration of movements, which can make comparisons between different movements challenging. A solution is to calculate dimensionless (squared) jerk. The calculation results in a single (individual-level), positive value. The mathematical underpinnings of this calculation are far outside the scope of these examples, and the accompanying manuscript. However, what is important to note here is that the measure (dimensionless jerk) was based on theoretical reasoning relating to our primary research questions. 
 
-
+The plot below shows the relationship between the three initial measures: speed, acceleration, and jerk.
 ```{python, eval=False, code_folding="hide"}
 import pandas as pd
 import os
+import numpy as np
+from scipy.signal import savgol_filter
+from scipy import integrate
+import matplotlib.pyplot as plt
+
+
 os.getcwd()
 #os.listdir(main_path)
 os.path.isdir('./dataoutput_STEP1_1_rawposedata')
@@ -1611,19 +1618,52 @@ def dimensionless_squared_jerk_from_position(ts, time):
         return np.nan
     
  #smoothness_p1_proximity = dimensionless_squared_jerk_from_position(ts['p1_com_approach_pos'].values, ts['time'].values)
+def normalize_array(arr):
+    arr = np.asarray(arr)
+    min_val = np.min(arr)
+    max_val = np.max(arr)
+    if max_val == min_val:
+        return np.zeros_like(arr)  # Avoid division by zero
+    return (arr - min_val) / (max_val - min_val)
 
+raw_speed, speed, raw_acceleration, acceleration, raw_jerk, jerk = dimensionless_squared_jerk_from_position(ts['p1_com_approach_pos'].values, ts['time'].values)
+plt.plot(normalize_array(speed[0:150]))
+plt.plot(normalize_array(acceleration[0:150]))
+plt.plot(normalize_array(jerk[0:150]))
+plt.legend(labels=["speed","acceleration","jerk"])
+plt.show()
 ```
 
+An additional methodological note, is the need for smoothing the data. Motion tracking, even when quite accurate, is prone to small fluctuations in position from frame to frame even when the tracked object/person is not moving. When we calculate something like interpersonal proximity, these fluctuations will cause fluctuations in proximity. This transfers to a subsequent measures, such as speed, acceleration, and jerk. In the provided pipeline, we use a Savitsky-Golay filter (implemented by SciPy). The filter slides along the time-series, smoothing the data within a particular window-length by fitting a polynomial of a pre-determined order to the datapoints. In our case, we set a time window of 11 datapoints, and a third degree polynomial. The plot below shows the effect of smoothing the speed data in this way.
+
+```{python, eval=False, code_folding="hide"}
+plt.plot(normalize_array(raw_speed[0:150]))
+plt.plot(normalize_array(speed[0:150]))
+plt.legend(labels=["raw speed","smoothed speed"])
+plt.show()
+```
 ::: {.callout-note .callout-settingup collapse="true"}
 ## DIY: Feature Extraction 🛠️
 
+### Step 1: Install requirements
+For each script we have provided a `requirements.txt` file. You can install the requirements using pip, by first navigating to the folder where the script is located and then running the following command in your terminal:
 
+```bash
+cd [yourspecificrootadress]/code_STEP2_smoothness_features/
+pip install -r requirements.txt
+```
 
-
+### Step 2: run the feature extraction script
+Once everything is installed, you can run the code that extracts the smoothness features based on dimensionless jerk:
+```bash
+py ./code_STEP2_features/STEP2_featureextraction.py
+```
 
 :::
 
 # Step 4: Statistical analysis (e.g., jerkiness of proximity/approach/avoidance, or non-linear recurrence) (R)
+For the first analysis, we are simply running a linear mixed model to assess whether there is an effect of *culture* on *smoothness*. The code below adds a grouping variable, based on substrings in the videoID variable, then convers the dataframe from wide to long format in order to accommodate the lme4 syntax. We include random intercepts for videoID in order to capture some of the variance between different dyads within the same culture.
+
 
 ```{r, eval=FALSE, code_folding="hide"}
 # manually edited this CSV
@@ -1659,7 +1699,11 @@ summary(model1)
 
 ::: {.callout-note .callout-settingup collapse="true"}
 ## DIY: Analysis 🛠️
+In order to run the more complex CRQA analysis described above, you can open the file *./code_STEP3_nonlinear_analysis/STEP3_nonlinearfeatures_CRQA.Rmd* in R Studio. 
 
+Before running the markdown file you will need to make sure you have a few packages installed (run this in R or R Studio):
+*install.packages(c("rio","plyr","tidyverse","invctr","fpCompare","gplots","testthat"))*
+*devtools::install_github("FredHasselman/casnet")*
 
 
 :::
