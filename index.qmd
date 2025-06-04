@@ -1664,37 +1664,8 @@ py ./code_STEP2_features/STEP2_featureextraction.py
 # Step 4: Statistical analysis (e.g., jerkiness of proximity/approach/avoidance, or non-linear recurrence) (R)
 For the first analysis, we are simply running a linear mixed model to assess whether there is an effect of *culture* on *smoothness*. The code below adds a grouping variable, based on substrings in the videoID variable, then convers the dataframe from wide to long format in order to accommodate the lme4 syntax. We include random intercepts for videoID in order to capture some of the variance between different dyads within the same culture.
 
-
-```{r, eval=FALSE, code_folding="hide"}
-# manually edited this CSV
-data <- read.csv("C:/Users/wiltshir/GitHub/InterPerDynPipelineAnalysis/Re_ Behavioral Dynamics in Social Interactions AP_SI/smoothness_data_top_view_clean.csv") 
-#data_cross_cultur<-data[1:18,]
-
-# Remove a row
-data<- subset(data, data$videoID!="cop_b09 z góry")
-
-# Add a culture grouping variable
-data$culture <- ifelse(grepl("góry$", data$videoID), "Yurakare",
-                     ifelse(grepl("kam_5$", data$videoID), "Polish", NA))
-
-# Restructure data into long format
-library(dplyr)
-
-library(tidyr)
-
-data_long <- data %>%
-  pivot_longer(cols = c(smoothness_p1_proximity, smoothness_p2_proximity),
-               names_to = "person",
-               values_to = "smoothness_value")
-
-library(lme4) 
-library(lmerTest) 
-
-model1 <- lmer(smoothness_value ~ culture + (1 | videoID), data = data_long)
-
-summary(model1)
+```{r child = "../code_STEP4_statisticalanalysis/STEP4_Smoothness_analysis.Rmd.Rmd"}
 ```
-
 
 
 ::: {.callout-note .callout-settingup collapse="true"}
