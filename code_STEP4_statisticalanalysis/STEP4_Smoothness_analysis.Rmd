@@ -12,7 +12,7 @@ output: html_document
 ### Loading the data here and creating some extra variables
 
 ```{r warning=FALSE}
-data <- read.csv("../dataoutput_STEP2_features/smoothness_data.csv") 
+data <- read.csv("dataoutput_STEP2_features/smoothness_data.csv") 
 
 data_cross_culture <- data[1:30,]
 
@@ -224,7 +224,7 @@ tsum_TOST(m1=m3,m2=m4,sd1=sd3,sd2=sd1,n1=10,n2=10,low_eqbound=-0.2, high_eqbound
 data2 <- data[31:length(data$videoID),]
 
 #Load Metadata file 
-ages <- read.csv("../meta/project_point_metadata_ages.csv")
+ages <- read.csv("meta/project_point_metadata_ages.csv")
 
 # Merge these files
 library(stringr)

@@ -2605,12 +2605,13 @@ python STEP2_featureextraction.py
 # Step 4: Statistical analysis (R)
 
 ::: {.callout-note .callout-settingup collapse="true"}
-## Smoothness analysis in R 
+## Smoothness analysis in R 🏴
 
+We smoothness analysis we will run from this notebook. 
 
-```{r child = "../code_STEP4_statisticalanalysis/STEP4_Smoothness_analysis.Rmd"}
+```{r child = "./code_STEP4_statisticalanalysis/STEP4_Smoothness_analysis.Rmd"}
 ```
-
+:::
 
 
 
