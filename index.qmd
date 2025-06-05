@@ -1934,7 +1934,7 @@ The second approach is based on the log dimensionless squared jerk metric, which
 While jerk-minimization has been a popular measure, it is affected by the amplitude and duration of movements, which can make comparisons between different movements challenging. A solution is to calculate dimensionless (squared) jerk. The calculation results in a single (individual-level), positive value. The mathematical underpinnings of this calculation are far outside the scope of these examples, and the accompanying manuscript. However, what is important to note here is that the measure (dimensionless jerk) was based on theoretical reasoning relating to our primary research questions. 
 
 The plot below shows the relationship between the three initial measures: speed, acceleration, and jerk.
-```{python, eval=False, code_folding="hide"}
+```{python, eval=FALSE, code_folding="hide"}
 import pandas as pd
 import os
 import numpy as np
@@ -2121,7 +2121,7 @@ def dimensionless_squared_jerk_from_position(ts, time):
     except Exception as e:
         print(f"Error calculating dimensionless squared jerk: {str(e)}")
         return np.nan
-    
+
  #smoothness_p1_proximity = dimensionless_squared_jerk_from_position(ts['p1_com_approach_pos'].values, ts['time'].values)
 def normalize_array(arr):
     arr = np.asarray(arr)
@@ -2712,7 +2712,7 @@ print(df.head())
 
 An additional methodological note, is the need for smoothing the data. Motion tracking, even when quite accurate, is prone to small fluctuations in position from frame to frame even when the tracked object/person is not moving. When we calculate something like interpersonal proximity, these fluctuations will cause fluctuations in proximity. This transfers to a subsequent measures, such as speed, acceleration, and jerk. In the provided pipeline, we use a Savitsky-Golay filter (implemented by SciPy). The filter slides along the time-series, smoothing the data within a particular window-length by fitting a polynomial of a pre-determined order to the datapoints. In our case, we set a time window of 11 datapoints, and a third degree polynomial. The plot below shows the effect of smoothing the speed data in this way.
 
-```{python, eval=False, code_folding="hide"}
+```{python, eval=FALSE, code_folding="hide"}
 plt.plot(normalize_array(raw_speed[0:150]))
 plt.plot(normalize_array(speed[0:150]))
 plt.legend(labels=["raw speed","smoothed speed"])
