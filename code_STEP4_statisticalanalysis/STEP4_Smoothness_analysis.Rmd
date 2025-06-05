@@ -1,0 +1,408 @@
+---
+title: "Step 4 Smoothness Analyses"
+author: "Travis J. Wiltshire"
+date: "2025-06-13"
+output: html_document
+---
+
+# Cross-Cultural Data Analysis
+
+## Analysis of the Jerkiness of Proximity/Approach/Avoidance Meaures
+
+### Loading the data here and creating some extra variables
+
+```{r warning=FALSE}
+data <- read.csv("dataoutput_STEP2_features/smoothness_data.csv") 
+
+data_cross_culture <- data[1:30,]
+
+
+# Add a culture grouping variable
+data_cross_culture$culture <- ifelse(grepl("cop_y", data_cross_culture$videoID), "Yurakare",
+                     ifelse(grepl("cop_p", data_cross_culture$videoID), "Polish", NA))
+
+# Restructure data into long format
+library(dplyr)
+library(tidyr)
+
+data_long <- data_cross_culture %>%
+  filter(!grepl("stab", videoID, ignore.case = TRUE)) %>%
+  pivot_longer(cols = c(smoothness_p1_proximity, smoothness_p2_proximity),
+               names_to = "person",
+               values_to = "jerkiness_value")
+
+# Create a separate data frame to check for stability
+yurakare_stab_test <- data_cross_culture[data_cross_culture$culture == "Yurakare", ]
+yurakare_stab_test$is_stab <- as.factor(grepl("stab", yurakare_stab_test$videoID, ignore.case = TRUE))
+
+yurakare_stab_test_long <- yurakare_stab_test %>%  
+  pivot_longer(cols = c(smoothness_p1_proximity, smoothness_p2_proximity),
+               names_to = "person",
+               values_to = "jerkiness_value")
+
+# Remove the stab tests here
+data_cross_culture <- data_cross_culture %>%
+  filter(!grepl("stab", videoID, ignore.case = TRUE))
+```
+
+### Stability Test
+
+The results below show that the stability correction for the Yurakare videos does not have an effect on the estimated jerkiness values.
+
+```{r}
+library(lme4)
+library(lmerTest)
+
+# Simplest model with random intercept
+model_stab <- lmer(jerkiness_value ~ is_stab + (1 | videoID), data = yurakare_stab_test_long)
+
+summary(model_stab)
+
+```
+
+### Jerkiness linear mixed effects models
+
+```{r warning=FALSE}
+#library(lme4)
+#library(lmerTest)
+
+# Simplest model with random intercept
+model1 <- lmer(jerkiness_value ~ culture + (1 | videoID), data = data_long)
+
+summary(model1)
+```
+
+```{r, eval=FALSE, include=FALSE, warning=FALSE}
+# Model with random intercept and slope for culture
+# Model is overspecified
+model2 <- lmer(jerkiness_value ~ culture + (1 + culture| videoID), data = data_long)
+
+summary(model2)
+```
+
+### Check estimated marginal means of the two groups
+
+```{r warning=FALSE}
+library(emmeans)
+
+emmeans(model1, pairwise ~ culture, adjust = "bonferroni")
+```
+
+### Plotting
+
+```{r warning=FALSE}
+library(ggplot2)
+
+
+ggplot(data_long, aes(x = culture, y = jerkiness_value, fill = culture)) +
+  geom_violin(alpha = 0.7, trim = FALSE) +  
+  geom_boxplot(width = 0.2, outlier.shape = NA, alpha = 0.6) +  # Adds boxplot inside violin
+  geom_jitter(width = 0.2, alpha = 0.5) +  
+  theme_minimal() +
+  labs(title = "Comparison of Jerkiness in Proximity Between Cultures",
+       y = "Jerkiness Value", x = "Culture") +
+  scale_fill_manual(values = c("Yurakare" = "#A6A24F", "Polish" = "#E07A5F"))
+
+
+```
+
+### Double check model performance
+
+```{r warning=FALSE}
+library(performance)
+
+plot(check_model(model1))
+```
+
+```{r warning=FALSE}
+library(report)
+report(model1)
+```
+
+## Center of Mass Distance Analyses
+
+```{r}
+# This doesn't need the long dataset
+dis_model <- lm(smoothness_distancecom ~ culture, data=data_cross_culture)
+summary(dis_model)
+
+```
+
+### Check estimated marginal means
+
+```{r warning=FALSE}
+
+emmeans(dis_model, pairwise ~ culture, adjust = "bonferroni")
+```
+
+### Plotting
+
+```{r}
+
+ggplot(data_cross_culture, aes(x = culture, y = smoothness_distancecom, fill = culture)) +
+  geom_violin(alpha = 0.7, trim = FALSE) +  
+  geom_boxplot(width = 0.2, outlier.shape = NA, alpha = 0.6) +  # Adds boxplot inside violin
+  geom_jitter(width = 0.2, alpha = 0.5) +  
+  theme_minimal() +
+  labs(title = "Comparison of Jerkiness in Distance Between Center of Mass",
+       y = "Jerkiness Value", x = "Culture") +
+  scale_fill_manual(values = c("Yurakare" = "#A6A24F", "Polish" = "#E07A5F"))
+
+```
+
+## Cluster Robust Standard Errors
+
+Models above are giving singular fit and many random effects are near zero. Here I try a cluster robust standard error estimator, just to be sure if the results above aren't driven by the random effects structure. 
+
+```{r}
+library(clubSandwich)
+lm_model <- lm(jerkiness_value ~ culture,data = data_long)
+vcov <- vcovCR(lm_model,cluster=data_long$videoID, type="CR2")
+coef_test(lm_model, vcov=vcov)
+```
+
+## SPARC
+```{r}
+sparc_model <- lm(SPARC_smoothness_distancecom ~ culture, data=data_cross_culture)
+summary(sparc_model)
+```
+### Check estimated marginal means
+
+```{r warning=FALSE}
+
+emmeans(sparc_model, pairwise ~ culture, adjust = "bonferroni")
+```
+
+
+### Plotting
+
+```{r}
+
+ggplot(data_cross_culture, aes(x = culture, y = SPARC_smoothness_distancecom, fill = culture)) +
+  geom_violin(alpha = 0.7, trim = FALSE) +  
+  geom_boxplot(width = 0.2, outlier.shape = NA, alpha = 0.6) +  # Adds boxplot inside violin
+  geom_jitter(width = 0.2, alpha = 0.5) +  
+  theme_minimal() +
+  labs(title = "Comparison of SPARC in Distance Between Center of Mass",
+       y = "Jerkiness Value", x = "Culture") +
+  scale_fill_manual(values = c("Yurakare" = "#A6A24F", "Polish" = "#E07A5F"))
+
+```
+
+
+## Equivalence Testing
+
+Here we want to interpret some of the null results further. The t-tests above are indicate that we did not observe a difference between the groups. This analysis can indicate whether or not the groups are approximately equivalent. 
+
+```{r}
+library(TOSTER)
+
+## Proximity
+m1 = mean(data_long$jerkiness_value[data_long$culture == "Polish"], na.rm = TRUE)
+m2 = mean(data_long$jerkiness_value[data_long$culture == "Yurakare"], na.rm = TRUE)
+sd1 = sd(data_long$jerkiness_value[data_long$culture == "Polish"], na.rm = TRUE)
+sd2 = mean(data_long$jerkiness_value[data_long$culture == "Yurakare"], na.rm = TRUE)
+
+# Using .2 as an effect size here as we don't have prior experience with this measure and it's a small effect size
+tsum_TOST(m1=m1,m2=m1,sd1=sd1,sd2=sd1,n1=10,n2=10,low_eqbound=-0.2, high_eqbound=0.2, alpha = 0.05, var.equal=TRUE)
+
+## COM
+m3 = mean(data_cross_culture$smoothness_distancecom[data_cross_culture$culture == "Polish"], na.rm = TRUE)
+m4 = mean(data_cross_culture$smoothness_distancecom[data_cross_culture$culture == "Yurakare"], na.rm = TRUE)
+sd3 = sd(data_cross_culture$smoothness_distancecom[data_cross_culture$culture == "Polish"], na.rm = TRUE)
+sd4 = mean(data_cross_culture$smoothness_distancecom[data_cross_culture$culture == "Yurakare"], na.rm = TRUE)
+
+# Using .2 as an effect size here as we don't have prior experience with this measure and it's a small effect size
+tsum_TOST(m1=m3,m2=m4,sd1=sd3,sd2=sd1,n1=10,n2=10,low_eqbound=-0.2, high_eqbound=0.2, alpha = 0.05, var.equal=TRUE)
+```
+
+
+# Longitudinal Data Analysis
+
+## Loading the data and merging with metadata
+```{r}
+data2 <- data[31:length(data$videoID),]
+
+#Load Metadata file 
+ages <- read.csv("meta/project_point_metadata_ages.csv")
+
+# Merge these files
+library(stringr)
+# Ensure columns are character
+ages$subject_nr <- as.character(ages$subject_nr)
+data2$videoID <- as.character(data2$videoID)
+
+
+# Extract relevant information from `videoID`
+library(purrr)  # Needed for map_chr()
+
+data2 <- data2 %>%
+  mutate(
+    T_value = str_split(videoID, "_") %>% map_chr(~ .x[3]),  # Extracts third element after split
+    T_value = paste0("T", T_value),  # Converts to "T1", "T2", etc.
+    point_match = str_extract(videoID, "point_\\d+")  # Extracts "point_X" for matching
+  )
+
+# Extract "point_X" from subject_nr (to match gender)
+ages <- ages %>%
+  mutate(point_match = str_extract(subject_nr, "point_\\d+"))
+
+# Reshape `ages` from wide to long format, keeping age in days and months
+ages_long <- ages %>%
+  pivot_longer(
+    cols = matches("age_T[1-7]_(days|mo)"),  # Selects columns like age_T1_days, age_T2_mo
+    names_to = c("T_value", "Age_Type"),
+    names_pattern = "age_(T[1-7])_(.+)",  # Extracts "T1", "T2", etc., and type (days/mo)
+    values_to = "Age_Value"
+  ) %>%
+  pivot_wider(names_from = Age_Type, values_from = Age_Value)  # Reshape back for separate days/mo columns
+
+#  Merge `data2` with `ages_long` using both `T_value` and `point_match`
+data2_augmented <- data2 %>%
+  left_join(ages_long, by = c("point_match", "T_value"))  # Merge on "point_X" and "T1-T7"
+
+
+# Add time variable
+data2_augmented <- data2_augmented %>%
+  mutate(time = as.numeric(str_extract(T_value, "\\d+")))
+```
+
+## Growth models for longitudinal mass distance analysis
+
+```{r}
+
+model_long_lin <- lmer(smoothness_distancecom ~ days + (1 | subject_nr), data = data2_augmented)
+model_long_quad <- lmer(smoothness_distancecom ~ days + I(days^2) + (1 | subject_nr), data = data2_augmented)
+model_long_cub <- lmer(smoothness_distancecom ~ days + I(days^2) + I(days^3)+ (1 | subject_nr), data = data2_augmented)
+#summary(model_long)
+plot(compare_performance(model_long_lin, model_long_quad,model_long_cub))
+anova(model_long_lin, model_long_quad,model_long_cub)
+summary(model_long_lin)
+```
+
+```{r}
+ggplot(data2_augmented, aes(x = days, y = smoothness_distancecom, color = factor(subject_nr))) +
+  geom_point(alpha = 0.6) +  # Scatter plot with transparency for better visualization
+  geom_smooth(method = "lm", aes(group = 1), color = "black", linetype = "dashed") +  # Overall regression line
+  labs(title = "Effect of Age on Jerkiness in Center of Mass Distance",
+       x = "Age in # of Days",
+       y = "Smoothness Distance",
+       color = "Subject ID") +  # Add a label for the color legend
+  theme_minimal() +
+  scale_color_viridis_d()  # Use a color scale that's distinct for each subject
+
+ggplot(data2_augmented, aes(x = days, y = smoothness_distancecom, color = factor(subject_nr), group = subject_nr)) +
+  geom_point(alpha = 0.6) +  # Scatter plot with transparency for better visualization
+  geom_line(alpha = 0.6) +  # Add lines for each subject
+  geom_smooth(method = "lm", aes(group = 1), color = "black", linetype = "dashed") +  # Overall regression line
+  labs(title = "Effect of Age on Jerkiness in Center of Mass Distance",
+       x = "Age in # of Days",
+       y = "Smoothness Distance",
+       color = "Subject ID") +  # Add a label for the color legend
+  theme_minimal() +
+  scale_color_viridis_d()  # Use a color scale that's distinct for each subject
+
+```
+
+## Orthogonal polynomials growth models
+This part was added based on differences in scales for age variables
+
+```{r}
+data2_augmented <- data2_augmented[!is.na(data2_augmented$days), ] #CHECKBYWIM
+orth_model_lin <- lmer(smoothness_distancecom ~ poly(days) + (1 | subject_nr), data = data2_augmented)
+orth_model_quad <- lmer(smoothness_distancecom ~ poly(days,2) + (1 | subject_nr), data = data2_augmented)
+orth_model_cub <- lmer(smoothness_distancecom ~ poly(days,3) + (1 | subject_nr), data = data2_augmented)
+plot(compare_performance(orth_model_lin, orth_model_quad,orth_model_cub))
+anova(orth_model_lin, orth_model_quad,orth_model_cub)
+summary(orth_model_lin)
+```
+
+## Individual Infant Only (p1) Smoothness Proximity
+
+```{r}
+
+model_long_lin_p1 <- lmer(smoothness_p1_proximity ~ days + (1 | subject_nr), data = data2_augmented)
+model_long_quad_p1 <- lmer(smoothness_p1_proximity ~ days + I(days^2) + (1 | subject_nr), data = data2_augmented)
+model_long_cub_p1 <- lmer(smoothness_p1_proximity ~ days + I(days^2) + I(days^3)+ (1 | subject_nr), data = data2_augmented)
+summary(model_long_quad_p1)
+plot(compare_performance(model_long_lin_p1, model_long_quad_p1,model_long_cub_p1))
+anova(model_long_lin_p1, model_long_quad_p1,model_long_cub_p1)
+```
+
+```{r}
+ggplot(data2_augmented, aes(x = days, y = smoothness_p1_proximity, color = factor(subject_nr), group = subject_nr)) +
+  geom_point(alpha = 0.6) +  # Scatter plot with transparency for better visualization
+  geom_line(alpha = 0.6) +  # Add lines for each subject
+  geom_smooth(method = "lm", aes(group = 1), color = "black", linetype = "dashed") +  # Overall regression line
+  labs(title = "Effect of Age on Jerkiness in Infant Proximity",
+       x = "Age in # of Days",
+       y = "Smoothness Distance",
+       color = "Subject ID") +  # Add a label for the color legend
+  theme_minimal() +
+  scale_color_viridis_d()  # Use a color scale that's distinct for each subject
+
+```
+
+## Testing a GAMM
+
+```{r}
+
+
+
+library(mgcv)
+# Fit the GAMM
+model_gamm <- gamm(
+  smoothness_distancecom ~ s(days),  # Smooth function for days
+  random = list(subject_nr = ~ 1),   # Random effect for subject_nr
+  data = data2_augmented,             
+  na.action = na.omit                # Handle missing data
+)
+
+# Summarize the GAMM model
+summary(model_gamm$gam)
+```
+
+```{r}
+plot(model_gamm$gam, pages = 1, main = "Smooth Effect of Days")
+
+# Get model predictions
+predictions <- predict(model_gamm$gam, newdata = data2_augmented, type = "response")
+
+# Add predictions to the original data frame
+data2_augmented$predictions <- predictions
+
+# Plot original data and GAMM model predictions
+ggplot(data2_augmented, aes(x = days, y = smoothness_distancecom)) +
+  geom_point(alpha = 0.5, color = "blue") +  # Scatter plot for the original data
+  geom_line(aes(y = predictions), color = "red") +  # Model predictions (smooth line)
+  labs(
+    title = "GAMM: Smoothness Distance vs. Days",
+    x = "Days",
+    y = "Smoothness Distance",
+    caption = "Blue points: Original data | Red line: Model predictions"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+## Growth models for longitudinal SPARC mass distance analysis
+
+```{r}
+
+sparc_model_long_lin <- lmer(SPARC_smoothness_distancecom ~ days + (1 | subject_nr), data = data2_augmented)
+sparc_model_long_quad <- lmer(SPARC_smoothness_distancecom ~ days + I(days^2) + (1 | subject_nr), data = data2_augmented)
+sparc_model_long_cub <- lmer(SPARC_smoothness_distancecom ~ days + I(days^2) + I(days^3)+ (1 | subject_nr), data = data2_augmented)
+#summary(model_long)
+plot(compare_performance(sparc_model_long_lin, sparc_model_long_quad,sparc_model_long_cub))
+anova(sparc_model_long_lin, sparc_model_long_quad,sparc_model_long_cub)
+summary(sparc_model_long_lin)
+```
+
+
+## Reproducibility
+```{r}
+# Save session info to a file
+sink("R_package_versions.txt")
+sessionInfo()
+```
+
