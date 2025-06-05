@@ -1929,7 +1929,218 @@ def spectral_arclength(movement, fs, padlevel=4, fc=10.0, amp_th=0.05):
 
 :::
 
-The second approach is based on the log dimensionless squared jerk metric, which is the traditional measure of smoothness in biomechanics [@hoganSensitivitySmoothnessMeasures2009]. Below the function that calculates the dimensionless squared jerk metric from position data.  This measure is based on taking the third derivative with respect to time (jerk), squared and integrated over the movement duration, and then normalized by the amplitude of the movement. The log of this value is taken keep the values in a reasonable range. 
+The second approach is based on the log dimensionless squared jerk metric, which is the traditional measure of smoothness in biomechanics [@hoganSensitivitySmoothnessMeasures2009].  Jerk is the third derivative of our proximity time-series. We therefore take the *change* in proximity from timepoint to timepoint, divided by the time interval. Doing this once, on the proximity values, gets us the first derivative: speed. The derivative of speed is calculated the same way, giving us *acceleration*, or how fast the speed is changing from timepoint to timepoint. The derivative of acceleration is then *jerk*. We utilize jerk here because of its theoretical importance in human movement sciences, for example in modeling complex biomechanical movements as well as interpersonal coordination. 
+
+While jerk-minimization has been a popular measure, it is affected by the amplitude and duration of movements, which can make comparisons between different movements challenging. A solution is to calculate dimensionless (squared) jerk. The calculation results in a single (individual-level), positive value. The mathematical underpinnings of this calculation are far outside the scope of these examples, and the accompanying manuscript. However, what is important to note here is that the measure (dimensionless jerk) was based on theoretical reasoning relating to our primary research questions. 
+
+The plot below shows the relationship between the three initial measures: speed, acceleration, and jerk.
+```{python, eval=False, code_folding="hide"}
+import pandas as pd
+import os
+import numpy as np
+from scipy.signal import savgol_filter
+from scipy import integrate
+import matplotlib.pyplot as plt
+
+
+os.getcwd()
+#os.listdir(main_path)
+os.path.isdir('./dataoutput_STEP1_1_rawposedata')
+ts = pd.read_csv('./dataoutput_STEP1_1_rawposedata/sample_keypoints_data_layer1.csv')
+
+def dimensionless_squared_jerk_from_position(ts, time):
+    """
+    Calculate the dimensionless squared jerk metric from position data.
+    
+    Parameters:
+    -----------
+    ts : array_like
+        Position data points, should be a 1D numpy array
+    time : array_like
+        Time points corresponding to the ts data, should be a 1D numpy array
+    
+    Returns:
+    --------
+    float
+        Dimensionless squared jerk metric or NaN if calculation fails
+    """
+    try:
+        # First check the raw inputs
+        ts = np.array(ts, dtype=float)
+        time = np.array(time, dtype=float)
+        
+        print(f"Original shape - ts: {ts.shape}, time: {time.shape}")
+        print(f"NaN count before processing - ts: {np.isnan(ts).sum()}, time: {np.isnan(time).sum()}")
+        
+        # Input validation before preprocessing
+        if len(ts) != len(time):
+            print(f"Error: Arrays must have the same length. ts: {len(ts)}, time: {len(time)}")
+            return np.nan
+            
+        if len(ts) < 11:  # Minimum length for savgol filter
+            print(f"Error: Input arrays too short for savgol window size=11. Length: {len(ts)}")
+            return np.nan
+        
+        # Check if time has NaNs - we need to fix time first
+        if np.isnan(time).any():
+            print("Warning: Time array contains NaNs, filling with linear sequence")
+            valid_time_mask = ~np.isnan(time)
+            if not valid_time_mask.any():
+                print("Error: All time values are NaN")
+                return np.nan
+                
+            # Create a proper time sequence
+            time = np.linspace(np.nanmin(time), np.nanmax(time), len(time))
+        
+        # Check if input data is all NaN
+        if np.isnan(ts).all():
+            print("Error: All input values are NaN")
+            return np.nan
+        
+        # Identify valid data points for interpolation
+        valid_mask = ~np.isnan(ts)
+        valid_indices = np.where(valid_mask)[0]
+        
+        if len(valid_indices) < 2:
+            print(f"Error: Not enough valid data points for interpolation. Found {len(valid_indices)}")
+            return np.nan
+        
+        # Handle the interpolation more carefully
+        # 1. Use valid points to interpolate
+        if np.isnan(ts).any():
+            try:               
+                # Create interpolator with valid points only
+                valid_time = time[valid_mask]
+                valid_data = ts[valid_mask]
+                
+                # Sort by time to ensure proper interpolation
+                sort_idx = np.argsort(valid_time)
+                valid_time = valid_time[sort_idx]
+                valid_data = valid_data[sort_idx]
+                
+                # Create interpolation function
+                f = interpolate.interp1d(
+                    valid_time, valid_data,
+                    bounds_error=False,
+                    fill_value=(valid_data[0], valid_data[-1])  # Extrapolate with edge values
+                )
+                
+                # Apply interpolation
+                ts_interpolated = f(time)
+                
+                # Check if interpolation fixed all NaNs
+                if np.isnan(ts_interpolated).any():
+                    print(f"Warning: Interpolation failed to fix all NaNs. Remaining: {np.isnan(ts_interpolated).sum()}")
+                    # Last resort: replace any remaining NaNs with nearest valid value
+                    ts_interpolated = pd.Series(ts_interpolated).fillna(method='ffill').fillna(method='bfill').values
+                
+                ts = ts_interpolated
+            except Exception as e:
+                print(f"Error during interpolation: {str(e)}")
+                return np.nan
+        
+        # Verify no NaNs remain after preprocessing
+        if np.isnan(ts).any() or np.isnan(time).any():
+            print("Error: Failed to remove all NaN values")
+            return np.nan
+            
+        # Ensure time steps are uniform for derivative calculation
+        uniform_time = np.linspace(time[0], time[-1], len(time))
+        if not np.allclose(time, uniform_time):
+            # If time is not uniform, resample the data
+            print("Warning: Time steps not uniform, resampling data")
+            # Use scipy's interpolation again to resample
+            f = interpolate.interp1d(time, ts, bounds_error=False, fill_value='extrapolate')
+            ts = f(uniform_time)
+            time = uniform_time
+        
+        # Calculate the time step
+        dt = np.diff(time)[0]
+        
+        if dt <= 0:
+            print(f"Error: Time steps must be positive. Got dt={dt}")
+            return np.nan
+        
+        # Print state after preprocessing
+        print(f"Data after preprocessing - Length: {len(ts)}")
+        print(f"NaN check after preprocessing - ts: {np.isnan(ts).any()}, time: {np.isnan(time).any()}")
+        print(f"Range - ts: {np.min(ts)} to {np.max(ts)}, time: {np.min(time)} to {np.max(time)}")
+        
+        # Calculate speed (exactly as in original)
+        speed = np.gradient(ts, dt)
+        sns.lineplot(data=speed)
+        # Smooth savgol filter (maintaining original settings)
+        speed = savgol_filter(speed, 11, 3)
+
+        # Calculate acceleration (exactly as in original)
+        acceleration = np.gradient(speed, dt)
+
+        # Smooth (maintaining original settings)
+        acceleration = savgol_filter(acceleration, 11, 3)
+        sns.lineplot(data=acceleration)
+        # Calculate jerk (exactly as in original)
+        jerk = np.gradient(acceleration, dt)
+        sns.lineplot(data=jerk)
+        # Smooth (maintaining original settings)
+        jerk = savgol_filter(jerk, 11, 3)
+        
+        # Calculate movement duration (D)
+        movement_duration = time[-1] - time[0]
+        
+        if movement_duration <= 0:
+            print(f"Error: Movement duration must be positive. Got {movement_duration}")
+            return np.nan
+        
+        # Calculate movement amplitude by integrating speed
+        position = integrate.simpson(speed, x=time)
+        movement_amplitude = abs(position)  # Use absolute value to ensure positive
+        
+        # Prevent division by zero
+        epsilon = 1e-10
+        if movement_amplitude < epsilon:
+            print(f"Warning: Movement amplitude very small ({movement_amplitude}). Using epsilon.")
+            movement_amplitude = epsilon
+            
+        # Calculate the squared jerk
+        squared_jerk = jerk ** 2
+        
+        # Integrate the squared jerk
+        integrated_squared_jerk = integrate.simpson(squared_jerk, x=time)
+        
+        # Ensure positive value for integral of squared jerk
+        if integrated_squared_jerk < 0:
+            print(f"Warning: Negative integral of squared jerk: {integrated_squared_jerk}. Using absolute value.")
+            integrated_squared_jerk = abs(integrated_squared_jerk)
+        
+        # Calculate the dimensionless squared jerk
+        dimensionless_jerk = integrated_squared_jerk * (movement_duration**5 / movement_amplitude**2)
+        
+
+        return dimensionless_jerk
+        
+    except Exception as e:
+        print(f"Error calculating dimensionless squared jerk: {str(e)}")
+        return np.nan
+    
+ #smoothness_p1_proximity = dimensionless_squared_jerk_from_position(ts['p1_com_approach_pos'].values, ts['time'].values)
+def normalize_array(arr):
+    arr = np.asarray(arr)
+    min_val = np.min(arr)
+    max_val = np.max(arr)
+    if max_val == min_val:
+        return np.zeros_like(arr)  # Avoid division by zero
+    return (arr - min_val) / (max_val - min_val)
+
+raw_speed, speed, raw_acceleration, acceleration, raw_jerk, jerk = dimensionless_squared_jerk_from_position(ts['p1_com_approach_pos'].values, ts['time'].values)
+plt.plot(normalize_array(speed[0:150]))
+plt.plot(normalize_array(acceleration[0:150]))
+plt.plot(normalize_array(jerk[0:150]))
+plt.legend(labels=["speed","acceleration","jerk"])
+plt.show()
+```
+
+
+Below the function that calculates the dimensionless squared jerk metric from position data.  This measure is based on taking the third derivative with respect to time (jerk), squared and integrated over the movement duration, and then normalized by the amplitude of the movement. The log of this value is taken keep the values in a reasonable range. 
 
 ## Example smoothness results on simulated time series data
 
@@ -2499,6 +2710,15 @@ print(df.head())
 ```
 :::
 
+An additional methodological note, is the need for smoothing the data. Motion tracking, even when quite accurate, is prone to small fluctuations in position from frame to frame even when the tracked object/person is not moving. When we calculate something like interpersonal proximity, these fluctuations will cause fluctuations in proximity. This transfers to a subsequent measures, such as speed, acceleration, and jerk. In the provided pipeline, we use a Savitsky-Golay filter (implemented by SciPy). The filter slides along the time-series, smoothing the data within a particular window-length by fitting a polynomial of a pre-determined order to the datapoints. In our case, we set a time window of 11 datapoints, and a third degree polynomial. The plot below shows the effect of smoothing the speed data in this way.
+
+```{python, eval=False, code_folding="hide"}
+plt.plot(normalize_array(raw_speed[0:150]))
+plt.plot(normalize_array(speed[0:150]))
+plt.legend(labels=["raw speed","smoothed speed"])
+plt.show()
+```
+
 
 ### Extract features for all videos using tsfresh
 To show how easy it is to extract features from the time series data, we use the `tsfresh` library [@christTimeSeriesFeatuRe2018]. This library contains a large number of features designed to characterize time series data. While we do not use them in our analysis, it provides a convenient example of how easy it is to extract features from the created time series in a data-driven way. The user can of course change this code to add more features or to extract only a subset of features.
@@ -2600,6 +2820,16 @@ python STEP2_featureextraction.py
 
 # Step 3: Non-linear time series analysis (R)
 
+::: {.callout-note .callout-settingup collapse="true"}
+## DIY: CRQA 🛠️
+In order to run the more complex CRQA analysis described above, you can open the file *./code_STEP3_nonlinear_analysis/STEP3_nonlinearfeatures_CRQA.Rmd* in R Studio. 
+
+Before running the markdown file you will need to make sure you have a few packages installed (run this in R or R Studio):
+*install.packages(c("rio","plyr","tidyverse","invctr","fpCompare","gplots","testthat"))*
+*devtools::install_github("FredHasselman/casnet")*
+
+
+:::
 
 
 # Step 4: Statistical analysis (R)
