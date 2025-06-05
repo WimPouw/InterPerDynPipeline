@@ -160,9 +160,12 @@ for(p in subjects){
 An example of output:
 
 ![](example2.png)
-# CRQA
 
-## Estimate Embedding Parameters
+
+
+# CRQA   
+
+## Estimate Embedding Parameters 
 
 Parameters were estimated using lagged Mutual Information and False Nearest Neighbour analysis.
 
@@ -207,6 +210,7 @@ param_data <- ldply(subjects, function(p){
 })
 
 rio::export(param_data,file.path(path_results, "embedding_parameters_all.csv"))
+knitr::opts_chunk$set(fig.align = "left")
 ```
 
 
@@ -215,11 +219,10 @@ An example of output:
 ![](example1.png)
 
 
-## Cross-RQA and Diagonal Profiles
+## Cross-RQA 
 
 *CRQA analyses* were conducted using the maximum estimated lag (`838`) and `3` embedding dimensions.    
-   
-*Diagonal Cross Recurrence Profiles* were extracted using a window of `1500` samples (`30s`) around the Line of Synchronisation. 
+
 
 ```{r crqa, eval = FALSE, include = TRUE}
 data_files <- list.files(path = path_results, pattern = "csv")
@@ -273,28 +276,18 @@ for(p in subjects){
         print(format(outTable$`Horizontal/Vertical line anisotropy`, digits = 3))
       }), cex = 0.8
     )
-
-    # DCRPs 
-    # diagProfiles[[t]] <- rqa_diagProfile(y1 = data$p1_com_diff,
-    #                                      y2 = data$p2_com_diff,
-    #                                      emDim = emDim,
-    #                                      emLag = emLag_max,
-    #                                      emRad = crqaOut[[t]]$emRad,
-    #                                      diagWin = diagonalWindow,
-    #                                      xname = "p1",
-    #                                      yname = "p2",
-    #                                      AUTO = FALSE,
-    #                                      doPlot = FALSE,
-    #                                      doShuffle = TRUE,
-    #                                      minY = NA)
-    }
-
   dev.off()
   saveRDS(object = crqaOut, file = file.path(path_results,paste0("crqa_maxlag_",p,"_",t,"sessions.Rds")))
- # saveRDS(object = diagProfiles, file = file.path(path_results,paste0("dcrp_maxlag_",p,"_",t,"sessions.Rds")))
   rm(crqaOut) #,diagProfiles)
 }
 ```
+
+An example of a Distance matrix:
+
+![](CRP_figure.jpeg)
+An example of a Distance matrix thresholded to yield 5% recurrent points:
+
+![](CRP_figure2.jpeg)
 
 
 An example of output:
@@ -363,147 +356,8 @@ crqa_data$subject_nr_f <- laply(crqa_data$subject_nr_n, function(n){
   ifelse(n<10, paste0("dyad 0",n), paste0("dyad ",n))})
 
 rio::export(crqa_data,file.path(path_results, "crqa_results_all.csv"))
-```
 
-# Descriptive
-
-Because the ages vary between measurement occasions, center ages on the mean of the first session.
-
-```{r result}
-meta_data <- rio::import(file.path(path_meta,"project_point_metadata_ages.csv"))
-crqa_data <- rio::import(file.path(path_results, "crqa_results_all.csv"))
-
-# Figures CRQA ----
-
-# Ages and sessions
-brk <- round(colMeans(meta_data[,3:9], na.rm = TRUE),1)
-lbls <- paste0("S",1:7,"=",brk)
-
-crqa_data |> 
-  filter(subject_nr_n!=1) |> 
-  group_by(gender_f) |> 
-  summarise(mean = mean(age_days, na.rm = TRUE))
-
-ggplot(crqa_data, aes(x = age_days, y = session, group = subject_nr_n)) + 
-  geom_point(aes(colour = subject_nr, shape = gender_f),position = position_jitter(.4,.1)) +
-  scale_x_continuous("Age (days)",breaks = brk, labels = lbls) +
-  theme_bw() +
-  theme(panel.grid.minor.x = element_blank())
+RPt <-rp(y1 = y1, y2 = y2, emDim = emDim, emLag = 10, emRad=NA)
+rp_plot(RPt, plotDimensions = TRUE, xlabel = "P1", ylabel = "P2")
 
 ```
-
-Explore if there are any trends in the data for *DET*erminism.
-
-```{r raw}
-# Linear
-ggplot(crqa_data, aes(x = age_days, y = DET, group = subject_nr_n)) + 
-  geom_point(aes(fill = subject_nr), pch= 21) +
-  geom_smooth(aes(colour = subject_nr), method = "lm", se = FALSE) +
-  theme_bw()
-
-# Square
-ggplot(crqa_data, aes(x = age_days, y = DET, group = subject_nr_n)) + 
-  geom_point(aes(fill = subject_nr), pch= 21) +
-  geom_smooth(aes(colour = subject_nr), method = "lm", formula = "y ~ poly(x, 2)", se = FALSE) +
-  theme_bw()
-
-# Cube
-ggplot(crqa_data, aes(x = age_days, y = DET, group = subject_nr_n)) + 
-  geom_point(aes(fill = subject_nr), pch= 21) +
-  geom_smooth(aes(colour = subject_nr), method = "lm", formula = "y ~ poly(x, 3)", se = FALSE) +
-  theme_bw()
-
-```
-
-
-Not very clear, but perhaps some quadratics going on....   
-
-# Mixed Models
-
-Let's try a few models:
-
-```{r lmer}
-library(lme4)
-library(lmerTest)
-library(emmeans)
-library(future)
-
-# Linear time
-m0.1 <- lmer(DET ~ age_days_cS1 + (1|subject_nr_n) + (1|age_days_cS1), crqa_data)
-summary(m0.1)
-
-m0.2 <- lmer(DET ~ age_days_cS1 + (age_days_cS1|subject_nr_n), crqa_data)
-summary(m0.2)
-
-# Squared time for some reason this throws an error
-#m1.1 <- lmer(DET ~ poly(age_days_cS1,2)  +  (1|subject_nr_n) + (1|poly(age_days_cS1,2)) , crqa_data)
-#summary(m1.1)
-
-m1.2 <- lmer(DET ~ poly(age_days_cS1,2) + (poly(age_days_cS1,2)|subject_nr_n), crqa_data)
-summary(m1.2)
-
-
-m1.2a <- lmer(DET ~ poly(age_days_cS1,2) +  (poly(age_days_cS1,2)|subject_nr_n), weights = N_sessions, crqa_data)
-summary(m1.2a)
-```
-
-Not a lot going on so it seems... perhaps we need to consider `gender`?
-
-```{r lmerGender}
-# Add gender
-m1.3 <- lmer(DET ~ poly(age_days_cS1,2) + gender_f + (poly(age_days_cS1,2)|subject_nr_f), crqa_data)
-summary(m1.3)
-
-# Conditional change model
-m1.4 <- lmer(DET ~ poly(age_days_cS1,2) * gender_f + (poly(age_days_cS1,2)|subject_nr_f), crqa_data)
-saveRDS(m1.4, file = file.path(path_results, "m4_lmer.rds"))
-summary(m1.4) 
-
-crqa_data$predm14 <- predict(m1.4)
-
-ggplot(crqa_data, aes(x = age_days, y = predm14, group = subject_nr_f)) + 
-  geom_point(aes(fill = subject_nr_f), pch= 21) +
-  geom_smooth(aes(colour = subject_nr_f), method = "lm", formula = "y ~ poly(x, 2)", se = FALSE) +
-  scale_y_continuous("Predicted Determinism") +
-  scale_x_continuous("Age (days)") +
-  scale_fill_discrete(" ") +
-  scale_colour_discrete(" ") +
-  facet_wrap(gender_f~.) +
-  theme_bw()
-
-
-# Conditional change model without I-S covariance
-m1.5 <- lmer(DET ~ poly(age_days_cS1,2) * gender_f + (poly(age_days_cS1,2)||subject_nr_f), crqa_data)
-saveRDS(m1.5, file = file.path(path_results, "m5_lmer.rds"))
-summary(m1.5) 
-
-crqa_data$predm15 <- predict(m1.5, type = "response")
-
-ggplot(crqa_data, aes(x = age_days, y = predm15, group = subject_nr_f)) + 
-  geom_point(aes(fill = subject_nr_f), pch= 21) +
-  geom_smooth(aes(colour = subject_nr_f), method = "lm", formula = "y ~ poly(x, 2)", se = FALSE) +
-  scale_y_continuous("Predicted Determinism") +
-  scale_x_continuous("Age (days)") +
-  scale_fill_discrete(" ") +
-  scale_colour_discrete(" ") +
-  facet_wrap(gender_f~.) +
-  theme_bw()
-
-anova(m1.3,m1.4,m1.5)
-
-```
-
-
-## Results
-
-`m1.4` is preferred in terms "fit", but `m1.5` shows the mean difference more clearly... 
-
-
-`r report::report(m1.4)`
-
-
-----
-
-
-`r report::report(m1.5)`
-
