@@ -1460,6 +1460,16 @@ print(df.head())
 
 :::
 
+An additional methodological note, is the need for smoothing the data. Motion tracking, even when quite accurate, is prone to small fluctuations in position from frame to frame even when the tracked object/person is not moving. When we calculate something like interpersonal proximity, these fluctuations will cause fluctuations in proximity. This transfers to a subsequent measures, such as speed, acceleration, and jerk. In the provided pipeline, we use a Savitsky-Golay filter (implemented by SciPy). The filter slides along the time-series, smoothing the data within a particular window-length by fitting a polynomial of a pre-determined order to the datapoints. In our case, we set a time window of 11 datapoints, and a third degree polynomial. The plot below shows the effect of smoothing the speed data in this way.zz
+
+```{python,eval=TRUE, code_folding="hide"}
+plt.plot(normalize_array(raw_speed[0:150]))
+plt.plot(normalize_array(speed[0:150]))
+plt.legend(labels=["raw speed","smoothed speed"])
+plt.show()
+```
+
+
 ## Step 1.3: Animation with original videodata
 
 We advise users to double check the quality of the tracking data and the derived variables. The animation below is generated using the code `STEP3_animation.py` which couples video with quantiative data, allowing for qualitatively checking the timeseries real time against what is happening in the video. The user can select variables need to be plotted in the video plus time series animation. The code below provides the animation. Please check the DIY section for how to set up the motion tracking and run the code.
@@ -1934,7 +1944,7 @@ The second approach is based on the log dimensionless squared jerk metric, which
 While jerk-minimization has been a popular measure, it is affected by the amplitude and duration of movements, which can make comparisons between different movements challenging. A solution is to calculate dimensionless (squared) jerk. The calculation results in a single (individual-level), positive value. The mathematical underpinnings of this calculation are far outside the scope of these examples, and the accompanying manuscript. However, what is important to note here is that the measure (dimensionless jerk) was based on theoretical reasoning relating to our primary research questions. 
 
 The plot below shows the relationship between the three initial measures: speed, acceleration, and jerk.
-```{python, eval=FALSE, code_folding="hide"}
+```{python, eval=TRUE, code_folding="hide"}
 import pandas as pd
 import os
 import numpy as np
@@ -2707,16 +2717,6 @@ df = pd.read_csv(csv_file)
 print(df.head())
 ```
 :::
-
-An additional methodological note, is the need for smoothing the data. Motion tracking, even when quite accurate, is prone to small fluctuations in position from frame to frame even when the tracked object/person is not moving. When we calculate something like interpersonal proximity, these fluctuations will cause fluctuations in proximity. This transfers to a subsequent measures, such as speed, acceleration, and jerk. In the provided pipeline, we use a Savitsky-Golay filter (implemented by SciPy). The filter slides along the time-series, smoothing the data within a particular window-length by fitting a polynomial of a pre-determined order to the datapoints. In our case, we set a time window of 11 datapoints, and a third degree polynomial. The plot below shows the effect of smoothing the speed data in this way.zz
-
-```{python,eval=FALSE, code_folding="hide"}
-plt.plot(normalize_array(raw_speed[0:150]))
-plt.plot(normalize_array(speed[0:150]))
-plt.legend(labels=["raw speed","smoothed speed"])
-plt.show()
-```
-
 
 ### Extract features for all videos using tsfresh
 To show how easy it is to extract features from the time series data, we use the `tsfresh` library [@christTimeSeriesFeatuRe2018]. This library contains a large number of features designed to characterize time series data. While we do not use them in our analysis, it provides a convenient example of how easy it is to extract features from the created time series in a data-driven way. The user can of course change this code to add more features or to extract only a subset of features.
