@@ -56,10 +56,6 @@ Arkadiusz Białek^1^, Wim Pouw^2^, ^3^, Travis J. Wiltshire^2^, James Trujillo^4
 Load some packages and set some variables... change the `path_repo` to the path where you downloaded the Github Repository (https://github.com/WimPouw/InterPerDynPipeline).
 
 ```{r load}
-# CRQA results
-# 4_1, 7_1
-# Change figure
-
 # Load packages
 library(rio)
 library(plyr)

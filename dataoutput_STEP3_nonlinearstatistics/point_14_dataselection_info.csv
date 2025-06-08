@@ -1,0 +1,13 @@
+file,subject,session,tsN_before,tsN_after,tsN_diff,frameDiffRounded,frequency,framediffsN_raw,framediffsN_round
+point_14_1_kam_5_chair_processed_data_layer2.csv,point_14,1,25618,7501,0,0.02,25612,17,6
+point_14_1_kam_5_chair_processed_data_layer2.csv,point_14,1,25618,7501,0,0.04,1,17,6
+point_14_1_kam_5_chair_processed_data_layer2.csv,point_14,1,25618,7501,0,0.08,1,17,6
+point_14_1_kam_5_chair_processed_data_layer2.csv,point_14,1,25618,7501,0,0.16,1,17,6
+point_14_1_kam_5_chair_processed_data_layer2.csv,point_14,1,25618,7501,0,0.18,1,17,6
+point_14_1_kam_5_chair_processed_data_layer2.csv,point_14,1,25618,7501,0,0.28,1,17,6
+point_14_2_kam_5_chair_processed_data_layer2.csv,point_14,2,34250,7501,0,0.02,34249,12,1
+point_14_3_kam_5_chair_processed_data_layer2.csv,point_14,3,24450,7501,0,0.02,24449,11,1
+point_14_4_kam_5_chair_processed_data_layer2.csv,point_14,4,31891,7501,0,0.02,31890,12,1
+point_14_5_kam_5_chair_processed_data_layer2.csv,point_14,5,23400,7501,0,0.02,23399,11,1
+point_14_6_kam_5_chair_processed_data_layer2.csv,point_14,6,33900,7501,0,0.02,33899,12,1
+point_14_7_kam_5_chair_processed_data_layer2.csv,point_14,7,26650,7501,0,0.02,26649,12,1

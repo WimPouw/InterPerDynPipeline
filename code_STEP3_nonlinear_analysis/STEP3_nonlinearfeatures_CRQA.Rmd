@@ -77,20 +77,28 @@ path_results <- file.path(path_repo,"dataoutput_STEP3_nonlinearstatistics")
 ```
 
 
+
+
 ## Prepare data
 
-The code below records the steps taken to create the main data file. 
+The code below records the steps taken to create the time series used for analysis:
+
+- For each dyad and session we look up which time points to select for analysis (info in the `meta` subfolder) 
+- After selection based on the time code, all time series will be padded to length `7501` and are saved in `dataoutput_STEP3_nonlinearstatistics`
+- Figures of before and after the selection procedure are saved as `[dyad]_selected_data.pdf` in `dataoutput_STEP3_nonlinearstatistics`
+- Diagnostic data about the selection procedure is saved as `[dyad]_dataselection_info.csv` in `dataoutput_STEP3_nonlinearstatistics`
 
 
 ```{r prepdata, eval=FALSE, include=TRUE}
 # Ages
-meta_data  <- rio::import(file.path(path_meta,"project_point_metadata_ages_fin.csv"))
+meta_data  <- rio::import(file.path(path_meta,"project_point_metadata_ages.csv"))
 # Data ranges to select
-meta_times <- rio::import(paste0(path_meta,"project_point_metadata_starttimes_seconds.csv"))
+meta_times <- rio::import(file.path(path_meta,"project_point_metadata_starttimes_seconds.csv"))
 
 # Select data segments using file metadata_starttimes
-meta_times$exclude_start[is.na(meta_times$exclude_start)] <- 0
-meta_times$exclude_end[is.na(meta_times$exclude_end)] <- 0
+meta_times$exclude_start[is.na(meta_times$exclude_start)] <- 0.00
+meta_times$exclude_end[is.na(meta_times$exclude_end)] <- 0.00
+
 rio::export(meta_times,file.path(path_meta,"project_point_metadata_starttimes_seconds.csv"))
 # Get file list
 data_files <- list.files(path = path_oridata, pattern = "point_")
@@ -107,6 +115,8 @@ for(p in subjects){
 
   # Plot the data and write to PDF
   pdf(file.path(path_results, paste0(p ,"_selected_data.pdf")), paper = "a4r")
+  
+  res_data <- list()
 
   for(t in seq_along(this_subject)){
 
@@ -115,20 +125,29 @@ for(p in subjects){
     # Select cols
     colIDs <- which(colnames(this_occassion)%in%c("time","p1_com_approach_pos","p2_com_approach_pos"))
     data   <- this_occassion |> select(all_of(colIDs))
+    
+    framediffs_raw <- NCOL(ftable(diff(data$time)))
+    
+    framediffs <- as.data.frame(ftable(round_trunc(diff(data$time),2)))
+    colnames(framediffs) <- c("frameDiffRounded","frequency")
+    
+    framediffs_round <- NROW(framediffs)
 
     plotTS_multi(data[,-1], title = p, subtitle = paste0("ORI: ",this_subject[t]))
 
     # Snip?
     snipIDs <- meta_times[grep(x = meta_times$VIDEO_ID, pattern = gsub(pattern = "_processed_data_layer2.csv", x = this_subject[t], replacement = "")),4:5]
     if(all(snipIDs %>>% 0)){
-      data[data$time %>=% snipIDs$start_exclude&data$time%<=%snipIDs$stop_exclude,2:3] <- NA
+      data[data$time %>=% snipIDs$exclude_start&data$time%<=%snipIDs$exclude_end,2:3] <- NA
+      snipIDs$exclude_start <- data$time[data$time %>=% snipIDs$exclude_start][2]
+      data <- data |> filter(!(time %>=% snipIDs$exclude_start & time %<=% (snipIDs$exclude_end)))
     }
 
     # Select segment
     rowIDs <- meta_times[grep(x =meta_times$VIDEO_ID, pattern = gsub(pattern = "_processed_data_layer2.csv", x = this_subject[t], replacement = "")),2:3]
 
     if(rowIDs$stop%<<%(rowIDs$start+tsLength)){
-      minVal <- min(c(data[rowIDs$start:rowIDs$stop,2],data[rowIDs$start:rowIDs$stop,3]), na.rm = TRUE)
+      #minVal <- min(c(data[rowIDs$start:rowIDs$stop,2],data[rowIDs$start:rowIDs$stop,3]), na.rm = TRUE)
       pad <- (rowIDs$start+tsLength) - rowIDs$stop
       tmp_time <- seq(rowIDs$start, (rowIDs$start+tsLength), by = 0.02)
       tmp_data <- data |> filter(time %>=% rowIDs$start, time %<=% rowIDs$stop)
@@ -139,21 +158,48 @@ for(p in subjects){
                          p2_com_approach_pos = tmp_p2_com_approach_pos)
       rm(tmp_data, tmp_time, tmp_p1_com_approach_pos, tmp_p2_com_approach_pos)
     } else {
+      rowIDs$start <- data$time[data$time %<=% rowIDs$start][1]
       rowIDs$stop <- (rowIDs$start+tsLength)
+      rowIDs$stop <- data$time[data$time %>=% rowIDs$stop][1]
       data <- data |> filter(time %>=% rowIDs$start, time %<=% rowIDs$stop)
     }
 
     data$p1_com_diff <- c(0,diff(data$p1_com_approach_pos))
     data$p2_com_diff <- c(0,diff(data$p2_com_approach_pos))
+    
+    occ <-  strsplit(x = this_subject[t], split = "_")[[1]][3]
+    
+    res_data[[t]] <- data.frame(file = this_subject[t],
+                                subject = p,
+                                session = occ,
+                                tsN_before = NROW(this_occassion),
+                                tsN_after = NROW(data),
+                                tsN_diff = 7501-NROW(data),
+                                framediffs,
+                                framediffsN_raw = framediffs_raw,
+                                framediffsN_round = framediffs_round)
+    
+    if(NROW(data)<7501){
+      rdif <- 7501-NROW(data)
+      tmp_data <- data.frame(time = rep(NA,rdif),
+                             p1_com_approach_pos = rep(NA,rdif),
+                             p2_com_approach_pos = rep(NA,rdif),
+                             p1_com_diff = rep(NA,rdif),
+                             p2_com_diff = rep(NA,rdif))
+      data <- rbind(data,tmp_data)
+      rm(tmp_data)
+    }
 
     plotTS_multi(data[,-1], title = p, subtitle = paste0("SEL: ",this_subject[t]))
     
-    occ <-  strsplit(x = this_subject[t], split = "_")[[1]][3]
-
     rio::export(data,file = file.path(path_results,paste0(p ,"_","session_",occ,".csv")))
   }
+  
+  rio::export(ldply(res_data), file.path(path_results,paste0(p ,"_dataselection_info.csv")))
+  
   dev.off()
 }
+
 ```
 
 
@@ -167,7 +213,7 @@ An example of output:
 
 ## Estimate Embedding Parameters 
 
-Parameters were estimated using lagged Mutual Information and False Nearest Neighbour analysis.
+Parameters were estimated using lagged Mutual Information and False Nearest Neighbour analysis by using the function `est_parameters()` in package `casnet`:
 
 
 ```{r estparam, eval=FALSE, include=TRUE}
@@ -197,7 +243,6 @@ for(p in subjects){
   saveRDS(object = list(p1 = paramlist_p1, p2 = paramlist_p2), file = file.path(path_results, paste0(p ,"_","parameters.rds")))
 }
 
-
 # After inspection: Using the global.minimum as emLag, all optimal emDim are maximally 3
 # Collect the parameter estimates and write to file
 param_data <- ldply(subjects, function(p){
@@ -221,11 +266,19 @@ An example of output:
 
 ## Cross-RQA 
 
-*CRQA analyses* were conducted using the maximum estimated lag (`838`) and `3` embedding dimensions.    
+*CRQA analyses* were conducted using the maximum estimated lag (`838`) and `3` embedding dimensions, the target value for Recurrence Rate was `0.05` (5% fixed RR).    
+
+
+- The CRQA results are calculated using `rqa_par()` in package `casnet`, which uses (some of the) massively parallel and memory saving algorithms implemented in Python library [PyRQA](https://pypi.org/project/PyRQA/).
+- The R output is captured and saved as a figure `[dyad]_CRQAresults.pdf` in `dataoutput_STEP3_nonlinearstatistics`
+- The results are saved as an R data file for each dyad as `crqa_maxlag_[dyad]_[Nsessions]sessions.Rds` in `dataoutput_STEP3_nonlinearstatistics`
+
 
 
 ```{r crqa, eval = FALSE, include = TRUE}
-data_files <- list.files(path = path_results, pattern = "csv")
+
+data_files <- list.files(path = path_results, pattern = "(point\\_)(\\d)+(\\_session\\_)(\\d)\\.csv")
+
 param_data <- rio::import(file.path(path_results, "embedding_parameters_all.csv"))
 meta_data  <- rio::import(file.path(path_meta,"project_point_metadata_ages.csv"))
 meta_times <- rio::import(file.path(path_meta,"project_point_metadata_starttimes_seconds.csv"))
@@ -235,23 +288,22 @@ subjects   <- meta_data$subject_nr
 emDim <- 3
 emLag_max <- max(param_data$emLag)
 emLag_median <- median(param_data$emLag)
-diagonalWindow  <- 1500
 
 for(p in subjects){
   
-  crqaOut <- diagProfiles <- list()
-
+  crqaOut <- list()
+  
   this_subject <- data_files[grep(pattern = paste0("(",p,"_)+"), x = data_files)]
-
+  
   # Write results to PDF
   pdf(file.path(path_results, paste0(p ,"_CRQAresults.pdf")), paper = "a4r")
-
+  
   for(t in seq_along(this_subject)){
     
     occ <-  strsplit(x = this_subject[t], split = "_|[.]")[[1]][4]
-     
+    
     data <- rio::import(file = file.path(path_results, paste0(p ,"_","session_",occ,".csv")))
-
+    
     # CRQA using massively parallel computing and bit encoding
     crqaOut[[t]] <- rqa_par(y1 = data$p1_com_diff,
                             y2 = data$p2_com_diff,
@@ -263,7 +315,7 @@ for(p in subjects){
                             AUTO = FALSE,
                             silent = FALSE,
                             doPlot = FALSE)
-
+    
     outTable <- attributes(crqaOut[[t]])$measuresTable
     gplots::textplot(
       testthat::capture_output({
@@ -276,10 +328,14 @@ for(p in subjects){
         print(format(outTable$`Horizontal/Vertical line anisotropy`, digits = 3))
       }), cex = 0.8
     )
+  }
+  
   dev.off()
   saveRDS(object = crqaOut, file = file.path(path_results,paste0("crqa_maxlag_",p,"_",t,"sessions.Rds")))
-  rm(crqaOut) #,diagProfiles)
+  
+  rm(crqaOut)
 }
+
 ```
 
 An example of a Distance matrix:
@@ -295,7 +351,8 @@ An example of output:
 ![](example3.png)
 
 
-Collect the results into 1 file.
+This code collects the results generated in the previous section into 1 file called `crqa_results_all.csv`.
+
 
 ```{r resultsfile, eval=FALSE, include=TRUE}
 # CRQA results file----
@@ -341,10 +398,6 @@ crqa_data <- crqa_data |>
          mean_age_days = mean(age_days, na.rm = TRUE),
          N_sessions = n())
 
-crqa_data <- crqa_data |> 
-  group_by(subject_nr_f) |> 
-  mutate(N_sessions = n())
-
 crqa_data$age_days_cS1 <- crqa_data$age_days - colMeans(meta_data[,3:9], na.rm = TRUE)[1]
 crqa_data$age_months_cS1 <- crqa_data$age_months - colMeans(meta_data[,10:16], na.rm = TRUE)[1]
 crqa_data$session_n_0 <- crqa_data$session_n - min(crqa_data$session_n)
@@ -355,9 +408,18 @@ crqa_data$gender_f <- factor(crqa_data$gender, levels = c(0,1), labels = c("girl
 crqa_data$subject_nr_f <- laply(crqa_data$subject_nr_n, function(n){
   ifelse(n<10, paste0("dyad 0",n), paste0("dyad ",n))})
 
+crqa_data <- crqa_data |> 
+  group_by(subject_nr_f) |> 
+  mutate(N_sessions = n())
+
+
 rio::export(crqa_data,file.path(path_results, "crqa_results_all.csv"))
+```
 
-RPt <-rp(y1 = y1, y2 = y2, emDim = emDim, emLag = 10, emRad=NA)
-rp_plot(RPt, plotDimensions = TRUE, xlabel = "P1", ylabel = "P2")
 
+
+# Session Info
+
+```{r sessioninfo}
+sessionInfo()
 ```
