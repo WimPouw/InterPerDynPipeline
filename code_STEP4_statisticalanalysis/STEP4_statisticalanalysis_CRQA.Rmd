@@ -90,7 +90,6 @@ brk <- round(colMeans(meta_data[,3:9], na.rm = TRUE),1)
 lbls <- paste0("S",1:7,"=",brk)
 
 crqa_data |> 
-  filter(subject_nr_n!=1) |> 
   group_by(gender_f) |> 
   summarise(mean = mean(age_days, na.rm = TRUE))
 
@@ -99,6 +98,7 @@ ggplot(crqa_data, aes(x = age_days, y = session, group = subject_nr_n)) +
   scale_x_continuous("Age (days)",breaks = brk, labels = lbls) +
   theme_bw() +
   theme(panel.grid.minor.x = element_blank())
+
 
 ```
 
@@ -138,69 +138,68 @@ library(lmerTest)
 library(emmeans)
 library(future)
 
-# Linear time
-m0.1 <- lmer(DET ~ age_days_cS1 + (1|subject_nr_n) + (1|age_days_cS1), crqa_data)
-summary(m0.1)
+maxAge <- max(crqa_data$age_days_cS1)
+crqa_data$age_days_cS1_u <- crqa_data$age_days_cS1/maxAge
+crqa_data$session_n_0_u <- crqa_data$session_n_0/7
 
-m0.2 <- lmer(DET ~ age_days_cS1 + (age_days_cS1|subject_nr_n), crqa_data)
-summary(m0.2)
+#crqa_data_tmp <- crqa_data |> filter(!length<7501)
 
-# Squared time for some reason this throws an error
-#m1.1 <- lmer(DET ~ poly(age_days_cS1,2)  +  (1|subject_nr_n) + (1|poly(age_days_cS1,2)) , crqa_data)
-#summary(m1.1)
+# Linear time >> Yes
+g0.1 <- glmer(N_dlp/RP_N ~ poly(age_days_cS1_u,1, raw = TRUE) + (1|subject_nr_f), weights = RP_N, family = binomial,crqa_data)
+summary(g0.1) 
 
-m1.2 <- lmer(DET ~ poly(age_days_cS1,2) + (poly(age_days_cS1,2)|subject_nr_n), crqa_data)
-summary(m1.2)
+# Random slopes? >> No
+g0.2 <- glmer(N_dlp/RP_N ~ poly(age_days_cS1_u,1, raw = TRUE) + (poly(age_days_cS1_u,1, raw = TRUE)|subject_nr_f), weights = RP_N, family = binomial,crqa_data)
+summary(g0.2) 
 
+# Quadratic time trend >> Yes
+g0.3 <- glmer(N_dlp/RP_N ~ poly(age_days_cS1_u,2, raw = TRUE) + (1|subject_nr_f), weights = RP_N, family = binomial,crqa_data)
+summary(g0.3) 
 
-m1.2a <- lmer(DET ~ poly(age_days_cS1,2) +  (poly(age_days_cS1,2)|subject_nr_n), weights = N_sessions, crqa_data)
-summary(m1.2a)
+anova(g0.1,g0.2,g0.3)
+
 ```
 
 Not a lot going on so it seems... perhaps we need to consider `gender`?
 
 ```{r lmerGender}
 # Add gender
-m1.3 <- lmer(DET ~ poly(age_days_cS1,2) + gender_f + (poly(age_days_cS1,2)|subject_nr_f), crqa_data)
-summary(m1.3)
+g1.4 <- glmer(N_dlp/RP_N ~ gender_f + poly(age_days_cS1_u,2, raw = TRUE) + (1|subject_nr_f), weights = RP_N, family = binomial,crqa_data)
+summary(g1.4) 
 
 # Conditional change model
-m1.4 <- lmer(DET ~ poly(age_days_cS1,2) * gender_f + (poly(age_days_cS1,2)|subject_nr_f), crqa_data)
-saveRDS(m1.4, file = file.path(path_results, "m4_lmer.rds"))
-summary(m1.4) 
+g1.5 <- glmer(N_dlp/RP_N ~ gender_f * poly(age_days_cS1_u,2, raw = TRUE) + (1|subject_nr_f),  weights = RP_N, family = binomial,crqa_data)
+saveRDS(g1.5, file = file.path(path_results, "g5_glmer.rds"))
+summary(g1.5) 
 
-anova(m1.3,m1.4)
-
-crqa_data$predm14 <- predict(m1.4)
+anova(g1.4,g1.5)
 
 crqa_data_tmp <- crqa_data %>% filter(subject_nr!="point_14")
 
 # Conditional change model without "Father-Daughter" dyad
-m1.5 <- lmer(DET ~ poly(age_days_cS1,2) * gender_f + (poly(age_days_cS1,2)|subject_nr_f), crqa_data_tmp)
-saveRDS(m1.5, file = file.path(path_results, "mr5_lmer.rds"))
-summary(m1.5) 
+g1.6 <- glmer(N_dlp/RP_N ~ gender_f * poly(age_days_cS1_u,2, raw = TRUE) + (1|subject_nr_f),  weights = RP_N, family = binomial,crqa_data_tmp)
+summary(g1.6) 
 
+crqa_data$predg15 <- predict(g1.5, type = "response")
 
-
-crqa_data_tmp$predm15 <- predict(m1.5)
 ```
 
 
 ## Results
 
-`m1.4` is preferred in terms fit indices.
+`g1.5` is the preferred model, there is likely random intercept variance to be explained.
 
 
 Plot the predicted results:
 
 ```{r resultplot}
-
 crqa_data$dyad_kind <- paste("mother -",ifelse(crqa_data$gender_f=="boys", "son","daughter"))
 crqa_data$dyad_kind[crqa_data$subject_nr=="point_14"] <- "father - daughter"
 crqa_data$dyad_kind <- factor(crqa_data$dyad_kind, c("mother - daughter", "mother - son", "father - daughter"), ordered=TRUE)
 
-ggplot(crqa_data, aes(x = age_days, y = predm14, group = subject_nr_f)) + 
+ggplot(crqa_data, aes(x = age_days, y = predg15, group = subject_nr_f)) + 
   geom_smooth(aes(colour = dyad_kind), method = "lm", formula = "y ~ poly(x, 2)", se = FALSE) +
+  #geom_line(aes(colour = dyad_kind)) +
   geom_point(aes(shape = dyad_kind, fill = dyad_kind)) +
   scale_y_continuous("Predicted Determinism") +
   scale_x_continuous("Age (days)") +
@@ -209,10 +208,15 @@ ggplot(crqa_data, aes(x = age_days, y = predm14, group = subject_nr_f)) +
   scale_shape_manual("Dyad", values = c(21,22,24)) +
   theme_bw()
 
+
+
+# For report we need the actual proportion
+g1.5a <- glmer(DET ~ gender_f * poly(age_days_cS1_u,2, raw = TRUE) + (1|subject_nr_f),  weights = RP_N, family = binomial,crqa_data)
+
 ```
 
 
 In words:
 
 
-`r report::report(m1.4)`
+`r report::report(g1.5a)`
