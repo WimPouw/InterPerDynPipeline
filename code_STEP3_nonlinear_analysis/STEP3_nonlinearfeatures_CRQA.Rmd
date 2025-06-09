@@ -139,13 +139,15 @@ for(p in subjects){
     snipIDs <- meta_times[grep(x = meta_times$VIDEO_ID, pattern = gsub(pattern = "_processed_data_layer2.csv", x = this_subject[t], replacement = "")),4:5]
     if(all(snipIDs %>>% 0)){
       data[data$time %>=% snipIDs$exclude_start&data$time%<=%snipIDs$exclude_end,2:3] <- NA
-      snipIDs$exclude_start <- data$time[data$time %>=% snipIDs$exclude_start][2]
-      data <- data |> filter(!(time %>=% snipIDs$exclude_start & time %<=% (snipIDs$exclude_end)))
+      # snipIDs$exclude_start <- data$time[data$time %>=% snipIDs$exclude_start][2]
+      # data <- data |> filter(!(time %>=% snipIDs$exclude_start & time %<=% (snipIDs$exclude_end)))
     }
 
     # Select segment
     rowIDs <- meta_times[grep(x =meta_times$VIDEO_ID, pattern = gsub(pattern = "_processed_data_layer2.csv", x = this_subject[t], replacement = "")),2:3]
 
+    
+    
     if(rowIDs$stop%<<%(rowIDs$start+tsLength)){
       #minVal <- min(c(data[rowIDs$start:rowIDs$stop,2],data[rowIDs$start:rowIDs$stop,3]), na.rm = TRUE)
       pad <- (rowIDs$start+tsLength) - rowIDs$stop
@@ -158,9 +160,9 @@ for(p in subjects){
                          p2_com_approach_pos = tmp_p2_com_approach_pos)
       rm(tmp_data, tmp_time, tmp_p1_com_approach_pos, tmp_p2_com_approach_pos)
     } else {
-      rowIDs$start <- data$time[data$time %<=% rowIDs$start][1]
+      rowIDs$start <- data$time[data$time %>=% rowIDs$start][1]
       rowIDs$stop <- (rowIDs$start+tsLength)
-      rowIDs$stop <- data$time[data$time %>=% rowIDs$stop][1]
+      rowIDs$stop <- last(data$time[data$time %<=% rowIDs$stop])
       data <- data |> filter(time %>=% rowIDs$start, time %<=% rowIDs$stop)
     }
 
@@ -179,16 +181,16 @@ for(p in subjects){
                                 framediffsN_raw = framediffs_raw,
                                 framediffsN_round = framediffs_round)
     
-    if(NROW(data)<7501){
-      rdif <- 7501-NROW(data)
-      tmp_data <- data.frame(time = rep(NA,rdif),
-                             p1_com_approach_pos = rep(NA,rdif),
-                             p2_com_approach_pos = rep(NA,rdif),
-                             p1_com_diff = rep(NA,rdif),
-                             p2_com_diff = rep(NA,rdif))
-      data <- rbind(data,tmp_data)
-      rm(tmp_data)
-    }
+    # if(NROW(data)<7501){
+    #   rdif <- 7501-NROW(data)
+    #   tmp_data <- data.frame(time = rep(NA,rdif),
+    #                          p1_com_approach_pos = rep(NA,rdif),
+    #                          p2_com_approach_pos = rep(NA,rdif),
+    #                          p1_com_diff = rep(NA,rdif),
+    #                          p2_com_diff = rep(NA,rdif))
+    #   data <- rbind(data,tmp_data)
+    #   rm(tmp_data)
+    # }
 
     plotTS_multi(data[,-1], title = p, subtitle = paste0("SEL: ",this_subject[t]))
     
@@ -218,7 +220,7 @@ Parameters were estimated using lagged Mutual Information and False Nearest Neig
 
 ```{r estparam, eval=FALSE, include=TRUE}
 # Estimate parameters ----
-data_files <- list.files(path = path_results, pattern = "csv")
+data_files <- list.files(path = path_results, pattern = "(point\\_)(\\d)+(\\_session\\_)(\\d)\\.csv")
 
 for(p in subjects){
 
@@ -372,7 +374,7 @@ crqa_data <- ldply(crqa_files, function(f){
   return(ldply(tmp))
 })
 
-# Create some variables we may need for lmer
+# Create some variables we may need for lmer [see STEP4 statistical analysis]
 crqa_data$subject_nr <- laply(strsplit(crqa_data$.id, split = "[|]"), function(s) s[1])
 crqa_data$session <- laply(strsplit(crqa_data$.id, split = "[|]"), function(s) s[2])
 crqa_data$subject_nr_n <- as.numeric(laply(strsplit(crqa_data$subject_nr, split = "[_]"), function(s) s[2]))
@@ -412,6 +414,29 @@ crqa_data <- crqa_data |>
   group_by(subject_nr_f) |> 
   mutate(N_sessions = n())
 
+
+# Add time series length without NA
+ts_lengths <- list()
+i <- 0
+data_files <- list.files(path = path_results, pattern = "(point\\_)(\\d)+(\\_session\\_)(\\d)\\.csv")
+
+for(p in subjects){
+
+  this_subject <- data_files[grep(pattern = paste0("(",p,"_)+"), x = data_files)]
+
+  for(t in seq_along(this_subject)){
+    i <- i+1
+
+    data <- rio::import(file.path(path_results,this_subject[t]))
+
+    occ <-  strsplit(x = this_subject[t], split = "_|[.]")[[1]][4]
+    
+    ts_lengths[[i]] <- data.frame(subject_nr = p, session_n = as.numeric(occ),  length = NROW(na.exclude(data$p1_com_diff)))
+  }
+}
+tsout <- ldply(ts_lengths)
+
+crqa_data <- left_join(crqa_data,tsout)
 
 rio::export(crqa_data,file.path(path_results, "crqa_results_all.csv"))
 ```
