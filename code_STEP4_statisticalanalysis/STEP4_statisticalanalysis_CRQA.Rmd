@@ -4,12 +4,12 @@ author: "Fred Hasselman"
 date: "2025-04-27"
 output:
   html_document:
-    toc: true
+    toc: false
     toc_float: true
     toc_depth: 2
     md_extensions: +hard_line_breaks
     highlight: pygments
-    theme: spacelab
+    theme: journal
 editor_options: 
   chunk_output_type: console
 ---
@@ -70,7 +70,7 @@ library(emmeans)
 
 
 # Paths to files 
-path_repo <- "/Users/fred/GitHub/InterPerDynPipeline"
+path_repo <- "../"
 path_meta <- file.path(path_repo,"meta")
 path_oridata <- file.path(path_repo,"dataoutput_STEP1_2_timeseries")
 path_results <- file.path(path_repo,"dataoutput_STEP3_nonlinearstatistics")
@@ -217,6 +217,9 @@ ggplot(crqa_data, aes(x = age_days, y = predg17, group = subject_nr_f)) +
   scale_shape_manual("Dyad", values = c(21,22,24)) +
   theme_bw()
 
+# save figure
+ 
+ggsave(file.path(path_repo,"images/crqa_determinism_by_dyad.png"), width = 10, height = 7, dpi = 300)
 
 # For the report we need the model fitted on the actual proportion, the form N_dlp/RP_N doesn't work
 g1.7a <- glmer(DET ~ dyad_fs * poly(age_days_cS1_u,2, raw = TRUE) + (1|subject_nr_f),  weights = RP_N, family = binomial,crqa_data)

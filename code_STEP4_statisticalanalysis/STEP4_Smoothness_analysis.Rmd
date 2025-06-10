@@ -2,9 +2,18 @@
 title: "Step 4 Smoothness Analyses"
 author: "Travis J. Wiltshire"
 date: "2025-06-13"
-output: html_document
+output:
+  html_document:
+    toc: false
+    toc_float: true
+    toc_depth: 2
+    md_extensions: +hard_line_breaks
+    highlight: pygments
+    theme: journal
+editor_options: 
+  chunk_output_type: console
 ---
-
+---
 # Cross-Cultural Data Analysis
 
 ## Analysis of the Jerkiness of Proximity/Approach/Avoidance Meaures
@@ -12,7 +21,7 @@ output: html_document
 ### Loading the data here and creating some extra variables
 
 ```{r warning=FALSE}
-data <- read.csv("dataoutput_STEP2_features/smoothness_data.csv") 
+data <- read.csv("../dataoutput_STEP2_features/smoothness_data.csv") 
 
 data_cross_culture <- data[1:30,]
 
@@ -103,7 +112,8 @@ ggplot(data_long, aes(x = culture, y = jerkiness_value, fill = culture)) +
        y = "Jerkiness Value", x = "Culture") +
   scale_fill_manual(values = c("Yurakare" = "#A6A24F", "Polish" = "#E07A5F"))
 
-
+# save the plot
+ggsave("../images/smoothness_proximity_culture_comparison.png", width = 8, height = 6, dpi = 300)
 ```
 
 ### Double check model performance
@@ -148,6 +158,9 @@ ggplot(data_cross_culture, aes(x = culture, y = smoothness_distancecom, fill = c
        y = "Jerkiness Value", x = "Culture") +
   scale_fill_manual(values = c("Yurakare" = "#A6A24F", "Polish" = "#E07A5F"))
 
+# save the plot
+ggsave("../images/smoothness_distancecom_culture_comparison.png", width = 8, height = 6, dpi = 300)
+
 ```
 
 ## Cluster Robust Standard Errors
@@ -187,6 +200,8 @@ ggplot(data_cross_culture, aes(x = culture, y = SPARC_smoothness_distancecom, fi
        y = "Jerkiness Value", x = "Culture") +
   scale_fill_manual(values = c("Yurakare" = "#A6A24F", "Polish" = "#E07A5F"))
 
+# save the plot
+ggsave("../images/smoothness_sparc_culture_comparison.png", width = 8, height = 6, dpi = 300)
 ```
 
 
@@ -224,7 +239,7 @@ tsum_TOST(m1=m3,m2=m4,sd1=sd3,sd2=sd1,n1=10,n2=10,low_eqbound=-0.2, high_eqbound
 data2 <- data[31:length(data$videoID),]
 
 #Load Metadata file 
-ages <- read.csv("meta/project_point_metadata_ages.csv")
+ages <- read.csv("../meta/project_point_metadata_ages.csv")
 
 # Merge these files
 library(stringr)
@@ -269,14 +284,17 @@ data2_augmented <- data2_augmented %>%
 
 ## Growth models for longitudinal mass distance analysis
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 
 model_long_lin <- lmer(smoothness_distancecom ~ days + (1 | subject_nr), data = data2_augmented)
 model_long_quad <- lmer(smoothness_distancecom ~ days + I(days^2) + (1 | subject_nr), data = data2_augmented)
 model_long_cub <- lmer(smoothness_distancecom ~ days + I(days^2) + I(days^3)+ (1 | subject_nr), data = data2_augmented)
 #summary(model_long)
-plot(compare_performance(model_long_lin, model_long_quad,model_long_cub))
-anova(model_long_lin, model_long_quad,model_long_cub)
+# Alternative plotting method
+comp_perf <- compare_performance(model_long_lin, model_long_quad, model_long_cub)
+print(plot(comp_perf))
+
+anova(model_long_lin, model_long_quad, model_long_cub)
 summary(model_long_lin)
 ```
 
@@ -291,6 +309,9 @@ ggplot(data2_augmented, aes(x = days, y = smoothness_distancecom, color = factor
   theme_minimal() +
   scale_color_viridis_d()  # Use a color scale that's distinct for each subject
 
+# save the plot
+ggsave("../images/smoothness_distancecom_longitudinal.png", width = 8, height = 6, dpi = 300)
+
 ggplot(data2_augmented, aes(x = days, y = smoothness_distancecom, color = factor(subject_nr), group = subject_nr)) +
   geom_point(alpha = 0.6) +  # Scatter plot with transparency for better visualization
   geom_line(alpha = 0.6) +  # Add lines for each subject
@@ -302,6 +323,8 @@ ggplot(data2_augmented, aes(x = days, y = smoothness_distancecom, color = factor
   theme_minimal() +
   scale_color_viridis_d()  # Use a color scale that's distinct for each subject
 
+# save the plot
+ggsave("../images/smoothness_distancecom_longitudinal_lines.png", width = 8, height = 6, dpi = 300)
 ```
 
 ## Orthogonal polynomials growth models
@@ -341,6 +364,8 @@ ggplot(data2_augmented, aes(x = days, y = smoothness_p1_proximity, color = facto
   theme_minimal() +
   scale_color_viridis_d()  # Use a color scale that's distinct for each subject
 
+# save the plot
+ggsave("../images/smoothness_p1_proximity_longitudinal_lines.png", width = 8, height = 6, dpi = 300)
 ```
 
 ## Testing a GAMM
@@ -383,15 +408,20 @@ ggplot(data2_augmented, aes(x = days, y = smoothness_distancecom)) +
   ) +
   theme_minimal() +
   theme(legend.position = "none")
+
+# save the plot
+ggsave("../images/smoothness_distancecom_gamm_predictions.png", width = 8, height = 6, dpi = 300)
 ```
 
 ## Growth models for longitudinal SPARC mass distance analysis
 
 ```{r}
-
 sparc_model_long_lin <- lmer(SPARC_smoothness_distancecom ~ days + (1 | subject_nr), data = data2_augmented)
 sparc_model_long_quad <- lmer(SPARC_smoothness_distancecom ~ days + I(days^2) + (1 | subject_nr), data = data2_augmented)
 sparc_model_long_cub <- lmer(SPARC_smoothness_distancecom ~ days + I(days^2) + I(days^3)+ (1 | subject_nr), data = data2_augmented)
+```
+
+```{r, warning=FALSE, message=FALSE}
 #summary(model_long)
 plot(compare_performance(sparc_model_long_lin, sparc_model_long_quad,sparc_model_long_cub))
 anova(sparc_model_long_lin, sparc_model_long_quad,sparc_model_long_cub)
@@ -399,10 +429,9 @@ summary(sparc_model_long_lin)
 ```
 
 
+
 ## Reproducibility
 ```{r}
-# Save session info to a file
-sink("R_package_versions.txt")
 sessionInfo()
 ```
 

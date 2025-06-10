@@ -34,6 +34,7 @@ format:
     number-sections: true
     code-fold: true
     code-tools: true
+engine: knitr
 ---
 ![](images/ts.gif)
 
@@ -55,12 +56,15 @@ The Quarto notebook is structured to have the following components, next to trad
 
 **What the Quarto notebook is not intended to do:** This notebook is not itself the pipeline (i.e., a collection of code that runs the complete pipeline). It is rather a linear step-by-step manual and explainer of how to understand and implement the pipeline steps. For actually applying this code, the user can further dig into the **DIY** blocks. 
 
+### What skills do I need?
+In principle if you know how to run a python or R script you should be able to reproduce the pipeline on your own data. However, being able to run something should rather be the start of learning about the things that are covered in this pipeline. To fully understand the pipeline some programming skills in python and R are helpful, especially if you want to adjust things flexibly to your own data. Then some basic understanding of common time series operations, like differentiation, and smoothing, and general kinematic variables is valuable background (e.g., check the first few chapters of @winterBiomechanicsMotorControl2009; or even just start with Kahnacadamy [kinematics unit](https://www.khanacademy.org/science/ap-college-physics-1/xf557a762645cccc5:kinematics)). Solid mathematical background is not required, but some basic understanding of linear algebra and calculus is further helpful. For non-linear analysis some understanding of the underpinnings of dynamical systems is helpful (which may require some basic understanding systems of differential equations to fully appreciate the significance of). 
+
 # Dataset
 Below is a description of the two datasets that were used as test cases for the pipeline. The datasets are available in masked form to reduce identifiability of the individuals in the dataset. Following the download guide for further information on how to access the datasets.
 
 ::: {.callout-note .callout-download collapse="true"}
 ## Download Guide ⬇️
-The masked data can be downloaded from the repository of Jagellonian University [here](). The unmasked data can be requested from the authors.
+The masked data can be downloaded from the repository of Jagellonian University ([FORTHCOMING AFTER REVIEW]()). The unmasked data can be requested from the authors.
 
 Please note that the masked data is not the input of the pipeline. YOLO tracking would not work well on masked data as detailed information about the body is lost, and only represented as the motion tracking data that comes with it (and is present in the repository). Rather the masked data can be used to check for qualitative changes in the behavior of the inviduals, and can be used to create animations such as in step 1.3.
 
@@ -223,6 +227,15 @@ while last_tp > 0:
         summary_data.append([f"Age Range T{last_tp}", f"{df[col].min():.0f}-{df[col].max():.0f} days"])
         break
     last_tp -= 1
+
+# Age mean 
+if 'age_T1_days' in df.columns:
+    summary_data.append(["Mean Age T1", f"{df['age_T1_days'].mean():.1f} days ({df['age_T1_days'].mean()/30.44:.1f} months)"])
+
+if last_tp > 0:
+    col = f'age_T{last_tp}_days'
+    if col in df.columns:
+        summary_data.append([f"Mean Age T{last_tp}", f"{df[col].mean():.1f} days ({df[col].mean()/30.44:.1f} months)"])
 
 # Create the table with the most important summary statistics
 axs[1, 1].axis('off')
@@ -1460,15 +1473,49 @@ print(df.head())
 
 :::
 
-An additional methodological note, is the need for smoothing the data. Motion tracking, even when quite accurate, is prone to small fluctuations in position from frame to frame even when the tracked object/person is not moving. When we calculate something like interpersonal proximity, these fluctuations will cause fluctuations in proximity. This transfers to a subsequent measures, such as speed, acceleration, and jerk. In the provided pipeline, we use a Savitsky-Golay filter (implemented by SciPy). The filter slides along the time-series, smoothing the data within a particular window-length by fitting a polynomial of a pre-determined order to the datapoints. In our case, we set a time window of 11 datapoints, and a third degree polynomial. The plot below shows the effect of smoothing the speed data in this way.zz
+An additional methodological note, is the need for smoothing the data. Motion tracking, even when quite accurate, is prone to small fluctuations in position from frame to frame even when the tracked object/person is not moving. In the case of pose tracking of top-down camera angles there is quite some noise related fluctuations in the keypoint estimates. When we calculate something like interpersonal proximity, these fluctuations will cause fluctuations in proximity. Noise especially amplifies to subsequent measures, such as speed, acceleration, and jerk. In the provided pipeline, we use a Savitsky-Golay filter (implemented by `SciPy`[@2020SciPy-NMeth]). The filter slides along the time-series, smoothing the data within a particular window-length by fitting a polynomial of a pre-determined order to the datapoints. In our case, we set a time window of 11 datapoints, and a third degree polynomial. The plot below shows the effect of smoothing the speed data in this way. 
+
+We recommend users to check the effect of smoothing on their own data, and adjust the window length and polynomial order to see whether the movement granularity that one is interested in is adequately represented in the time series (the animation code that we provided will help with checking whether one is smoothing too little or too much). 
+
+::: {.callout-note .callout-installation collapse="true"}
+## Example code for checking behavior of smoothing of time series to reduce noise-related jitter 🏴
 
 ```{python,eval=TRUE, code_folding="hide"}
+import pandas as pd
+import numpy as np
+import glob as glob
+import os
+import scipy.signal
+import matplotlib.pyplot as plt
+
+def normalize_array(arr):
+    """Normalize an array to the range [0, 1]"""
+    return (arr - np.min(arr)) / (np.max(arr) - np.min(arr))
+
+folderstep12output = "./dataoutput_STEP1_2_timeseries/"
+# Load the CSV file
+csv_file = glob.glob(os.path.join(folderstep12output + "*.csv"))[0]
+df = pd.read_csv(csv_file)
+
+# 
+raw_speed = df['wrist_left_p1_speed'].values
+speed = scipy.signal.savgol_filter(raw_speed, window_length=11, polyorder=3)
+extra_speed = scipy.signal.savgol_filter(raw_speed, window_length=21, polyorder=3)
+
 plt.plot(normalize_array(raw_speed[0:150]))
 plt.plot(normalize_array(speed[0:150]))
-plt.legend(labels=["raw speed","smoothed speed"])
-plt.show()
+plt.plot(normalize_array(extra_speed[0:150]))
+plt.title("Effect of smoothing on speed data using Savitsky-Golay filter")
+plt.xlabel("Frames")
+plt.legend(labels=["raw speed","smoothed speed (window 11)", "extra smoothed speed (window 21)"])
+#plt.show()
+# save the plot
+plt.savefig("images/smoothing_speed_effect.png")
+plt.close()
 ```
+:::
 
+![Effect of smoothing on speed data using Savitsky-Golay filter](./images/smoothing_speed_effect.png)
 
 ## Step 1.3: Animation with original videodata
 
@@ -1941,9 +1988,12 @@ def spectral_arclength(movement, fs, padlevel=4, fc=10.0, amp_th=0.05):
 
 The second approach is based on the log dimensionless squared jerk metric, which is the traditional measure of smoothness in biomechanics [@hoganSensitivitySmoothnessMeasures2009].  Jerk is the third derivative of our proximity time-series. We therefore take the *change* in proximity from timepoint to timepoint, divided by the time interval. Doing this once, on the proximity values, gets us the first derivative: speed. The derivative of speed is calculated the same way, giving us *acceleration*, or how fast the speed is changing from timepoint to timepoint. The derivative of acceleration is then *jerk*. We utilize jerk here because of its theoretical importance in human movement sciences, for example in modeling complex biomechanical movements as well as interpersonal coordination. 
 
-While jerk-minimization has been a popular measure, it is affected by the amplitude and duration of movements, which can make comparisons between different movements challenging. A solution is to calculate dimensionless (squared) jerk. The calculation results in a single (individual-level), positive value. The mathematical underpinnings of this calculation are far outside the scope of these examples, and the accompanying manuscript. However, what is important to note here is that the measure (dimensionless jerk) was based on theoretical reasoning relating to our primary research questions. 
+While integrating over the jerk timeseries has been a popular measure of smoothness, it is affected by the amplitude and duration of movements, which can make comparisons between different movements challenging. A solution is to calculate dimensionless (squared) jerk. The calculation results in a single (individual-level), positive value. The mathematical underpinnings of this calculation are outside of the scope of this m. However, what is important to note here is that the measure (dimensionless jerk) was based on theoretical reasoning relating to our primary research questions. 
 
-The plot below shows the relationship between the three initial measures: speed, acceleration, and jerk.
+Below the function that calculates the dimensionless squared jerk metric from position data.  This measure is based on taking the third derivative with respect to time (jerk), squared and integrated over the movement duration, and then normalized by the amplitude of the movement. The log of this value is taken keep the values in a reasonable range. 
+
+::: {.callout-note .callout-installation collapse="true"}
+## Pipeline code step 2, function for calculating dimensionless squared jerk 🚩 
 ```{python, eval=TRUE, code_folding="hide"}
 import pandas as pd
 import os
@@ -1951,12 +2001,6 @@ import numpy as np
 from scipy.signal import savgol_filter
 from scipy import integrate
 import matplotlib.pyplot as plt
-
-
-os.getcwd()
-#os.listdir(main_path)
-os.path.isdir('./dataoutput_STEP1_1_rawposedata')
-ts = pd.read_csv('./dataoutput_STEP1_1_rawposedata/sample_keypoints_data_layer1.csv')
 
 def dimensionless_squared_jerk_from_position(ts, time):
     """
@@ -2131,130 +2175,15 @@ def dimensionless_squared_jerk_from_position(ts, time):
     except Exception as e:
         print(f"Error calculating dimensionless squared jerk: {str(e)}")
         return np.nan
-
- #smoothness_p1_proximity = dimensionless_squared_jerk_from_position(ts['p1_com_approach_pos'].values, ts['time'].values)
-def normalize_array(arr):
-    arr = np.asarray(arr)
-    min_val = np.min(arr)
-    max_val = np.max(arr)
-    if max_val == min_val:
-        return np.zeros_like(arr)  # Avoid division by zero
-    return (arr - min_val) / (max_val - min_val)
-
-raw_speed, speed, raw_acceleration, acceleration, raw_jerk, jerk = dimensionless_squared_jerk_from_position(ts['p1_com_approach_pos'].values, ts['time'].values)
-plt.plot(normalize_array(speed[0:150]))
-plt.plot(normalize_array(acceleration[0:150]))
-plt.plot(normalize_array(jerk[0:150]))
-plt.legend(labels=["speed","acceleration","jerk"])
-plt.show()
 ```
-
-
-Below the function that calculates the dimensionless squared jerk metric from position data.  This measure is based on taking the third derivative with respect to time (jerk), squared and integrated over the movement duration, and then normalized by the amplitude of the movement. The log of this value is taken keep the values in a reasonable range. 
+:::
 
 ## Example smoothness results on simulated time series data
 
 In the below example we show how the two smoothness metrics behave for three different time series data. The first time series is a smooth sinusoidal signal, the second is a noisy version of the first, and the third is a more noisy version of the second. The spectral arc length metric should be higher for the smooth signal, while the dimensionless squared jerk metric should be lower for the smooth signal (as it is less jerky).
 
 ::: {.callout-note .callout-installation collapse="true"}
-## Pipeline code step 2, function for calculating log dimensionless jerk 🚩 
-
-```{python, code_folding="hide"}
-import numpy as np
-from scipy import interpolate
-from scipy.signal import savgol_filter
-import pandas as pd
-import scipy.integrate as integrate
-
-# function to calculate the dimensionless squared jerk metric from position data
-def dimensionless_squared_jerk_from_position(ts, time):
-    """
-    Calculate the dimensionless squared jerk metric from position data.
-    
-    Parameters:
-    -----------
-    ts : array_like
-        Position data points, should be a 1D numpy array
-    time : array_like
-        Time points corresponding to the ts data, should be a 1D numpy array
-    
-    Returns:
-    --------
-    float
-        Dimensionless squared jerk metric or NaN if calculation fails
-    """
-    dt = np.mean(np.diff(time))  # Calculate time step from the time array
-
-    # Calculate speed (exactly as in original)
-    speed = np.gradient(ts, dt)
-
-    # Smooth savgol filter (maintaining original settings)
-    speed = savgol_filter(speed, 11, 3)
-
-    # Calculate acceleration (exactly as in original)
-    acceleration = np.gradient(speed, dt)
-
-    # Smooth (maintaining original settings)
-    acceleration = savgol_filter(acceleration, 11, 3)
-    
-    # Calculate jerk (exactly as in original)
-    jerk = np.gradient(acceleration, dt)
-    
-    # Smooth (maintaining original settings)
-    jerk = savgol_filter(jerk, 11, 3)
-    
-    # Calculate movement duration (D)
-    movement_duration = time[-1] - time[0]
-    
-    if movement_duration <= 0:
-        print(f"Error: Movement duration must be positive. Got {movement_duration}")
-        return np.nan
-    
-    # Calculate movement amplitude by integrating speed
-    position = integrate.simpson(speed, x=time)
-    movement_amplitude = abs(position)  # Use absolute value to ensure positive
-    
-    # Prevent division by zero
-    epsilon = 1e-10
-    if movement_amplitude < epsilon:
-        print(f"Warning: Movement amplitude very small ({movement_amplitude}). Using epsilon.")
-        movement_amplitude = epsilon
-        
-    # Calculate the squared jerk
-    squared_jerk = jerk ** 2
-    
-    # Integrate the squared jerk
-    integrated_squared_jerk = integrate.simpson(squared_jerk, x=time)
-    
-    # Ensure positive value for integral of squared jerk
-    if integrated_squared_jerk < 0:
-        print(f"Warning: Negative integral of squared jerk: {integrated_squared_jerk}. Using absolute value.")
-        integrated_squared_jerk = abs(integrated_squared_jerk)
-    
-    # Calculate the dimensionless squared jerk
-    dimensionless_jerk = integrated_squared_jerk * (movement_duration**5 / movement_amplitude**2)
-    
-    # Final sanity check
-    if np.isnan(dimensionless_jerk) or np.isinf(dimensionless_jerk):
-        print(f"Warning: Result is {dimensionless_jerk}. Details: ")
-        print(f"  Movement duration: {movement_duration}")
-        print(f"  Movement amplitude: {movement_amplitude}")
-        print(f"  Integrated squared jerk: {integrated_squared_jerk}")
-        return np.nan
-    # log the result
-    
-    #print(f"Dimensionless squared jerk: {dimensionless_jerk}")
-    # log the dimensionless jerk
-    dimensionless_jerk = np.log(dimensionless_jerk)
-
-    return dimensionless_jerk
-```
-
-:::
-
-::: {.callout-note .callout-installation collapse="true"}
 ## Example code for checking behavior of the smoothness metrics 🏴
-
 
 ```{python, code_folding="hide"}
 import matplotlib.pyplot as plt
@@ -2818,6 +2747,20 @@ python STEP2_featureextraction.py
 
 # Step 3: Non-linear time series analysis (R)
 
+The development of infant-caregiver interaction was studied using Cross-Recurrence Quantification Analysis (CRQA). CRQA is a nonlinear time series analysis technique that can be used to study synchronization and the strength and direction of coupling dynamics between two systems (Marwan & Kurths, 2002; Shockley et al., 2002). Specifically, we used CRQA to quantify the strength and direction of coupling between infant and caregiver based on changes in their centre of mass during the 7 lab visits. To assess whether the overall strength of coupling changes over time we will use a generalized mixed model with the CRQA measure of coupling strength (determinism) as the dependent variable and age and dyad relation as predictors.
+
+
+
+[forthcoming: Minimalist CRQA explanation].
+
+![Cross-recurrence plot](./images/CRP_figure.jpeg)
+
+::: {.callout-note .callout-settingup collapse="true"}
+## CRQA analysis in R 🚩
+
+{{< include ./code_STEP3_nonlinear_analysis/STEP3_nonlinearfeatures_CRQA.html >}}
+:::
+
 ::: {.callout-note .callout-settingup collapse="true"}
 ## DIY: CRQA 🛠️
 In order to run the more complex CRQA analysis described above, you can open the file *./code_STEP3_nonlinear_analysis/STEP3_nonlinearfeatures_CRQA.Rmd* in R Studio. 
@@ -2826,21 +2769,40 @@ Before running the markdown file you will need to make sure you have a few packa
 *install.packages(c("rio","plyr","tidyverse","invctr","fpCompare","gplots","testthat"))*
 *devtools::install_github("FredHasselman/casnet")*
 
-
 :::
 
 
 # Step 4: Statistical analysis (R)
 
+## Step 4.1: Statistical report on smoothness analysis in R
+
+For the individual level analysis of the smoothness of the individual approach/avoidance behavior, we fit a linear mixed model using `lme4` [@batesFittingLinearMixedEffects2015] where the individual smoothness metric was the outcome variable, culture (Yurakaré or Polish) was the predictor variable, and we included a random intercept to account for individuals being nested within sibling pairs. Overall, the model suggests there was no evidence of an effect of culture on the smoothness of individual approach/avoidance movements, (β = 0.12, 95% CI [−0.53, 0.77], marginal R² = .004). For the Polish group, the estimated marginal mean was 38.3 (SE = 0.45, 95% CI [37.3, 39.2]). For the Yurakaré group, the estimated marginal mean was 39.5 (SE = 0.45, 95% CI [37.6, 49.5]). The figure below shows the overall pattern. In order to evaluate whether the results of these models were biased due to singular fit issues in estimating the random effects, we ran an equivalent linear regression including cluster robust standard error estimates (McNeish et al., 2017) using the `clubSandwich` [@pustejovskyClubSandwichClusterRobustSandwich2025] `R`-package, which provided compatible results. 
+
+For the dyadic distance between center of mass analyses, we fit a simple linear regression with the smoothness of the distance between the dyad members’ center of mass as the outcome variable and culture (Yurakaré vs Polish) as the predictor variable. Consistent with the prior analyses, we did not observe a significant effect for culture (β = 0.15, 95% CI [−0.81, 1.11],  R² = .006). The estimated marginal mean for the Polish group was 39.0 (SE = 0.64, 95% CI [37.7, 40.3]), and for the Yurakaré group it was 39.3 (SE = 0.64, 95% CI [38.0, 40.6])
+
+![Cross-cultural Comparisons of Individual Smoothness of Approach/Avoidance Behaviors (A) and Dyadic Smoothness in Proximity of Individuals’ Center of Mass (B)](./images/smoothness_distancecom_culture_comparison.png)
+
 ::: {.callout-note .callout-settingup collapse="true"}
-## Smoothness analysis in R 🏴
+## Detailed smoothness analysis in R 🚩
 
-We smoothness analysis we will run from this notebook. 
+{{< include ./code_STEP4_statisticalanalysis/STEP4_Smoothness_analysis.html >}}
+:::
 
-```{r child = "./code_STEP4_statisticalanalysis/STEP4_Smoothness_analysis.Rmd"}
-```
+## Step 4.2: Statistical report on non-linear analysis in R
+
+To analyze the development of parent-infant interactions, we fit a logistic (generalized) mixed model using lme4 [@batesFittingLinearMixedEffects2015], predicting the determinism (DET) measure obtained from CRQA for each dyad at each measurement occasion. The age of the infant (in days) was used as the time predictor and was centered on the average age of the sample at the first measurement occasion. The framework of generalized mixed models allows for the estimation of proportion data based on counts, where the denominator may vary from case to case. In the present dataset 6 dyads had 1 time series that was shorter than expected based on the selection criterion of 150 seconds (6 out of 86 dyadic series). Time series length will affect the number of recurrent points that can be detected; therefore, we used the number of recurrent points detected as a weight variable in the model (see supplementary data for details). A linear and quadratic effect of the time variable (age in days) were included in the model, as well as an interaction with a categorical variable indicating parent-infant relation; mother-daughter (N=6), mother-son (N=5), father-daughter (N=1) with the latter as the reference category. The dyad ID was entered as a random effect in the model. The model predictions are displayed in Figure blow. The estimated marginal means at 92.6 days (the average at the first measurement occasion) for the father-daughter dyads (M = .39, 95% CI [.36, .42]) did not differ from the mother-daughter dyads (M = .36, 95% CI [.35, .37]) and mother-son dyads (M = 0.40, 95% CI [.39, .41]), but the mother-daughter and mother-son dyads did differ (OR = 0.86, zratio = -3.96, pTukey = 0.002). All interaction effects of the dyad type with linear and quadratic age effects were significant .
+
+![CRQA results](./images/crqa_determinism_by_dyad.png)
+
+::: {.callout-note .callout-settingup collapse="true"}
+## Detailed CRQA statistical analysis in R 🚩
+
+{{< include ./code_STEP4_statisticalanalysis/STEP4_statisticalanalysis_CRQA.html >}}
 :::
 
 
+# Step 5: Masking
+
+[forthcoming: Masking explanation].
 
 # References
