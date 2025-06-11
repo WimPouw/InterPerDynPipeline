@@ -59,7 +59,7 @@ The Quarto notebook is structured to have the following components, next to trad
 **What the Quarto notebook is not intended to do:** This notebook is not itself the pipeline (i.e., a collection of code that runs the complete pipeline). It is rather a linear step-by-step manual and explainer of how to understand and implement the pipeline steps. For actually applying this code, the user can further dig into the **DIY** blocks. 
 
 ### What skills do I need?
-In principle if you know how to run a python or R script you should be able to reproduce the pipeline on your own data. However, being able to run something should rather be the start of learning about the things that are covered in this pipeline. To fully understand the pipeline some programming skills in python and R are helpful, especially if you want to adjust things flexibly to your own data. Then some basic understanding of common time series operations, like differentiation, and smoothing, and general kinematic variables is valuable background (e.g., check the first few chapters of @winterBiomechanicsMotorControl2009; or even just start with Kahnacadamy [kinematics unit](https://www.khanacademy.org/science/ap-college-physics-1/xf557a762645cccc5:kinematics)). Solid mathematical background is not required, but some basic understanding of linear algebra and calculus is further helpful. For non-linear analysis some understanding of the underpinnings of dynamical systems is helpful (which may require some basic understanding systems of differential equations to fully appreciate the significance of). 
+In principle if you know how to run a python or R script you should be able to reproduce the pipeline on your own data. However, being able to run something should rather be the start of learning about the things that are covered in this pipeline. To fully understand the pipeline some programming skills in python and R are helpful, especially if you want to adjust things flexibly to your own data. Then some basic understanding of common time series operations, like differentiation, and smoothing, and general kinematic variables is valuable background (e.g., check the first few chapters of @winterBiomechanicsMotorControl2009; or even just start with Kahnacadamy [kinematics unit](https://www.khanacademy.org/science/ap-college-physics-1/xf557a762645cccc5:kinematics)). Solid mathematical background is not required, but some basic understanding of linear algebra and calculus is further helpful. For non-linear analysis some understanding of the underpinnings of dynamical systems is helpful (which may require some basic understanding of systems of differential equations to fully appreciate the significance of). 
 
 # Dataset
 Below is a description of the two datasets that were used as test cases for the pipeline. The datasets are available in masked form to reduce identifiability of the individuals in the dataset. Following the download guide for further information on how to access the datasets.
@@ -71,14 +71,14 @@ The masked data can be downloaded from the repository of Jagellonian University 
 Please note that the masked data is not the input of the pipeline. YOLO tracking would not work well on masked data as detailed information about the body is lost, and only represented as the motion tracking data that comes with it (and is present in the repository). Rather the masked data can be used to check for qualitative changes in the behavior of the inviduals, and can be used to create animations such as in step 1.3.
 
 **Example of masked videodata**
-![](./images/masked_example.jpeg){fig-align="center" width=600}
+!["Figure S1. Overview demographics Sibling dataset"](./images/masked_example.jpeg){fig-align="center" width=600}
 :::
 
-### Dataset Mother Infant
+### Dataset Caregiver-Infant
 Thirteen infant-caregiver pairs visited the child laboratory monthly for a total of seven visits. The infants' ages at the first visit ranged from 7 to 9 months. Parents were instructed to "play as usual," with a set of different toys to encourage spontaneous interactions. Each visit lasted approximately 30 minutes and was divided into four stages. For our analyses, we focus on recordings from the stage where the infant was seated in a feeding chair, facing the caregiver sitting directly across. This controlled setup minimizes movement around the room, facilitating video motion tracking analysis. Additionally, our analyses are restricted to top-view recordings, ensuring that both the caregiver and the infant are captured within a single frame.
 
 ::: {.callout-note .callout-download collapse="true"}
-## Plotting code for the Mother-Infant dataset 🏴
+## Plotting code for the Caregiver-Infant dataset 🏴
 
 ```{python, eval=FALSE}
 
@@ -100,7 +100,7 @@ df['gender_label'] = df['gender'].map({0: 'Female', 1: 'Male'})
 
 # Create a 2x2 subplot layout
 fig, axs = plt.subplots(2, 2, figsize=(12, 10), gridspec_kw={'width_ratios': [1.5, 1], 'height_ratios': [1.5, 1]})
-fig.suptitle('Mother-Infant Dataset Overview', fontsize=16, fontfamily='serif')
+fig.suptitle('Caregiver-Infant Dataset Overview', fontsize=16, fontfamily='serif')
 
 # Define colors for gender
 colors = {
@@ -263,9 +263,9 @@ plt.close(fig) # Explicitly close the figure object
 
 :::
 
-![](images/mother_infant_analysis.png){fig-align="center" width=600}
+!["Figure S2. Overview demographics caregiver-infant dataset"](images/mother_infant_analysis.png){fig-align="center" width=600}
 
-Note that in our github repository we use short sample data from this dataset from an infant-mother pair whom we are allowed to share the video data for the current purposes.
+Note that in our github repository we use short sample data from this dataset from an caregiver-infant pair whom we are allowed to share the video data for the current purposes.
 
 ### Dataset Siblings
 Ten sibling pairs (total = 20 pairs) were observed from Polish urban culture and Yurakaré indigenous culture each. Observations were made during a semi-structured play situation: in the natural environment of the Yurakaré community and laboratory conditions in Poland. Siblings were asked to build a tower together using 54 wooden blocks while sitting facing each other. Each pair had 4 minutes to complete the task. This setup allowed for a systematic comparison of coordinated and mutually adjusted movements in siblings, using our pipeline to examine the smoothness of interaction while "doing things together" in these two cultural groups.
@@ -659,6 +659,9 @@ Here is an example of the output video with annotated keypoints and skeletons. T
   Your browser does not support the video tag.
 </video>
 </html>
+Figure S3. Example output video with annotated keypoints and skeletons. The green points indicate accepted keypoints. The blue lines connect the keypoints to form a skeleton.
+
+
 
 Here is an example of the output csv file containing the coordinates of the keypoints. The CSV file contains the following columns: frame number, person ID, keypoint ID, x-coordinate, and y-coordinate. Each row corresponds to a detected keypoint in a specific frame.
 
@@ -1045,7 +1048,7 @@ except Exception as e:
 
 :::
 
-![Proximity Calculation Visualization](./images/proximity_visualization/proximity_calculation.gif)
+![Figure S4. Proximity Calculation Visualization](./images/proximity_visualization/proximity_calculation.gif)
 
 We further check for any remaining missing values after processing and confirms time continuity to detect any frame drops or temporal misalignments. 
 
@@ -1517,11 +1520,11 @@ plt.close()
 ```
 :::
 
-![Effect of smoothing on speed data using Savitsky-Golay filter](./images/smoothing_speed_effect.png)
+![Figure S5. Effect of smoothing on speed data using Savitsky-Golay filter](./images/smoothing_speed_effect.png)
 
 ## Step 1.3: Animation with original videodata
 
-We advise users to double check the quality of the tracking data and the derived variables. The animation below is generated using the code `STEP3_animation.py` which couples video with quantiative data, allowing for qualitatively checking the timeseries real time against what is happening in the video. The user can select variables need to be plotted in the video plus time series animation. The code below provides the animation. Please check the DIY section for how to set up the motion tracking and run the code.
+We advise users to double check the quality of the tracking data and the derived variables, as well as to get a better intuitive and qualitative understanding of their quantitative methods. We have argued elsewhere that especially when working with derived measurements of high-dimensional data that researchers can train to become better in their intuitive grasp for their measurements by relating it real-time with the raw video data [@miaoDIMSDashboardExploring2025]. In this way become better in our understanding what the measure is and is not responding to; which we mention in the introduction means becoming observant rather than a disinterested observer [@hackingRepresentingInterveningIntroductory1983]. The animation below is generated using the code `STEP3_animation.py` which couples video with quantiative data, allowing for qualitatively checking the timeseries real time against what is happening in the video. The user can select variables need to be plotted in the video plus time series animation. The code below provides the animation. Please check the DIY section for how to set up the motion tracking and run the code.
 
 ::: {.callout-note .callout-installation collapse="true"}
 ## Code chunk: Animation code for coupling video with quantitative data 🚩 
@@ -1891,7 +1894,7 @@ print("\nAll videos processed!")
 
 :::
 
-![Animation of motion tracking data coupled with video](./images/com_distance_example.gif)
+![Figure S6. Animation of motion tracking data coupled with video](./images/com_distance_example.gif)
 
 # Step 2: Summary feature extraction: Smoothness and other features
 We have motivated in the main paper accompanying this notebook that smoothness can be a useful feature to understand the quality of interactions. And our pipeline focuses on the extraction of this specific feature, while we also show how easy it is to generate other features from the time series data that are processed after step 1.
@@ -2267,7 +2270,7 @@ plt.savefig('./images/smoothness_metrics_comparison.png', dpi=300, bbox_inches='
 ```
 :::
 
-![Smoothness metrics comparison](./images/smoothness_metrics_comparison.png)
+![Figure S7. Smoothness metrics comparison](./images/smoothness_metrics_comparison.png)
 
 In the below pipeline code for step 2, we calculate smoothness for the distance between the two hands, as well as the distance to the center of mass (COM) and centroid of the two hands. We also calculate the smoothness of the wrist speed profiles, which are derived from the distance time series data. When SPARC is in the variable name, it refers to the spectral arc length metric, while smoothness will refer to the dimensionless squared jerk metric.
 
@@ -2756,7 +2759,7 @@ For each dyad we now have 2 multivariate time series that can be thought of as t
 
 Many different measures can be calculated from the recurrence matrix, in the present study we focus on determinism (DET) which is the proportion of the number of recurrent points that form a diagonal line on the total number of recurrent points. Diagonal lines indicate a consecutive sequence of states that occurred in one time series is repeated in the other time series in almost exactly the same way, or, both systems followed the same trajectory through state space for a while. Therefore, determinism is generally considered a measure of the strength of the coupling between the two systems.
 
-![Cross-recurrence plot](./images/CRP_figure.jpeg)
+![Figure S8. Cross-recurrence plot](./images/CRP_figure.jpeg)
 
 ::: {.callout-note .callout-settingup collapse="true"}
 ## CRQA analysis in R 🚩
@@ -2783,7 +2786,7 @@ For the individual level analysis of the smoothness of the individual approach/a
 
 For the dyadic distance between center of mass analyses, we fit a simple linear regression with the smoothness of the distance between the dyad members’ center of mass as the outcome variable and culture (Yurakaré vs Polish) as the predictor variable. Consistent with the prior analyses, we did not observe a significant effect for culture (β = 0.15, 95% CI [−0.81, 1.11],  R² = .006). The estimated marginal mean for the Polish group was 39.0 (SE = 0.64, 95% CI [37.7, 40.3]), and for the Yurakaré group it was 39.3 (SE = 0.64, 95% CI [38.0, 40.6])
 
-![Cross-cultural Comparisons of Individual Smoothness of Approach/Avoidance Behaviors (A) and Dyadic Smoothness in Proximity of Individuals’ Center of Mass (B)](./images/smoothness_distancecom_culture_comparison.png)
+![Figure S9. Cross-cultural Comparisons of Individual Smoothness of Approach/Avoidance Behaviors (A) and Dyadic Smoothness in Proximity of Individuals’ Center of Mass (B)](./images/smoothness_distancecom_culture_comparison.png)
 
 ::: {.callout-note .callout-settingup collapse="true"}
 ## Detailed smoothness analysis in R 🚩
@@ -2795,9 +2798,9 @@ For the dyadic distance between center of mass analyses, we fit a simple linear 
 
 To analyze the development of parent-infant interactions, we fit a logistic (generalized) mixed model using lme4 [@batesFittingLinearMixedEffects2015], predicting the determinism (DET) measure obtained from CRQA for each dyad at each measurement occasion. The age of the infant (in days) was used as the time predictor and was centered on the average age of the sample at the first measurement occasion. The framework of generalized mixed models allows for the estimation of proportion data based on counts, where the denominator may vary from case to case. In the present dataset 6 dyads had 1 time series that was shorter than expected based on the selection criterion of 150 seconds (6 out of 86 dyadic series). Time series length will affect the number of recurrent points that can be detected; therefore, we used the number of recurrent points detected as a weight variable in the model (see supplementary data for details). A linear and quadratic effect of the time variable (age in days) were included in the model, as well as an interaction with a categorical variable indicating parent-infant relation; mother-daughter (N=6), mother-son (N=5), father-daughter (N=1) with the latter as the reference category. The dyad ID was entered as a random effect in the model. The model predictions are displayed in Figure blow. The estimated marginal means at 92.6 days (the average at the first measurement occasion) for the father-daughter dyads (M = .39, 95% CI [.36, .42]) did not differ from the mother-daughter dyads (M = .36, 95% CI [.35, .37]) and mother-son dyads (M = 0.40, 95% CI [.39, .41]), but the mother-daughter and mother-son dyads did differ (OR = 0.86, zratio = -3.96, pTukey = 0.002). All interaction effects of the dyad type with linear and quadratic age effects were significant (see Table 1 below for the results of this model).
 
-![CRQA results plot](./images/crqa_determinism_by_dyad.png)
+![Figure S10. CRQA results plot](./images/crqa_determinism_by_dyad.png)
 
-## Table S1
+#### Table S1 {.unnumbered}
 *Fixed Effects for Generalized Linear Mixed Model Predicting N_dlp/RP_N*
 
 | Predictor | β | SE | z | p |
