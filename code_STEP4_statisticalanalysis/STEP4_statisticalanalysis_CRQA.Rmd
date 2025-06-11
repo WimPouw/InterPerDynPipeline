@@ -144,15 +144,15 @@ maxAge <- max(crqa_data$age_days_cS1)
 crqa_data$age_days_cS1_u <- crqa_data$age_days_cS1/maxAge
 
 # Linear time >> Yes
-g0.1 <- glmer(N_dlp/RP_N ~ poly(age_days_cS1_u,1, raw = TRUE) + (1|subject_nr_f), weights = RP_N, family = binomial,crqa_data)
+g0.1 <- glmer(N_dlp/RP_N ~ poly(age_days_cS1,1) + (1|subject_nr_f), weights = RP_N, family = binomial,crqa_data)
 summary(g0.1) 
 
 # Random slopes? >> No
-g0.2 <- glmer(N_dlp/RP_N ~ poly(age_days_cS1_u,1, raw = TRUE) + (poly(age_days_cS1_u,1, raw = TRUE)|subject_nr_f), weights = RP_N, family = binomial,crqa_data)
+g0.2 <- glmer(N_dlp/RP_N ~ poly(age_days_cS1,1) + (poly(age_days_cS1_u,1, raw = TRUE)|subject_nr_f), weights = RP_N, family = binomial,crqa_data)
 summary(g0.2) 
 
 # Quadratic time trend >> Yes
-g0.3 <- glmer(N_dlp/RP_N ~ poly(age_days_cS1_u,2, raw = TRUE) + (1|subject_nr_f), weights = RP_N, family = binomial,crqa_data)
+g0.3 <- glmer(N_dlp/RP_N ~ poly(age_days_cS1,2) + (1|subject_nr_f), weights = RP_N, family = binomial,crqa_data)
 summary(g0.3) 
 
 anova(g0.1,g0.2,g0.3)
@@ -163,11 +163,11 @@ Not a lot going on so it seems... perhaps we need to consider `gender`?
 
 ```{r lmerGender}
 # Add gender
-g1.4 <- glmer(N_dlp/RP_N ~ gender_f + poly(age_days_cS1_u,2, raw = TRUE) + (1|subject_nr_f), weights = RP_N, family = binomial,crqa_data)
+g1.4 <- glmer(N_dlp/RP_N ~ gender_f + poly(age_days_cS1,2) + (1|subject_nr_f), weights = RP_N, family = binomial,crqa_data)
 summary(g1.4) 
 
 # Conditional change model
-g1.5 <- glmer(N_dlp/RP_N ~ gender_f * poly(age_days_cS1_u,2, raw = TRUE) + (1|subject_nr_f),  weights = RP_N, family = binomial,crqa_data)
+g1.5 <- glmer(N_dlp/RP_N ~ gender_f * poly(age_days_cS1,2) + (1|subject_nr_f),  weights = RP_N, family = binomial,crqa_data)
 saveRDS(g1.5, file = file.path(path_results, "g5_glmer.rds"))
 summary(g1.5) 
 
@@ -178,7 +178,7 @@ crqa_data$predg15 <- predict(g1.5, type = "response")
 crqa_data_tmp <- crqa_data %>% filter(subject_nr!="point_14")
 
 # Conditional change model without "Father-Daughter" dyad
-g1.6 <- glmer(N_dlp/RP_N ~ gender_f * poly(age_days_cS1_u,2, raw = TRUE) + (1|subject_nr_f),  weights = RP_N, family = binomial,crqa_data_tmp)
+g1.6 <- glmer(N_dlp/RP_N ~ gender_f * poly(age_days_cS1,2) + (1|subject_nr_f),  weights = RP_N, family = binomial,crqa_data_tmp)
 summary(g1.6) 
 
 crqa_data$dyad <- paste("mother -",ifelse(crqa_data$gender_f=="boys", "son","daughter"))
@@ -187,11 +187,11 @@ crqa_data$dyad_fs <- factor(crqa_data$dyad, c("mother - daughter", "mother - son
 crqa_data$dyad_fs <- reorder(crqa_data$dyad_fs, ref = "f-d")
 
 # Conditional change model with dyad-caregiver categories
-g1.7 <- glmer(N_dlp/RP_N ~ dyad_fs * poly(age_days_cS1_u,2, raw = TRUE) + (1|subject_nr_f),  weights = RP_N, family = binomial,crqa_data)
+g1.7 <- glmer(N_dlp/RP_N ~ dyad_fs * poly(age_days_cS1,2) + (1|subject_nr_f),  weights = RP_N, family = binomial,crqa_data)
 saveRDS(g1.7, file = file.path(path_results, "g7_glmer.rds"))
 summary(g1.7) 
 
-emmeans::emmeans(g1.7, ~ dyad_fs|poly(age_days_cS1_u,2, raw = TRUE), type = "response")
+emmeans::emmeans(g1.7, ~ dyad_fs|poly(age_days_cS1,2), type = "response")
 
 crqa_data$predg17 <- predict(g1.7, type = "response")
 ```
@@ -213,8 +213,8 @@ ggplot(crqa_data, aes(x = age_days, y = predg17, group = subject_nr_f)) +
   geom_point(aes(shape = dyad_f, fill = dyad_f)) +
   scale_y_continuous("Predicted Determinism", limits = c(.3,.45), expand = c(0,.01)) +
   scale_x_continuous("Age (days)",c(250,300,350,400, 450)) +
-  scale_fill_manual("Dyad", values = c("steelblue2","thistle2","red2")) +
-  scale_colour_manual("Dyad", values = c("steelblue3","thistle3","red3")) +
+  scale_fill_manual("Dyad", values = c("steelblue2","thistle2","peachpuff2")) +
+  scale_colour_manual("Dyad", values = c("steelblue3","thistle3","peachpuff3")) +
   scale_shape_manual("Dyad", values = c(21,22,24)) +
   theme_bw()
 
@@ -227,7 +227,16 @@ g1.7a <- glmer(DET ~ dyad_fs * poly(age_days_cS1_u,2, raw = TRUE) + (1|subject_n
 
 ```
 
+## Table of model output
 
+`r sjPlot::tab_model(g1.7)`   
+
+
+
+    
+    
+      
+      
 In words:
 
 `r report::report(g1.7a)`
