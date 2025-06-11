@@ -2804,9 +2804,6 @@ To analyze the development of parent-infant interactions, we fit a logistic (gen
 
 
 # Step 5: Masking
-
-[forthcoming: Masking explanation].
-
 Our masking approach equips researchers with context-sensitive masking decisions, which may have verying levels of reproducibility needed, or varying constraints such as, cultural sensitivity, and participant protection. Indeed, we think masking protocols should be applied through culturally aligned decision-making rather than indiscriminately. In our cross-cultural case study comparing Yurakaré sibling interactions with Polish lab sessions, we adopted masking strategies informed by participant consent, cultural and legal advisors, and recording flexibility, from which we learned that "identifiable" or "sensitive" data may across communities and requires nuance. Below is a video that shows the masking procedure we opted for.
 
 
