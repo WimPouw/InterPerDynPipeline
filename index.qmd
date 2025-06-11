@@ -2751,9 +2751,10 @@ python STEP2_featureextraction.py
 
 The development of infant-caregiver interaction was studied using Cross-Recurrence Quantification Analysis (CRQA). CRQA is a nonlinear time series analysis technique that can be used to study synchronization and the strength and direction of coupling dynamics between two systems (Marwan & Kurths, 2002; Shockley et al., 2002). Specifically, we used CRQA to quantify the strength and direction of coupling between infant and caregiver based on changes in their centre of mass during the 7 lab visits. To assess whether the overall strength of coupling changes over time we will use a generalized mixed model with the CRQA measure of coupling strength (determinism) as the dependent variable and age and dyad relation as predictors.
 
+Using CRQA we can quantify the extent to which the dynamics of two different systems are coupled over time. To do so, we evaluate whether two systems occupy the same regions in a shared multidimensional phase space in which each coordinate represents a state, and a trajectory represents the evolution of system states over time. We can reconstruct a phase space trajectory from a single observed time series by creating delayed copies that represent so-called surrogate dimensions. Takens’ theorem [@takens1981a] guarantees the reconstructed trajectory will be topologically equivalent to the original, the important dynamical properties are recovered, not the exact same trajectory. The procedure concerns determining a time lag (embedding delay) to construct the surrogate dimensions (we used the first local minimum of the mutual information function, cf. [@fraserIndependentCoordinatesStrange1986]) and determining how many surrogate dimensions we need (we used False Nearest Neighbor analysis, cf. [@kennelDeterminingEmbeddingDimension1992]). We obtained an estimate for the delay and number of embedding dimensions for each COM time series in the data set and used the maximum delay (828) and maximum embedding dimension (3) for all CRQA analyses.
+For each dyad we now have 2 multivariate time series that can be thought of as trajectories through a reconstructed 3 dimensional phase space (cf. [@hasselmanEarlyWarningSignals2022]). The next step is to create a distance matrix in which each cell represents the Euclidean distance between the coordinates of the two systems (see Figure below). The cells that form the main diagonal represent the distance between the states observed at exactly the same point in time. Moving away from the main diagonal, cells represent a distance to a state that occurred at an earlier or later point in time relative to the time series on the row or in columns. The next step is to choose a threshold value to determine which coordinates should be considered recurring states, yielding a binary matrix called the recurrence matrix, with only 0s and 1s. For each dyad and measurement occasion, a threshold was chosen that yielded a matrix in which a fixed  number of cells contained a 1. These cells represent states that are very similar and occur in both time series also known as the Recurrence Rate, which we set at 5%. Recurring states around the main diagonal, indicate they occurred at approximately the same moment in time, recurrent states below or above the main diagonal occurred earlier (or later) relative to the time series on the X or Y axis.
 
-
-[forthcoming: Minimalist CRQA explanation].
+Many different measures can be calculated from the recurrence matrix, in the present study we focus on determinism (DET) which is the proportion of the number of recurrent points that form a diagonal line on the total number of recurrent points. Diagonal lines indicate a consecutive sequence of states that occurred in one time series is repeated in the other time series in almost exactly the same way, or, both systems followed the same trajectory through state space for a while. Therefore, determinism is generally considered a measure of the strength of the coupling between the two systems.
 
 ![Cross-recurrence plot](./images/CRP_figure.jpeg)
 
@@ -2792,9 +2793,23 @@ For the dyadic distance between center of mass analyses, we fit a simple linear 
 
 ## Step 4.2: Statistical report on non-linear analysis in R
 
-To analyze the development of parent-infant interactions, we fit a logistic (generalized) mixed model using lme4 [@batesFittingLinearMixedEffects2015], predicting the determinism (DET) measure obtained from CRQA for each dyad at each measurement occasion. The age of the infant (in days) was used as the time predictor and was centered on the average age of the sample at the first measurement occasion. The framework of generalized mixed models allows for the estimation of proportion data based on counts, where the denominator may vary from case to case. In the present dataset 6 dyads had 1 time series that was shorter than expected based on the selection criterion of 150 seconds (6 out of 86 dyadic series). Time series length will affect the number of recurrent points that can be detected; therefore, we used the number of recurrent points detected as a weight variable in the model (see supplementary data for details). A linear and quadratic effect of the time variable (age in days) were included in the model, as well as an interaction with a categorical variable indicating parent-infant relation; mother-daughter (N=6), mother-son (N=5), father-daughter (N=1) with the latter as the reference category. The dyad ID was entered as a random effect in the model. The model predictions are displayed in Figure blow. The estimated marginal means at 92.6 days (the average at the first measurement occasion) for the father-daughter dyads (M = .39, 95% CI [.36, .42]) did not differ from the mother-daughter dyads (M = .36, 95% CI [.35, .37]) and mother-son dyads (M = 0.40, 95% CI [.39, .41]), but the mother-daughter and mother-son dyads did differ (OR = 0.86, zratio = -3.96, pTukey = 0.002). All interaction effects of the dyad type with linear and quadratic age effects were significant .
+To analyze the development of parent-infant interactions, we fit a logistic (generalized) mixed model using lme4 [@batesFittingLinearMixedEffects2015], predicting the determinism (DET) measure obtained from CRQA for each dyad at each measurement occasion. The age of the infant (in days) was used as the time predictor and was centered on the average age of the sample at the first measurement occasion. The framework of generalized mixed models allows for the estimation of proportion data based on counts, where the denominator may vary from case to case. In the present dataset 6 dyads had 1 time series that was shorter than expected based on the selection criterion of 150 seconds (6 out of 86 dyadic series). Time series length will affect the number of recurrent points that can be detected; therefore, we used the number of recurrent points detected as a weight variable in the model (see supplementary data for details). A linear and quadratic effect of the time variable (age in days) were included in the model, as well as an interaction with a categorical variable indicating parent-infant relation; mother-daughter (N=6), mother-son (N=5), father-daughter (N=1) with the latter as the reference category. The dyad ID was entered as a random effect in the model. The model predictions are displayed in Figure blow. The estimated marginal means at 92.6 days (the average at the first measurement occasion) for the father-daughter dyads (M = .39, 95% CI [.36, .42]) did not differ from the mother-daughter dyads (M = .36, 95% CI [.35, .37]) and mother-son dyads (M = 0.40, 95% CI [.39, .41]), but the mother-daughter and mother-son dyads did differ (OR = 0.86, zratio = -3.96, pTukey = 0.002). All interaction effects of the dyad type with linear and quadratic age effects were significant (see Table 1 below for the results of this model).
 
-![CRQA results](./images/crqa_determinism_by_dyad.png)
+![CRQA results plot](./images/crqa_determinism_by_dyad.png)
+
+## Table S1
+*Fixed Effects for Generalized Linear Mixed Model Predicting N_dlp/RP_N*
+
+| Predictor | β | SE | z | p |
+|-----------|---|----|----|---|
+| Intercept | -0.485 | 0.031 | -15.59 | < .001 |
+| Gender (Girls) | -0.141 | 0.041 | -3.47 | < .001 |
+| Age (Linear) | 0.403 | 0.003 | 153.65 | < .001 |
+| Age (Quadratic) | -0.568 | 0.003 | -172.69 | < .001 |
+| Gender × Age (Linear) | -0.174 | 0.004 | -42.27 | < .001 |
+| Gender × Age (Quadratic) | 0.346 | 0.005 | 73.28 | < .001 |
+
+*Note.* Model: binomial family with logit link. N = 79 observations, 12 subjects.
 
 ::: {.callout-note .callout-settingup collapse="true"}
 ## Detailed CRQA statistical analysis in R 🚩
@@ -2804,7 +2819,7 @@ To analyze the development of parent-infant interactions, we fit a logistic (gen
 
 
 # Step 5: Masking
-Our masking approach equips researchers with context-sensitive masking decisions, which may have verying levels of reproducibility needed, or varying constraints such as, cultural sensitivity, and participant protection. Indeed, we think masking protocols should be applied through culturally aligned decision-making rather than indiscriminately. In our cross-cultural case study comparing Yurakaré sibling interactions with Polish lab sessions, we adopted masking strategies informed by participant consent, cultural and legal advisors, and recording flexibility, from which we learned that "identifiable" or "sensitive" data may across communities and requires nuance. Below is a video that shows the masking procedure we opted for.
+Our masking approach equips researchers with context-sensitive masking decisions, which may have verying levels of reproducibility needed, or varying constraints such as, cultural sensitivity, and participant protection (see Table S2). Indeed, we think masking protocols should be applied through culturally aligned decision-making rather than indiscriminately. In our cross-cultural case study comparing Yurakaré sibling interactions with Polish lab sessions, we adopted masking strategies informed by participant consent, cultural and legal advisors, and recording flexibility, from which we learned that "identifiable" or "sensitive" data may across communities and requires nuance. Below is a video that shows the masking procedure we opted for.
 
 
 <html>
@@ -2818,7 +2833,7 @@ Our masking approach equips researchers with context-sensitive masking decisions
 
 The table below the three masking strategies that we explored.
 
-*MaskAnyone Strategy Elements (Hiding Approach)*
+*Table S2: MaskAnyone Strategy Elements (Hiding Approach)*
 
 | Strategy | Description | Effectiveness | Illustrative Results |
 |----------|-------------|---------------|---------------------|
