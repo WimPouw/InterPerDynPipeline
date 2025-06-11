@@ -251,13 +251,13 @@ cat("- Subject (Intercept) SD:", round(random_effects$estimate[1], 3), "\n")
 model_glance <- broom.mixed::glance(g1.7a)
 
 # Create summary text based on g1.7a
+cat("_ Model: binomial family with logit link. N = 86 observations, 13 dyads.")
+
 cat("\n\n**Model Summary (g1.7a):**\n\n")
 cat("- **Model type:** Generalized linear mixed model (binomial family with logit link)\n")
 cat("- **AIC:** ", round(model_glance$AIC, 1), "\n")
 cat("- **BIC:** ", round(model_glance$BIC, 1), "\n")
 cat("- **Log-likelihood:** ", round(model_glance$logLik, 1), "\n")
-cat("- **Number of observations:** ", model_glance$nobs, "\n")
-cat("- **Number of groups (subjects):** ", model_glance$ngrps, "\n\n")
 
 cat("**Interpretation:** The model revealed significant effects of dyad type and age on determinism measures. ")
 cat("Both linear and quadratic age effects were significant, with significant interactions between dyad type and age trends. ")
