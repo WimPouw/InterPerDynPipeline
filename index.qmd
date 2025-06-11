@@ -1,6 +1,6 @@
 ---
-title: "An Open-source Standardized Pipeline for Tracing the Behavioral Dynamics in Social Interactions"
-subtitle: "Computationally Reproducible Extended Methods and Results Section"
+title: "An Open-source Standardized Pipeline for Equitable Observations of Interactive Behavioral Dynamics"
+subtitle: "Theory-driven Measurement, Analysis, and Archiving"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 author: 
   - name: "Arkadiusz Białek*"
