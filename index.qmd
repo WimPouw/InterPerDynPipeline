@@ -698,7 +698,7 @@ Below is an animation to exemplify what we are measuring. We are here capturing 
 ::: {.callout-note .callout-installation collapse="true"}
 ## Code for creating animation to exemplify behavior of proximity measure 🏴
 
-```{python,}
+```{python}
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -2814,10 +2814,12 @@ To analyze the development of parent-infant interactions, we fit a logistic (gen
 
 *Note.* Model: binomial family with logit link. N = 79 observations, 12 subjects.
 
+
 ::: {.callout-note .callout-settingup collapse="true"}
 ## Detailed CRQA statistical analysis in R 🚩
 
 {{< include ./code_STEP4_statisticalanalysis/STEP4_statisticalanalysis_CRQA.html >}}
+
 :::
 
 

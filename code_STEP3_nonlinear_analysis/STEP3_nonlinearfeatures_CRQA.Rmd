@@ -53,7 +53,7 @@ Arkadiusz Białek^1^, Wim Pouw^2^, ^3^, Travis J. Wiltshire^2^, James Trujillo^4
 
 # Setup
 
-Load some packages and set some variables... change the `path_repo` to the path where you downloaded the Github Repository (https://github.com/WimPouw/InterPerDynPipeline).
+Load some packages and set some variables. change the `path_repo` to the path where you downloaded the Github Repository (https://github.com/WimPouw/InterPerDynPipeline).
 
 ```{r load}
 # Load packages

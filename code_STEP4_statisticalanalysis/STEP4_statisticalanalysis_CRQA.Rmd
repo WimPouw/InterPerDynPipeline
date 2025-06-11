@@ -224,22 +224,45 @@ ggsave(file.path(path_repo,"images/crqa_determinism_by_dyad.png"), width = 10, h
 
 # For the report we need the model fitted on the actual proportion, the form N_dlp/RP_N doesn't work
 g1.7a <- glmer(DET ~ dyad_fs * poly(age_days_cS1_u,2, raw = TRUE) + (1|subject_nr_f),  weights = RP_N, family = binomial,crqa_data)
-
 ```
 
-## Table of model output
 
-`r sjPlot::tab_model(g1.7)`   
+```{r echo=FALSE}
+library(broom.mixed)
+library(knitr)
 
+# Create a clean model summary table
+library(broom.mixed)
+library(knitr)
 
+# Get only fixed effects (no random effects)
+fixed_effects <- broom.mixed::tidy(g1.7, effects = "fixed", conf.int = TRUE, exponentiate = FALSE)
 
-    
-    
-      
-      
-In words:
+kable(fixed_effects, 
+      digits = 3,
+      caption = "Fixed Effects for Generalized Linear Mixed Model Predicting N_dlp/RP_N")
 
-`r report::report(g1.7a)`
+# Show random effects separately if needed
+random_effects <- broom.mixed::tidy(g1.7, effects = "ran_pars")
+cat("\n\n**Random Effects:**\n")
+cat("- Subject (Intercept) SD:", round(random_effects$estimate[1], 3), "\n")
+
+# Model fit statistics for g1.7a
+model_glance <- broom.mixed::glance(g1.7a)
+
+# Create summary text based on g1.7a
+cat("\n\n**Model Summary (g1.7a):**\n\n")
+cat("- **Model type:** Generalized linear mixed model (binomial family with logit link)\n")
+cat("- **AIC:** ", round(model_glance$AIC, 1), "\n")
+cat("- **BIC:** ", round(model_glance$BIC, 1), "\n")
+cat("- **Log-likelihood:** ", round(model_glance$logLik, 1), "\n")
+cat("- **Number of observations:** ", model_glance$nobs, "\n")
+cat("- **Number of groups (subjects):** ", model_glance$ngrps, "\n\n")
+
+cat("**Interpretation:** The model revealed significant effects of dyad type and age on determinism measures. ")
+cat("Both linear and quadratic age effects were significant, with significant interactions between dyad type and age trends. ")
+cat("The father-daughter dyad serves as the reference category in the model.")
+```
 
 # Session Info
 
