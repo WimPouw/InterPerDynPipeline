@@ -3,9 +3,9 @@ title: "An Open-source Standardized Pipeline for Tracing the Behavioral Dynamics
 subtitle: "Computationally Reproducible Extended Methods and Results Section"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 author: 
-  - name: Arkadiusz Białek
+  - name: "Arkadiusz Białek*"
     affiliation: Jagiellonian University, Poland
-  - name: Wim Pouw
+  - name: "Wim Pouw*"
     affiliation: Tilburg University, Netherlands
   - name: James Trujillo
     affiliation: University of Amsterdam, Netherlands
@@ -36,6 +36,8 @@ format:
     code-tools: true
 engine: knitr
 ---
+
+\* Shared first author.
 ![](images/ts.gif)
 
 # Overview
@@ -2804,5 +2806,46 @@ To analyze the development of parent-infant interactions, we fit a logistic (gen
 # Step 5: Masking
 
 [forthcoming: Masking explanation].
+
+Our masking approach equips researchers with context-sensitive masking decisions, which may have verying levels of reproducibility needed, or varying constraints such as, cultural sensitivity, and participant protection. Indeed, we think masking protocols should be applied through culturally aligned decision-making rather than indiscriminately. In our cross-cultural case study comparing Yurakaré sibling interactions with Polish lab sessions, we adopted masking strategies informed by participant consent, cultural and legal advisors, and recording flexibility, from which we learned that "identifiable" or "sensitive" data may across communities and requires nuance. Below is a video that shows the masking procedure we opted for.
+
+
+<html>
+<video width="600" height="400" controls>
+  <source src="./images/cop_p01_contours.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+</html>
+
+
+
+The table below the three masking strategies that we explored.
+
+*MaskAnyone Strategy Elements (Hiding Approach)*
+
+| Strategy | Description | Effectiveness | Illustrative Results |
+|----------|-------------|---------------|---------------------|
+| **Blur** | Applies Gaussian blurring at a user-controllable blur intensity level. | Moderate, may be limited depending on blur intensity. | Progressively blurred versions maintaining color and general structure ![Blur example](./images/blur_apa.png)  |
+| **Pixellation** | Reduces image resolution by grouping pixels into uniform blocks, creating a mosaic effect | Moderate to high, depending on block size | Blocky, mosaic-like appearance with preserved general shapes  ![Pixel example](./images/pixellation_apa.png) |
+| **Contours** | Uses Canny edge detection to preserve essential contours while eliminating finer details. User-controlled detail. | Moderate, balances privacy with utility. | Black and white line drawings showing only structural boundaries ![Contour example](./images/countours_apa.png) |
+
+*Note.* This table presents the three primary hiding strategies implemented in the MaskAnyone system, detailing their technical approach, privacy effectiveness, and expected visual outcomes.
+
+
+::: {.callout-note .callout-settingup collapse="true"}
+## DIY: Trying masking yourself 🛠️
+In earlier work of the masking project we utilized a light-weight masking approach using Mediapipe [@lugaresiMediaPipeFrameworkBuilding2019] called MaskedPiper [@owoyeleMaskedPiperMaskingPersonal2022]. We have recently provided an updated and enriched python notebook that allows for masking single-person videos in several ways. 
+
+You can find the code on www.envisionbox.org in one of the modules called ["Full-body tracking, +masking/blurring, and movement tracing (Python)"](https://envisionbox.org/embedded_Mediapiping.html).
+
+![MaskedPiper 2.0 example](./images/ted_kid_blurred.gif)
+:::
+
+::: {.callout-note .callout-settingup collapse="true"}
+## DIY: Trying masking yourself (Advanced) 🛠️
+MaskAnyone is the most recent release version of the masking project [@owoyeleMaskAnyoneToolkitOffering2024]. The MaskAnyone code is available on GitHub: [MaskAnyone](https://github.com/MaskAnyone/MaskAnyone) and there is an installation guide available on the GitHub page.
+
+![MaskAnyone 2.0 example](./images/maskanyone.gif)
+:::
 
 # References
