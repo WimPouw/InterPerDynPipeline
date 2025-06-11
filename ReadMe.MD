@@ -3,7 +3,7 @@
 
 ## What This Pipeline Does
 
-This pipeline enables researchers to:
+This [pipeline](https://wimpouw.github.io/InterPerDynPipeline/) enables researchers to:
 - **Track human movement** from top-view video recordings using YOLOv8 pose estimation
 - **Extract behavioral time-varying variables** like approach/avoidance patterns  
 - **Extract features** like smoothness to understand social interactive qualities
@@ -11,11 +11,12 @@ This pipeline enables researchers to:
 - **Ensure privacy** through video masking techniques
 - **Reproduce results** with your own data
 
-## 🚀 Getting Started
+## 🚀🚀🚀 Getting Started (Quarto notebook landing page)
 
 **👉 [Complete Installation & Usage Guide →](https://wimpouw.github.io/InterPerDynPipeline/)**
 
-All installation instructions, dependencies, step-by-step tutorials, and code examples are available in our comprehensive documentation.
+
+All installation instructions, dependencies, step-by-step tutorials, and code examples are available in our documentation quarto notebook: https://wimpouw.github.io/InterPerDynPipeline/.
 
 ### Behavioral Analysis
 - **Smoothness metrics**: Quantify coordination quality using spectral arc length and dimensionless jerk
