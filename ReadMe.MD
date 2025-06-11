@@ -1,5 +1,6 @@
 # An Open-source Standardized Pipeline for Equitable Observations of Interactive Behavioral Dynamics
 ![Motion tracking example](./images/ts.gif)
+
 **Authors:**  
 Arkadiusz Białek¹, Wim Pouw²,³, James Trujillo⁴, Fred Hasselman⁵, Babajide Alamu Owoyele⁶, Natalia Siekiera¹, Joanna Rączaszek-Leonardi⁷ & Travis J. Wiltshire²
 
