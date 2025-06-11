@@ -2829,6 +2829,11 @@ The table below the three masking strategies that we explored.
 *Note.* This table presents the three primary hiding strategies implemented in the MaskAnyone system, detailing their technical approach, privacy effectiveness, and expected visual outcomes.
 
 
+## Ethical Considerations: Need for Integration in Research Ethics Protocols and Informed Consent
+Ethical archiving answers to calls for wasting less resources in research and increasing reusability, reproducibility, as well as the ability for research integrity entities to assess research quality [@resnikShouldResearchersDestroy2024]. Indeed, as in the latter case masking is relevant even when data is not openly shared, but also enabling more data archiving, and archiving while lower the chance of privacy leaks (e.g., when data is breached). 
+
+Effective masking requires ongoing dialogue with research participants and communities. We recommend establishing clear consent protocols that explain to participants the masking options. Institutions also need to regularly review privacy adequacy as technology evolves, also to maintain flexibility to adjust approaches based on participant feedback. The goal is not merely technical anonymization, but culturally respectful privacy protection that enables meaningful research while honoring participant dignity and community values. 
+
 ::: {.callout-note .callout-settingup collapse="true"}
 ## DIY: Trying masking yourself 🛠️
 In earlier work of the masking project we utilized a light-weight masking approach using Mediapipe [@lugaresiMediaPipeFrameworkBuilding2019] called MaskedPiper [@owoyeleMaskedPiperMaskingPersonal2022]. We have recently provided an updated and enriched python notebook that allows for masking single-person videos in several ways. 
