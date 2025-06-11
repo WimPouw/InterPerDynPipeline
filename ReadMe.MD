@@ -1,5 +1,5 @@
 # An Open-source Standardized Pipeline for Equitable Observations of Interactive Behavioral Dynamics
-![Motion tracking example](.images/ts.gif)
+![Motion tracking example](./images/ts.gif)
 
 ## What This Pipeline Does
 
