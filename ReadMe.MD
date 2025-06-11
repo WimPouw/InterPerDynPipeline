@@ -15,20 +15,14 @@ This [pipeline](https://wimpouw.github.io/InterPerDynPipeline/) enables research
 
 **👉 [Complete Installation & Usage Guide →](https://wimpouw.github.io/InterPerDynPipeline/)**
 
-
 All installation instructions, dependencies, step-by-step tutorials, and code examples are available in our documentation quarto notebook: https://wimpouw.github.io/InterPerDynPipeline/.
-
-### Behavioral Analysis
-- **Smoothness metrics**: Quantify coordination quality using spectral arc length and dimensionless jerk
-- **Approach dynamics**: Measure proximity changes and mutual positioning
-- **Cross-recurrence analysis**: Assess coupling strength between interaction partners
 
 ## 📁 Repository Structure
 
 ```
 InterPerDynPipeline/
-├── code_STEP1_posetrackingprocessing/    # Motion tracking scripts
-├── code_STEP2_smoothness_features/       # Feature extraction
+├── code_STEP1_posetrackingprocessing/    # Motion tracking scripts (python)
+├── code_STEP2_smoothness_features/       # Feature extraction (python)
 ├── code_STEP3_nonlinear_analysis/        # CRQA analysis (R)
 ├── code_STEP4_statisticalanalysis/       # Statistical modeling (R)
 ├── dataoutput_STEP*/                     # Output directories
@@ -44,8 +38,8 @@ If you use this pipeline in your research, please cite:
 @article{bialek2024interperdyn,
   title={An Open-source Standardized Pipeline for Equitable Observations of Interactive Behavioral Dynamics},
   author={Białek, Arkadiusz and Pouw, Wim and Trujillo, James and Hasselman, Fred and Owoyele, Babajide Alamu and Siekiera, Natalia and Rączaszek-Leonardi, Joanna and Wiltshire, Travis J.},
-  journal={[Journal Name]},
-  year={2024}
+  journal={[PsyArxiv]},
+  year={2025}
 }
 ```
 ## 🤝 Contributing
