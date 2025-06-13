@@ -2812,7 +2812,7 @@ To analyze the development of parent-infant interactions, we fit a logistic (gen
 | Gender × Age (Linear) | -0.174 | 0.004 | -42.27 | < .001 |
 | Gender × Age (Quadratic) | 0.346 | 0.005 | 73.28 | < .001 |
 
-*Note.* Model: binomial family with logit link. N = 79 observations, 12 subjects.
+*Note.* Model: binomial family with logit link. N = 86 observations, 13 subjects.
 
 
 ::: {.callout-note .callout-settingup collapse="true"}
@@ -2824,6 +2824,9 @@ To analyze the development of parent-infant interactions, we fit a logistic (gen
 
 
 # Step 5: Masking
+
+The open-source MaskAnyone toolbox (see DIY below) facilitates secure and reproducible video data de-identification, crucial for behavioral analysis, by removing personally identifiable information in different degrees while preserving movement dynamics. Built with React, FastAPI [@Ramirez_FastAPI], and Docker, this modular platform offers various configurable deidentification algorithms (blurring, suppression, silhouette rendering) and integrates segmentation models like SAM, YOLOv8, and OpenPose/MediaPipe. Accessible via web and CLI, MaskAnyone supports scalable deidentification and privacy validation for researchers with varying technical expertise.
+
 Our masking approach equips researchers with context-sensitive masking decisions, which may have verying levels of reproducibility needed, or varying constraints such as, cultural sensitivity, and participant protection (see Table S2). Indeed, we think masking protocols should be applied through culturally aligned decision-making rather than indiscriminately. In our cross-cultural case study comparing Yurakaré sibling interactions with Polish lab sessions, we adopted masking strategies informed by participant consent, cultural and legal advisors, and recording flexibility, from which we learned that "identifiable" or "sensitive" data may across communities and requires nuance. Below is a video that shows the masking procedure we opted for.
 
 
