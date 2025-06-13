@@ -2759,7 +2759,7 @@ For each dyad we now have 2 multivariate time series that can be thought of as t
 
 Many different measures can be calculated from the recurrence matrix, in the present study we focus on determinism (DET) which is the proportion of the number of recurrent points that form a diagonal line on the total number of recurrent points. Diagonal lines indicate a consecutive sequence of states that occurred in one time series is repeated in the other time series in almost exactly the same way, or, both systems followed the same trajectory through state space for a while. Therefore, determinism is generally considered a measure of the strength of the coupling between the two systems.
 
-![Figure S8. Cross-recurrence plot](./images/CRP_figure.jpeg)
+![Figure S8. Cross-recurrence plot. The two time series P1 and P2 are delay-embedded using a lag of 838 to create three surrogate dimensions. For each timepoint in P1, a distance is calculated to every other time point in P2 and vice versa. A threshold value is chosen to create a binary cross-recurrence matrix with 5% recurrent points. All measures calculated based on the line structures (done with `R` package `casnet`, [@hasselmanCasnetToolboxStudying2025])](./images/CRP_figure.jpeg)
 
 ::: {.callout-note .callout-settingup collapse="true"}
 ## CRQA analysis in R 🚩
