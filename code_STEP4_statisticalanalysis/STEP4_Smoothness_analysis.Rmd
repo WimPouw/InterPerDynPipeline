@@ -13,7 +13,7 @@ output:
 editor_options: 
   chunk_output_type: console
 ---
----
+
 # Cross-Cultural Data Analysis
 
 ## Analysis of the Jerkiness of Proximity/Approach/Avoidance Meaures
