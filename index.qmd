@@ -691,13 +691,59 @@ print(df.head())
 :::
 
 ## Step 1.2: Raw pose data post-processing for timeseries matrices (Python)
-The raw pose data with frame, person, keypoint, and x,y  position data that we end up with is not yet in a format that is easy to work with for our purposes. Additionally, sometimes we dont have a person or two persons detected in the frame. We want to transform these raw pose data to timeseries matrix format, whereby we have time in seconds as one column and different time-varying variables in the other columns. Furthermore, we smooth and interpolate the data if necessary. The below python code executes this second step whereby we store the position data per person, and furthe derive interpersonal distances measures, and kinematic metrics (e.g. speed) and tracking quality indicators (e.g. tracking status that says something about where it concerns interpolated data).
+The raw pose data with frame, person, keypoint, and x,y  position data that we end up with is not yet in a format that is easy to work with for our purposes. Additionally, sometimes we dont have a person (or multiple persons) detected in the frame. We want to transform these raw pose data to timeseries matrix format, whereby we have time in seconds as one column and different time-varying variables in the other columns. Furthermore, we smooth and interpolate the data if necessary. The below python code executes this second step whereby we store the position data per person, and furthe derive interpersonal distances measures, and kinematic metrics (e.g. speed) and tracking quality indicators (e.g. tracking status that says something about where it concerns interpolated data).
 
 Next to determining time in seconds from the frame rate of the videos, the script starts with assigning left and right person IDs based on the horizontal position in the frame (with left being ID 1 and right being ID 2). It then processes the time data to calculate statistics for tracked people using upper body keypoints (as the lower body keypoints are unreliable from top-view and may be ignored). Specifically, we reduce the dimensionality of all upper body keypoints by determined relative positions and their distances: We calculate a bounding box (determined by the outer edges of the keypoints) and determine the center in x and y coordinates (`centroid_x`, `centroid_y`) and their P1-P2 distance of those centroids (`distance`), and the center of mass (`com_x`, `com_y`) for each person and the distnace (`distance_com`). Further we determine the midpoint of the shoulders as another relevant position (`shoulder_midpoint_x`, `shoulder_midpoint_y`) and compute its distance (`distance_shoulder_midpoint`). Additionally, information about body parts such as arm motions by taking the wrist positions (`wrist_left_x`, `wrist_left_y`, `wrist_right_x`, `wrist_right_y`), and further deriving total motion per second, called speed (based on a euclidean sum of the changes of position along x and y). 
 
-The Savitzky-Golay filter is applied for smoothing jittering position data (using a window size of 11 frames, polynomial order of 3). The script handles missing data through two complementary techniques: linear interpolation for brief gaps in tracking (up to 5 frames) and we take the last known location for longer gaps (up to 20 frames). The script also calculates the speed of the center of mass and wrist positions, and here we also smooth the values using the Savitzky-Golay filter to reduce noise that is amplified during differientation (see @winterBiomechanicsMotorControl2009).
+Before calculating our primary measure of interest, which will be the object of our statistical analyses. We need to process the data in two important ways. 
+First, we check for any remaining **missing values** after processing and confirm time continuity to detect any frame drops or temporal misalignments. The script handles missing data through two complementary techniques: linear interpolation for brief gaps in tracking (up to 5 frames) and we take the last known location for longer gaps (up to 20 frames).
 
-The more sophisticated measure that we have created is the proximity calculation measure (see function `calculate_approach()` in the step2 script). This function establishes initial reference position for both participants and then projects their subsequent movements onto the connecting line between them. This allows for quantifying approach and retreat behaviors for each person seperately (which a distance measure does not allow for) while allowing for relative angle changes between them - positive values indicate movement toward the other person (relative from start), while negative values indicate withdrawal (relative from start).
+Second, we need to **smooth the data**. Motion tracking, even when quite accurate, is prone to small fluctuations in position from frame to frame even when the tracked object/person is not moving. In the case of pose tracking of top-down camera angles there is quite some noise related fluctuations in the keypoint estimates. When we calculate something like interpersonal proximity, these fluctuations will cause fluctuations in proximity. Noise especially amplifies to subsequent measures, such as speed, acceleration, and jerk. In the provided pipeline, we use a Savitsky-Golay filter (implemented by `SciPy`[@2020SciPy-NMeth]). The filter slides along the time-series, smoothing the data within a particular window-length by fitting a polynomial of a pre-determined order to the datapoints. In our case, we set a time window of 11 datapoints, and a third degree polynomial. The plot below shows the effect of smoothing the speed data in this way. The script also calculates the speed of the center of mass and wrist positions, and here we also smooth the values using the Savitzky-Golay filter to reduce noise that is amplified during differientation (see @winterBiomechanicsMotorControl2009).
+
+We recommend users to check the effect of smoothing on their own data, and adjust the window length and polynomial order to see whether the movement granularity that one is interested in is adequately represented in the time series (the animation code that we provided will help with checking whether one is smoothing too little or too much). 
+
+::: {.callout-note .callout-installation collapse="true"}
+## Example code for checking behavior of smoothing of time series to reduce noise-related jitter 🏴
+
+```{python,eval=TRUE, code_folding="hide"}
+import pandas as pd
+import numpy as np
+import glob as glob
+import os
+import scipy.signal
+import matplotlib.pyplot as plt
+
+def normalize_array(arr):
+    """Normalize an array to the range [0, 1]"""
+    return (arr - np.min(arr)) / (np.max(arr) - np.min(arr))
+
+folderstep12output = "./dataoutput_STEP1_2_timeseries/"
+# Load the CSV file
+csv_file = glob.glob(os.path.join(folderstep12output + "*.csv"))[0]
+df = pd.read_csv(csv_file)
+
+# 
+raw_speed = df['wrist_left_p1_speed'].values
+speed = scipy.signal.savgol_filter(raw_speed, window_length=11, polyorder=3)
+extra_speed = scipy.signal.savgol_filter(raw_speed, window_length=21, polyorder=3)
+
+plt.plot(normalize_array(raw_speed[0:150]))
+plt.plot(normalize_array(speed[0:150]))
+plt.plot(normalize_array(extra_speed[0:150]))
+plt.title("Effect of smoothing on speed data using Savitsky-Golay filter")
+plt.xlabel("Frames")
+plt.legend(labels=["raw speed","smoothed speed (window 11)", "extra smoothed speed (window 21)"])
+#plt.show()
+# save the plot
+plt.savefig("images/smoothing_speed_effect.png")
+plt.close()
+```
+:::
+
+![Figure S4. Effect of smoothing on speed data using Savitsky-Golay filter](./images/smoothing_speed_effect.png)
+
+
+The more sophisticated measure that we have created, which is the object of our later analyses, is the proximity calculation measure (see function `calculate_approach()` in the step2 script). This function establishes initial reference position for both participants and then projects their subsequent movements onto the connecting line between them. This allows for quantifying approach and retreat behaviors for each person seperately (which a distance measure does not allow for) while allowing for relative angle changes between them - positive values indicate movement toward the other person (relative from start), while negative values indicate withdrawal (relative from start).
 
 Below is an animation to exemplify what we are measuring. We are here capturing only movements that are changing the distance between them. When someone moves in a circle around the other person we want to make sure we do not register that as approach or retreat (which we would do if we just capture horizontal position for example). However we also want capture each person their own approach/avoidance value (which would not be possible when using a simple distance measure). By always measuring the signed length of the projected line from the initial position (based on the current connected line), the method tracks cumulative approach/avoidance for each person over time. 
 
@@ -1054,9 +1100,7 @@ except Exception as e:
 
 :::
 
-![Figure S4. Proximity Calculation Visualization](./images/proximity_visualization/proximity_calculation.gif)
-
-We further check for any remaining missing values after processing and confirms time continuity to detect any frame drops or temporal misalignments. 
+![Figure S5. Proximity Calculation Visualization](./images/proximity_visualization/proximity_calculation.gif)
 
 The output of this script is a timeseries matrix for each video, which contains the time in seconds and the calculated variables. The timeseries matrices are saved in the `./dataoutput_STEP1_2_timeseries/` folder. The code below is the script `STEP2_process_timeseries.py` that you can run to process the raw pose data.
 
@@ -1481,56 +1525,11 @@ df = pd.read_csv(csv_file)
 # Display the first few rows of the DataFrame
 print(df.head())
 ```
-
 :::
-
-An additional methodological note, is the need for smoothing the data. Motion tracking, even when quite accurate, is prone to small fluctuations in position from frame to frame even when the tracked object/person is not moving. In the case of pose tracking of top-down camera angles there is quite some noise related fluctuations in the keypoint estimates. When we calculate something like interpersonal proximity, these fluctuations will cause fluctuations in proximity. Noise especially amplifies to subsequent measures, such as speed, acceleration, and jerk. In the provided pipeline, we use a Savitsky-Golay filter (implemented by `SciPy`[@2020SciPy-NMeth]). The filter slides along the time-series, smoothing the data within a particular window-length by fitting a polynomial of a pre-determined order to the datapoints. In our case, we set a time window of 11 datapoints, and a third degree polynomial. The plot below shows the effect of smoothing the speed data in this way. 
-
-We recommend users to check the effect of smoothing on their own data, and adjust the window length and polynomial order to see whether the movement granularity that one is interested in is adequately represented in the time series (the animation code that we provided will help with checking whether one is smoothing too little or too much). 
-
-::: {.callout-note .callout-installation collapse="true"}
-## Example code for checking behavior of smoothing of time series to reduce noise-related jitter 🏴
-
-```{python,eval=TRUE, code_folding="hide"}
-import pandas as pd
-import numpy as np
-import glob as glob
-import os
-import scipy.signal
-import matplotlib.pyplot as plt
-
-def normalize_array(arr):
-    """Normalize an array to the range [0, 1]"""
-    return (arr - np.min(arr)) / (np.max(arr) - np.min(arr))
-
-folderstep12output = "./dataoutput_STEP1_2_timeseries/"
-# Load the CSV file
-csv_file = glob.glob(os.path.join(folderstep12output + "*.csv"))[0]
-df = pd.read_csv(csv_file)
-
-# 
-raw_speed = df['wrist_left_p1_speed'].values
-speed = scipy.signal.savgol_filter(raw_speed, window_length=11, polyorder=3)
-extra_speed = scipy.signal.savgol_filter(raw_speed, window_length=21, polyorder=3)
-
-plt.plot(normalize_array(raw_speed[0:150]))
-plt.plot(normalize_array(speed[0:150]))
-plt.plot(normalize_array(extra_speed[0:150]))
-plt.title("Effect of smoothing on speed data using Savitsky-Golay filter")
-plt.xlabel("Frames")
-plt.legend(labels=["raw speed","smoothed speed (window 11)", "extra smoothed speed (window 21)"])
-#plt.show()
-# save the plot
-plt.savefig("images/smoothing_speed_effect.png")
-plt.close()
-```
-:::
-
-![Figure S5. Effect of smoothing on speed data using Savitsky-Golay filter](./images/smoothing_speed_effect.png)
 
 ## Step 1.3: Animation with original videodata
 
-We advise users to double check the quality of the tracking data and the derived variables, as well as to get a better intuitive and qualitative understanding of their quantitative methods. We have argued elsewhere that especially when working with derived measurements of high-dimensional data that researchers can train to become better in their intuitive grasp for their measurements by relating it real-time with the raw video data [@miaoDIMSDashboardExploring2025]. In this way become better in our understanding what the measure is and is not responding to; which we mention in the introduction means becoming observant rather than a disinterested observer [@hackingRepresentingInterveningIntroductory1983]. The animation below is generated using the code `STEP3_animation.py` which couples video with quantiative data, allowing for qualitatively checking the timeseries real time against what is happening in the video. The user can select variables need to be plotted in the video plus time series animation. The code below provides the animation. Please check the DIY section for how to set up the motion tracking and run the code.
+We advise users to double check the quality of the tracking data and the derived variables, both to verify quality as well as to get a better intuitive and qualitative understanding of their quantitative methods. We have argued elsewhere that especially when working with derived measurements of high-dimensional data that researchers can train to become better in their intuitive grasp for their measurements by relating it real-time with the raw video data [@miaoDIMSDashboardExploring2025]. In this way we become better in our understanding of what the measure is and is not responding to; which, as we mention in the introduction to the companion paper, means becoming observant rather than a disinterested observer [@hackingRepresentingInterveningIntroductory1983]. The animation below is generated using the code `STEP3_animation.py` which couples video with quantiative data, allowing for qualitatively checking the timeseries real time against what is happening in the video. The user can select variables need to be plotted in the video plus time series animation. The code below provides the animation. Please check the DIY section for how to set up the motion tracking and run the code.
 
 ::: {.callout-note .callout-installation collapse="true"}
 ## Code chunk: Animation code for coupling video with quantitative data 🚩 
@@ -1903,9 +1902,9 @@ print("\nAll videos processed!")
 ![Figure S6. Animation of motion tracking data coupled with video](./images/com_distance_example.gif)
 
 # Step 2: Summary feature extraction: Smoothness and other features
-We have motivated in the main paper accompanying this notebook that smoothness can be a useful feature to understand the quality of interactions. And our pipeline focuses on the extraction of this specific feature, while we also show how easy it is to generate other features from the time series data that are processed after step 1.
+We have motivated in the main paper accompanying this notebook that smoothness can be a useful feature to understand the quality of interactions. Our pipeline focuses on the extraction of this specific feature, while we also show how easy it is to generate other features from the time series data that are processed after step 1.
 
-We take two approaches to quantify smoothness of the movement data. The first approach is based on the spectral arc length metric, which has been shown to be a stable measure of smoothness for prolonged (quasi-cyclical) time series data [@balasubramanianAnalysisMovementSmoothness2015]. The approach is based on analyzing the frequency spectrum, specifically the changes in energy over the different frequencies, for the lower frequencies (< 10Hz; but this can be set by the user). Specifally it calculates the spectral arc length (distance of two points along a curve) from Fourier magnitude spectrum of the speed data (or in our case changes in the distance or proximity positions). This code is directly copied from the [original repository](https://github.com/siva82kb/smoothness) by the lead developer of the metric, Sivak Balasubramanian. We refer to the [@balasubramanianAnalysisMovementSmoothness2015] for further details and validation of this novel measure of smoothness. As can be seen, the higher values of the spectral arc length indicate smoother movements, while lower values indicate more jerky movements.
+We take **two approaches** to quantify smoothness of the movement data. The first approach is based on the spectral arc length metric, which has been shown to be a stable measure of smoothness for prolonged (quasi-cyclical) time series data [@balasubramanianAnalysisMovementSmoothness2015]. The approach is based on analyzing the frequency spectrum, specifically the changes in energy over the different frequencies, for the lower frequencies (< 10Hz; but this can be set by the user). Specifally it calculates the spectral arc length (distance of two points along a curve) from Fourier magnitude spectrum of the speed data (or in our case changes in the distance or proximity positions). This code is directly copied from the [original repository](https://github.com/siva82kb/smoothness) by the lead developer of the metric, Sivak Balasubramanian. We refer to the [@balasubramanianAnalysisMovementSmoothness2015] for further details and validation of this novel measure of smoothness. As can be seen, the higher values of the spectral arc length indicate smoother movements, while lower values indicate more jerky movements.
 
 ::: {.callout-note .callout-installation collapse="true"}
 ## Pipeline code step 2, function for calculating spectral arc length 🚩 
@@ -2802,7 +2801,7 @@ For the dyadic distance between center of mass analyses, we fit a simple linear 
 
 ## Step 4.2: Statistical report on non-linear analysis in R
 
-To analyze the development of parent-infant interactions, we fit a logistic (generalized) mixed model using lme4 [@batesFittingLinearMixedEffects2015], predicting the determinism (DET) measure obtained from CRQA for each dyad at each measurement occasion. The age of the infant (in days) was used as the time predictor and was centered on the average age of the sample at the first measurement occasion. The framework of generalized mixed models allows for the estimation of proportion data based on counts, where the denominator may vary from case to case. In the present dataset 6 dyads had 1 time series that was shorter than expected based on the selection criterion of 150 seconds (6 out of 86 dyadic series). Time series length will affect the number of recurrent points that can be detected; therefore, we used the number of recurrent points detected as a weight variable in the model (see supplementary data for details). A linear and quadratic effect of the time variable (age in days) were included in the model, as well as an interaction with a categorical variable indicating parent-infant relation; mother-daughter (N=6), mother-son (N=5), father-daughter (N=1) with the latter as the reference category. The dyad ID was entered as a random effect in the model. The model predictions are displayed in Figure blow. The estimated marginal means at 92.6 days (the average at the first measurement occasion) for the father-daughter dyads (M = .39, 95% CI [.36, .42]) did not differ from the mother-daughter dyads (M = .36, 95% CI [.35, .37]) and mother-son dyads (M = 0.40, 95% CI [.39, .41]), but the mother-daughter and mother-son dyads did differ (OR = 0.86, zratio = -3.96, pTukey = 0.002). All interaction effects of the dyad type with linear and quadratic age effects were significant (see Table 1 below for the results of this model).
+To analyze the development of parent-infant interactions, we fit a logistic (generalized) mixed model using lme4 [@batesFittingLinearMixedEffects2015], predicting the determinism (DET) measure obtained from CRQA for each dyad at each measurement occasion. The age of the infant (in days) was used as the time predictor and was centered on the average age of the sample at the first measurement occasion. The framework of generalized mixed models allows for the estimation of proportion data based on counts, where the denominator may vary from case to case. In the present dataset 6 dyads had 1 time series that was shorter than expected based on the selection criterion of 150 seconds (6 out of 86 dyadic series). Time series length will affect the number of recurrent points that can be detected; therefore, we used the number of recurrent points detected as a weight variable in the model (see supplementary data for details). A linear and quadratic effect of the time variable (age in days) were included in the model, as well as an interaction with a categorical variable indicating parent-infant relation; mother-daughter (N=6), mother-son (N=5), father-daughter (N=1) with the latter as the reference category. The dyad ID was entered as a random effect in the model. The model predictions are displayed in Figure blow. The estimated marginal means at 92.6 days (the average at the first measurement occasion) for the father-daughter dyads (M = .39, 95% CI [.36, .42]) did not differ from the mother-daughter dyads (M = .36, 95% CI [.35, .37]) or from the mother-son dyads (M = 0.40, 95% CI [.39, .41]), but the mother-daughter and mother-son dyads did differ from one another (OR = 0.86, zratio = -3.96, pTukey = 0.002). All interaction effects of the dyad type with linear and quadratic age effects were significant (see Table 1 below for the results of this model).
 
 ![Figure S10. CRQA results plot](./images/crqa_determinism_by_dyad.png)
 
@@ -2833,7 +2832,7 @@ To analyze the development of parent-infant interactions, we fit a logistic (gen
 
 The open-source MaskAnyone toolbox (see DIY below) facilitates secure and reproducible video data de-identification, crucial for behavioral analysis, by removing personally identifiable information in different degrees while preserving movement dynamics. Built with React, FastAPI [@Ramirez_FastAPI], and Docker, this modular platform offers various configurable deidentification algorithms (blurring, suppression, silhouette rendering) and integrates segmentation models like SAM, YOLOv8, and OpenPose/MediaPipe. Accessible via web and CLI, MaskAnyone supports scalable deidentification and privacy validation for researchers with varying technical expertise.
 
-Our masking approach equips researchers with context-sensitive masking decisions, which may have verying levels of reproducibility needed, or varying constraints such as, cultural sensitivity, and participant protection (see Table S2). Indeed, we think masking protocols should be applied through culturally aligned decision-making rather than indiscriminately. In our cross-cultural case study comparing Yurakaré sibling interactions with Polish lab sessions, we adopted masking strategies informed by participant consent, cultural and legal advisors, and recording flexibility, from which we learned that "identifiable" or "sensitive" data may across communities and requires nuance. Below is a video that shows the masking procedure we opted for.
+Our masking approach equips researchers with context-sensitive masking decisions, which may have verying levels of reproducibility needed, or varying constraints such as cultural sensitivity and participant protection (see Table S2). Indeed, we think masking protocols should be applied through culturally aligned decision-making rather than indiscriminately. In our cross-cultural case study comparing Yurakaré sibling interactions with Polish lab sessions, we adopted masking strategies informed by participant consent, cultural and legal advisors, and recording flexibility, from which we learned that the notions of data being "identifiable" or "sensitive" may differ across communities and requires nuance. Below is a video that shows the masking procedure we opted for.
 
 
 <html>
