@@ -524,11 +524,11 @@ def tensor_to_matrix(results_tensor):
 def check_for_duplication(results):
     # this threshold determines how close two skeletons must be in order to be
     # considered the same person. Arbitrarily chosen for now.
-    close_threshold =150
+    close_threshold =150 # note that the value is in pixels
     # missing data tolerance
-    miss_tolerance = 0.95 # this means we can miss up to 75% of the keypoints
+    miss_tolerance = 0.95 # this means we can miss up to 95% of the keypoints
     drop_indices = []
-    if len(results[0].keypoints.xy) > 1:
+    if len(results[0].keypoints.xy) > 1: # only proceed if a skeleton is detected
         conf_scores = []
         # get detection confidence for each skeleton
         for person in tensor_to_matrix(results[0].keypoints.conf):
@@ -552,9 +552,10 @@ def check_for_duplication(results):
                 
         # additional checks:
         for person in range(len(results[0].keypoints.xy)):
-           keypoints_missed =  np.isnan(tensor_to_matrix(results[0].keypoints.xy[person])).sum()/2
-           perc_missed = keypoints_missed/len(tensor_to_matrix(results[0].keypoints.xy[person]))
+           keypoints_missed =  np.isnan(tensor_to_matrix(results[0].keypoints.xy[person])).sum()/2 
+           perc_missed = keypoints_missed/len(tensor_to_matrix(results[0].keypoints.xy[person])) # calculate percentage of missing keypoints
            
+           # compare % of missing keypoints against the threshold that we set earlier
            if perc_missed > miss_tolerance:
                drop_indices.append(person)
         
@@ -722,9 +723,11 @@ folderstep12output = "./dataoutput_STEP1_2_timeseries/"
 csv_file = glob.glob(os.path.join(folderstep12output + "*.csv"))[0]
 df = pd.read_csv(csv_file)
 
-# 
+# get raw speed values
 raw_speed = df['wrist_left_p1_speed'].values
+# smooth the speed timeseries
 speed = scipy.signal.savgol_filter(raw_speed, window_length=11, polyorder=3)
+# comparison smoothing
 extra_speed = scipy.signal.savgol_filter(raw_speed, window_length=21, polyorder=3)
 
 plt.plot(normalize_array(raw_speed[0:150]))
@@ -2011,6 +2014,7 @@ import numpy as np
 from scipy.signal import savgol_filter
 from scipy import integrate
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 def dimensionless_squared_jerk_from_position(ts, time):
     """
