@@ -4,6 +4,7 @@
 *point_7_5_plakaty_krzeselko_kam_5.avi
 *point_7_5_plakaty_krzeselko_kam_5_bitrate_920.avi
 /.quarto/
+*.rar
 
 # Point files (point_X_Y_kam_5_chair) - ignore all except CSV
 **/point_*_*_kam_5_chair*

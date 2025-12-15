@@ -59,12 +59,12 @@ The Quarto notebook is structured to have the following components, next to trad
 **What the Quarto notebook is not intended to do:** This notebook is not itself the pipeline (i.e., a collection of code that runs the complete pipeline). It is rather a linear step-by-step manual and explainer of how to understand and implement the pipeline steps. For actually applying this code, the user can further dig into the **DIY** blocks. 
 
 ### What skills do I need?
-In principle if you know how to run a python or R script you should be able to reproduce the pipeline on your own data. However, being able to run something should rather be the start of learning about the things that are covered in this pipeline. To fully understand the pipeline some programming skills in python and R are helpful, especially if you want to adjust things flexibly to your own data. Then some basic understanding of common time series operations, like differentiation, and smoothing, and general kinematic variables is valuable background (e.g., check the first few chapters of @winterBiomechanicsMotorControl2009; or even just start with Kahnacadamy [kinematics unit](https://www.khanacademy.org/science/ap-college-physics-1/xf557a762645cccc5:kinematics)). Solid mathematical background is not required, but some basic understanding of linear algebra and calculus is further helpful. For non-linear analysis some understanding of the underpinnings of dynamical systems is helpful (which may require some basic understanding of systems of differential equations to fully appreciate the significance of).
+In principle if you know how to run a python or R script you should be able to reproduce the pipeline on your own data. However, being able to run something should rather be the start of learning about the things that are covered in this pipeline. To fully understand the pipeline some programming skills in python and R are helpful, especially if you want to adjust things flexibly to your own data. Then some basic understanding of common time series operations, like differentiation, and smoothing, and general kinematic variables is valuable background (e.g., check the first few chapters of @winterBiomechanicsMotorControl2009; or even just start with Kahn Acadamy [kinematics unit](https://www.khanacademy.org/science/ap-college-physics-1/xf557a762645cccc5:kinematics)). Solid mathematical background is not required, but some basic understanding of linear algebra and calculus is further helpful. For non-linear analysis some understanding of the underpinnings of dynamical systems is helpful (which may require some basic understanding of systems of differential equations to fully appreciate the significance of).
 
 #### Notes on tested system specifications
 Our pipeline has been tested on what amounts to modern (at 2025) PC gaming desktops with GPU support. However, in principle all code can be run without a GPU, but will take considerably more time for pose tracking at step 1 (by an estimated factor of 5 to 10 times). Step 1 to 4 was performed on a PC equipped with a 12th Gen Intel(R) Core(TM) i9-12900KF, NVIDIA GeForce RTX 4090 GPU, and 64 GB RAM running Windows 10 Home. Masking at step 5 was performed on a Dell XPS 17 9710 system equipped with an Intel Core i9-11980HK processor, NVIDIA GeForce RTX 3060 Laptop GPU, and 64 GB RAM running Windows 11 Home (Build 26100).
 
-# Dataset
+# Datasets for our cases
 Below is a description of the two datasets that were used as test cases for the pipeline. The datasets are available in masked form to reduce identifiability of the individuals in the dataset. Following the download guide for further information on how to access the datasets.
 
 ::: {.callout-note .callout-download collapse="true"}
@@ -77,7 +77,122 @@ Please note that the masked data is not the input of the pipeline. YOLO tracking
 !["Figure S1. Overview demographics Sibling dataset"](./images/masked_example.jpeg){fig-align="center" width=600}
 :::
 
-### Dataset Caregiver-Infant
+### Case 1: Dataset siblings
+Ten sibling pairs (total = 20 pairs) were observed from Polish urban culture and Yurakaré indigenous culture each. Observations were made during a semi-structured play situation: in the natural environment of the Yurakaré community and laboratory conditions in Poland. Siblings were asked to build a tower together using 54 wooden blocks while sitting facing each other. Each pair had 4 minutes to complete the task. This setup allowed for a systematic comparison of coordinated and mutually adjusted movements in siblings, using our pipeline to examine the smoothness of interaction while "doing things together" in these two cultural groups.
+
+::: {.callout-note .callout-download collapse="true"}
+## Plotting code for the Siblings dataset 🏴
+```{python, eval=FALSE, code_folding="hide"}
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+
+# Load the data
+df = pd.read_csv('./meta/project_siblings_metadata_ages_gender.csv')
+
+# Data preprocessing
+df['AgeDifference'] = abs(df['P1agemonths'] - df['P2agemonths'])
+df['AverageAge'] = (df['P1agemonths'] + df['P2agemonths']) / 2
+df['GenderCombo'] = df['GenderP1'] + '-' + df['GenderP2']
+
+# Create a 2x2 subplot layout
+fig, axs = plt.subplots(2, 2, figsize=(10, 8), gridspec_kw={'width_ratios': [1.5, 1], 'height_ratios': [1.5, 1]})
+fig.suptitle('Sibling Dataset Overview', fontsize=16, fontfamily='serif')
+
+# Define colors for gender combinations
+colors = {
+    'M-M': '#4472C4',   # Blue
+    'M-F': '#7030A0',   # Purple
+    'F-M': '#548235',   # Green
+    'F-F': '#C55A11'    # Rust/Orange
+}
+
+# 1. Scatter plot - P1 age vs P2 age
+for gender_combo, group in df.groupby('GenderCombo'):
+    axs[0, 0].scatter(
+        group['P1agemonths'],
+        group['P2agemonths'],
+        color=colors.get(gender_combo, 'gray'),
+        alpha=0.7,
+        label=gender_combo,
+        s=50
+    )
+
+# Add reference line
+min_age = min(df['P1agemonths'].min(), df['P2agemonths'].min())
+max_age = max(df['P1agemonths'].max(), df['P2agemonths'].max())
+axs[0, 0].plot([min_age, max_age], [min_age, max_age], 'k--', alpha=0.3)
+axs[0, 0].set_xlabel('P1 Age (months)', fontfamily='serif')
+axs[0, 0].set_ylabel('P2 Age (months)', fontfamily='serif')
+axs[0, 0].set_title('Participant Ages (P1 vs P2)', fontfamily='serif')
+axs[0, 0].grid(True, alpha=0.3)
+axs[0, 0].legend()
+
+# 2. Bar chart - Age differences
+bar_positions = np.arange(len(df))
+bar_width = 0.8
+axs[0, 1].bar(
+    bar_positions,
+    df['AgeDifference'],
+    width=bar_width,
+    color=[colors.get(combo, 'gray') for combo in df['GenderCombo']]
+)
+axs[0, 1].set_xticks(bar_positions)
+axs[0, 1].set_xticklabels(df['Code'], rotation=90)
+axs[0, 1].set_xlabel('Sibling Pair', fontfamily='serif')
+axs[0, 1].set_ylabel('Age Difference (months', fontfamily='serif')
+axs[0, 1].set_title('Age Differences by Sibling Pair', fontfamily='serif')
+axs[0, 1].grid(True, alpha=0.3, axis='y')
+
+# 3. Pie chart - Gender distribution
+gender_counts = df['GenderCombo'].value_counts()
+axs[1, 0].pie(
+    gender_counts,
+    labels=gender_counts.index,
+    autopct='%1.1f%%',
+    colors=[colors.get(combo, 'gray') for combo in gender_counts.index],
+    wedgeprops={'edgecolor': 'w', 'linewidth': 1}
+)
+axs[1, 0].set_title('Gender Distribution', fontfamily='serif')
+
+# 4. Summary table
+summary_data = [
+    ["Total Sibling Pairs", f"{len(df)}"],
+    ["Average P1 Age", f"{df['P1agemonths'].mean()} months"],
+    ["Average P2 Age", f"{df['P2agemonths'].mean()} months"],
+    ["Average Age Difference", f"{df['AgeDifference'].mean()/30:.1f} months"],
+    ["Number of Males", f"{(df['GenderP1'] == 'M').sum() + (df['GenderP2'] == 'M').sum()}"],
+    ["Number of Females", f"{(df['GenderP1'] == 'F').sum() + (df['GenderP2'] == 'F').sum()}"]
+]
+
+# Turn off axis for table
+axs[1, 1].axis('off')
+table = axs[1, 1].table(
+    cellText=[row for row in summary_data],
+    colLabels=["Measure", "Value"],
+    loc='center',
+    cellLoc='left'
+)
+table.auto_set_font_size(False)
+table.set_fontsize(10)
+table.scale(1, 1.5)
+axs[1, 1].set_title('Dataset Summary', fontfamily='serif')
+
+plt.tight_layout()
+plt.subplots_adjust(top=0.9)
+
+# Save the figure to a file
+output_path = "images/sibling_analysis.png"
+os.makedirs(os.path.dirname(output_path), exist_ok=True)
+plt.savefig(output_path, dpi=300, bbox_inches='tight')
+plt.close()
+```
+:::
+
+![](images/sibling_analysis.png){fig-align="center" width=600}
+
+### Case 2: Dataset mother-infant
 Thirteen infant-caregiver pairs visited the child laboratory monthly for a total of seven visits. The infants' ages at the first visit ranged from 7 to 9 months. Parents were instructed to "play as usual," with a set of different toys to encourage spontaneous interactions. Each visit lasted approximately 30 minutes and was divided into four stages. For our analyses, we focus on recordings from the stage where the infant was seated in a feeding chair, facing the caregiver sitting directly across. This controlled setup minimizes movement around the room, facilitating video motion tracking analysis. Additionally, our analyses are restricted to top-view recordings, ensuring that both the caregiver and the infant are captured within a single frame.
 
 ::: {.callout-note .callout-download collapse="true"}
@@ -270,122 +385,7 @@ plt.close(fig) # Explicitly close the figure object
 
 Note that in our github repository we use short sample data from this dataset from an caregiver-infant pair whom we are allowed to share the video data for the current purposes.
 
-### Dataset Siblings
-Ten sibling pairs (total = 20 pairs) were observed from Polish urban culture and Yurakaré indigenous culture each. Observations were made during a semi-structured play situation: in the natural environment of the Yurakaré community and laboratory conditions in Poland. Siblings were asked to build a tower together using 54 wooden blocks while sitting facing each other. Each pair had 4 minutes to complete the task. This setup allowed for a systematic comparison of coordinated and mutually adjusted movements in siblings, using our pipeline to examine the smoothness of interaction while "doing things together" in these two cultural groups.
 
-::: {.callout-note .callout-download collapse="true"}
-## Plotting code for the Siblings dataset 🏴
-```{python, eval=FALSE, code_folding="hide"}
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
-import os
-
-# Load the data
-df = pd.read_csv('./meta/project_siblings_metadata_ages_gender.csv')
-
-# Data preprocessing
-df['AgeDifference'] = abs(df['P1agedays'] - df['P2agedays'])
-df['AverageAge'] = (df['P1agedays'] + df['P2agedays']) / 2
-df['GenderCombo'] = df['GenderP1'] + '-' + df['GenderP2']
-
-# Create a 2x2 subplot layout
-fig, axs = plt.subplots(2, 2, figsize=(10, 8), gridspec_kw={'width_ratios': [1.5, 1], 'height_ratios': [1.5, 1]})
-fig.suptitle('Sibling Dataset Overview', fontsize=16, fontfamily='serif')
-
-# Define colors for gender combinations
-colors = {
-    'M-M': '#4472C4',   # Blue
-    'M-F': '#7030A0',   # Purple
-    'F-M': '#548235',   # Green
-    'F-F': '#C55A11'    # Rust/Orange
-}
-
-# 1. Scatter plot - P1 age vs P2 age
-for gender_combo, group in df.groupby('GenderCombo'):
-    axs[0, 0].scatter(
-        group['P1agedays'],
-        group['P2agedays'],
-        color=colors.get(gender_combo, 'gray'),
-        alpha=0.7,
-        label=gender_combo,
-        s=50
-    )
-
-# Add reference line
-min_age = min(df['P1agedays'].min(), df['P2agedays'].min())
-max_age = max(df['P1agedays'].max(), df['P2agedays'].max())
-axs[0, 0].plot([min_age, max_age], [min_age, max_age], 'k--', alpha=0.3)
-axs[0, 0].set_xlabel('P1 Age (days)', fontfamily='serif')
-axs[0, 0].set_ylabel('P2 Age (days)', fontfamily='serif')
-axs[0, 0].set_title('Participant Ages (P1 vs P2)', fontfamily='serif')
-axs[0, 0].grid(True, alpha=0.3)
-axs[0, 0].legend()
-
-# 2. Bar chart - Age differences
-bar_positions = np.arange(len(df))
-bar_width = 0.8
-axs[0, 1].bar(
-    bar_positions,
-    df['AgeDifference'],
-    width=bar_width,
-    color=[colors.get(combo, 'gray') for combo in df['GenderCombo']]
-)
-axs[0, 1].set_xticks(bar_positions)
-axs[0, 1].set_xticklabels(df['Code'], rotation=90)
-axs[0, 1].set_xlabel('Sibling Pair', fontfamily='serif')
-axs[0, 1].set_ylabel('Age Difference (days)', fontfamily='serif')
-axs[0, 1].set_title('Age Differences by Sibling Pair', fontfamily='serif')
-axs[0, 1].grid(True, alpha=0.3, axis='y')
-
-# 3. Pie chart - Gender distribution
-gender_counts = df['GenderCombo'].value_counts()
-axs[1, 0].pie(
-    gender_counts,
-    labels=gender_counts.index,
-    autopct='%1.1f%%',
-    colors=[colors.get(combo, 'gray') for combo in gender_counts.index],
-    wedgeprops={'edgecolor': 'w', 'linewidth': 1}
-)
-axs[1, 0].set_title('Gender Distribution', fontfamily='serif')
-
-# 4. Summary table
-summary_data = [
-    ["Total Sibling Pairs", f"{len(df)}"],
-    ["Average P1 Age", f"{df['P1agedays'].mean()/30:.1f} months"],
-    ["Average P2 Age", f"{df['P2agedays'].mean()/30:.1f} months"],
-    ["Average Age Difference", f"{df['AgeDifference'].mean()/30:.1f} months"],
-    ["Number of Males", f"{(df['GenderP1'] == 'M').sum() + (df['GenderP2'] == 'M').sum()}"],
-    ["Number of Females", f"{(df['GenderP1'] == 'F').sum() + (df['GenderP2'] == 'F').sum()}"]
-]
-
-# Turn off axis for table
-axs[1, 1].axis('off')
-table = axs[1, 1].table(
-    cellText=[row for row in summary_data],
-    colLabels=["Measure", "Value"],
-    loc='center',
-    cellLoc='left'
-)
-table.auto_set_font_size(False)
-table.set_fontsize(10)
-table.scale(1, 1.5)
-axs[1, 1].set_title('Dataset Summary', fontfamily='serif')
-
-plt.tight_layout()
-plt.subplots_adjust(top=0.9)
-
-# Save the figure to a file
-output_path = "images/sibling_analysis.png"
-os.makedirs(os.path.dirname(output_path), exist_ok=True)
-plt.savefig(output_path, dpi=300, bbox_inches='tight')
-plt.close()
-```
-:::
-
-![](images/sibling_analysis.png){fig-align="center" width=600}
-
-::: {.callout-note .callout-settingup collapse="true"}
 ## DIY: Setting up the repository on your local machine 🛠️
 
 ### Step 0: Github repo
